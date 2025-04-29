@@ -1,0 +1,159 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Autocomplete Testing Standards
+
+Standards for implementing comprehensive, maintainable tests for the autocomplete component library using Vitest.
+
+<rule>
+name: autocomplete_testing_standards
+description: Testing requirements and best practices for autocomplete components using Vitest
+filters:
+  # Match test files
+  - type: file_extension
+    pattern: "\\.(test|spec)\\.(js|jsx|ts|tsx)$"
+  # Match test-related code
+  - type: content
+    pattern: "(test|describe|it|expect|vi\\.)"
+  # Match test file creation or modification
+  - type: event
+    pattern: "file_create|file_modify"
+
+actions:
+  - type: enforce
+    conditions:
+      # Test Structure
+      - pattern: "describe\\(['\"]useAutoComplete['\"]"
+        message: "Tests must be organized in describe blocks for each major feature"
+      - pattern: "test\\(['\"]should"
+        message: "Test names must use 'should' format for clarity"
+      - pattern: "render\\(<AutoComplete"
+        message: "Component tests must use React Testing Library's render function"
+      - pattern: "screen\\.getByRole"
+        message: "Tests must use semantic queries from React Testing Library"
+      - pattern: "vi\\.mock"
+        message: "Async operations must be properly mocked using vi.mock"
+      - pattern: "vi\\.useFakeTimers"
+        message: "Timers must be mocked for debounce testing"
+
+  - type: suggest
+    message: |
+      When implementing tests for the autocomplete component:
+
+      1. Vitest Configuration:
+         - Use vitest.config.ts for project configuration
+         - Configure jsdom environment for component testing
+         - Set up proper aliases for imports
+         - Configure coverage thresholds
+         - Use proper test setup files
+
+      2. Test Structure:
+         - Organize tests in logical describe blocks
+         - Use clear, descriptive test names
+         - Follow AAA pattern (Arrange, Act, Assert)
+         - Use proper test setup and teardown
+         - Use vi.mock for mocking dependencies
+         - Use vi.useFakeTimers for timer-dependent tests
+
+      3. Component Testing:
+         - Test both controlled and uncontrolled modes
+         - Verify all prop combinations
+         - Test error states and edge cases
+         - Include snapshot tests for UI components
+         - Use vi.mock for async operations
+
+      4. Hook Testing:
+         - Test state management
+         - Verify async operations using vi.mock
+         - Test cleanup functions
+         - Verify memoization
+         - Use vi.useFakeTimers for debounce testing
+
+      5. Accessibility Testing:
+         - Test ARIA attributes
+         - Verify keyboard navigation
+         - Test screen reader compatibility
+         - Check focus management
+         - Use @testing-library/jest-dom matchers
+
+      6. Performance Testing:
+         - Test debouncing behavior with vi.useFakeTimers
+         - Verify virtualization
+         - Test large dataset handling
+         - Measure render performance
+         - Use vi.mock for async data fetching
+
+      7. Integration Testing:
+         - Test component interactions
+         - Verify state synchronization
+         - Test with real async operations using vi.mock
+         - Verify error handling
+         - Use proper cleanup in afterEach
+
+      8. Vitest Best Practices:
+         - Use vi.mock for external dependencies
+         - Use vi.useFakeTimers for timer-dependent code
+         - Use vi.spyOn for function spying
+         - Use vi.fn() for mock functions
+         - Use vi.clearAllMocks in afterEach
+         - Use vi.resetAllMocks when needed
+
+examples:
+  - input: |
+      // Good: Well-structured test with Vitest
+      import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
+      import { render, screen } from '@testing-library/react'
+      import { renderHook } from '@testing-library/react-hooks'
+
+      describe('useAutoComplete', () => {
+        beforeEach(() => {
+          vi.useFakeTimers()
+        })
+
+        afterEach(() => {
+          vi.clearAllMocks()
+          vi.useRealTimers()
+        })
+
+        describe('Async Operations', () => {
+          test('should debounce async search', async () => {
+            const mockSearch = vi.fn().mockResolvedValue(['result'])
+            vi.mock('../api', () => ({
+              searchItems: mockSearch
+            }))
+
+            const { result } = renderHook(() => useAutoComplete({
+              onFilterAsync: mockSearch,
+              asyncDebounceMs: 300
+            }))
+
+            result.current.setInputValue('test')
+            vi.advanceTimersByTime(300)
+            
+            expect(mockSearch).toHaveBeenCalledWith('test')
+          })
+        })
+
+        describe('Accessibility', () => {
+          test('should provide proper ARIA attributes', () => {
+            render(<AutoComplete items={[]} />)
+            const combobox = screen.getByRole('combobox')
+            expect(combobox).toHaveAttribute('aria-expanded', 'false')
+            expect(combobox).toHaveAttribute('aria-autocomplete', 'list')
+          })
+        })
+      })
+
+      // Bad: Poorly structured test without Vitest features
+      test('test1', () => {
+        const wrapper = mount(<AutoComplete />)
+        expect(wrapper.find('input').exists()).toBe(true)
+      })
+    output: "Properly structured and maintainable tests using Vitest"
+
+metadata:
+  priority: high
+  version: 1.0
+</rule>

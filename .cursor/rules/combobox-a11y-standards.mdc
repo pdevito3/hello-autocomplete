@@ -1,0 +1,103 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Combobox Accessibility Standards
+
+Standards for implementing accessible combobox components following WAI-ARIA specifications.
+
+<rule>
+name: combobox_a11y_standards
+description: Accessibility requirements for combobox components
+filters:
+  # Match component files that might contain combobox implementations
+  - type: file_extension
+    pattern: "\\.(js|jsx|ts|tsx)$"
+  # Match files that contain combobox-related code
+  - type: content
+    pattern: "(combobox|autocomplete|dropdown)"
+  # Match component creation or modification
+  - type: event
+    pattern: "file_create|file_modify"
+
+actions:
+  - type: enforce
+    conditions:
+      # Required ARIA attributes
+      - pattern: "role=['\"]combobox['\"]"
+        message: "Combobox must have role='combobox'"
+      - pattern: "aria-expanded=['\"](mdc:true|false)['\"]"
+        message: "Combobox must have aria-expanded attribute"
+      - pattern: "aria-controls=['\"].*['\"]"
+        message: "Combobox must have aria-controls referencing the popup element"
+      - pattern: "aria-autocomplete=['\"](mdc:none|list|both)['\"]"
+        message: "Combobox must have aria-autocomplete attribute"
+      - pattern: "aria-labelledby=['\"].*['\"]|aria-label=['\"].*['\"]"
+        message: "Combobox must have either aria-labelledby or aria-label"
+
+  - type: suggest
+    message: |
+      When implementing a combobox:
+
+      1. Required ARIA Attributes:
+         - role="combobox"
+         - aria-expanded (true/false)
+         - aria-controls (references popup element)
+         - aria-autocomplete (none/list/both)
+         - aria-labelledby or aria-label
+
+      2. Keyboard Interaction:
+         - Tab: Include in page tab sequence
+         - Down Arrow: Open popup and move focus
+         - Up Arrow: Move focus to last option
+         - Escape: Close popup
+         - Enter: Accept selected value
+         - Printable characters: Filter options
+
+      3. Popup Requirements:
+         - Must be hidden by default
+         - Must have appropriate role (listbox/grid/tree/dialog)
+         - Must maintain focus management
+         - Must support aria-activedescendant
+
+      4. State Management:
+         - Track expanded/collapsed state
+         - Track selected value
+         - Track active descendant
+         - Handle focus management
+
+      5. Error Prevention:
+         - Validate input against allowed values
+         - Provide clear error messages
+         - Support undo/redo operations
+
+examples:
+  - input: |
+      // Good: Properly implemented combobox
+      <div
+        role="combobox"
+        aria-expanded="false"
+        aria-controls="popup-id"
+        aria-autocomplete="list"
+        aria-labelledby="label-id"
+      >
+        <input type="text" />
+        <div id="popup-id" role="listbox">
+          {/* Options */}
+        </div>
+      </div>
+
+      // Bad: Missing required attributes
+      <div>
+        <input type="text" />
+        <div>
+          {/* Options */}
+        </div>
+      </div>
+    output: "Properly implemented accessible combobox"
+
+metadata:
+  priority: high
+  version: 1.0
+</rule>

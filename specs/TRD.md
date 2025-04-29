@@ -177,6 +177,44 @@ describe("useAutoComplete", () => {
 });
 ```
 
+### 5. Vitest Configuration
+
+```typescript
+// vitest.config.ts
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
+import { resolve } from "path";
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: ["./src/test/setup.ts"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      exclude: ["node_modules/", "src/test/", "**/*.d.ts"],
+    },
+  },
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "./src"),
+    },
+  },
+});
+```
+
+### 6. Test Coverage Requirements
+
+- Minimum 80% code coverage for all components
+- 100% coverage for critical paths
+- Unit tests for all hooks and utilities
+- Integration tests for component interactions
+- Accessibility tests using @testing-library/jest-dom
+- Performance tests for async operations
+- Snapshot tests for UI components
+
 ## Development Environment
 
 ### 1. Tooling
