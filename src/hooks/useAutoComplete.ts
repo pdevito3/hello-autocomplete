@@ -38,25 +38,48 @@ export interface UseAutoCompleteOptions<T> {
   placement?: Placement;
   asyncDebounceMs?: number;
   allowCustomValue?: boolean;
+  /**
+   * Called immediately on every keystroke with the current input value.
+   * Use for side-effects (e.g. analytics, external state sync).
+   */
   onInputValueChange?: (value: string) => void;
+
+  /**
+   * Called after debouncing (asyncDebounceMs) when filtering items.
+   * Receives the searchTerm and an AbortSignal; should return a Promise
+   * that resolves to the array of items to render.
+   */
+  onFilterAsync?: (params: {
+    searchTerm: string;
+    signal: AbortSignal;
+  }) => Promise<T[]>;
+
+  /**
+   * Called immediately on every keystroke, returning a Promise<void>.
+   * Use for async side-effects that don't directly drive the dropdown items.
+   */
+  onInputValueChangeAsync?: (params: {
+    value: string;
+    signal: AbortSignal;
+  }) => Promise<void>;
+
+  /**
+   * Called when the input loses focus. Can be used for async validation or cleanup.
+   */
+  onBlurAsync?: (params: {
+    value: string;
+    signal: AbortSignal;
+  }) => Promise<void>;
+
+  /**
+   * Called when the user clicks the "empty" action button (if enabled).
+   */
+  onEmptyActionClick?: () => void;
   onSelectValue?: (value: T) => void;
   onCustomValueAsync?: (params: {
     value: string;
     signal: AbortSignal;
   }) => Promise<void>;
-  onInputValueChangeAsync?: (params: {
-    value: string;
-    signal: AbortSignal;
-  }) => Promise<void>;
-  onBlurAsync?: (params: {
-    value: string;
-    signal: AbortSignal;
-  }) => Promise<void>;
-  onFilterAsync?: (params: {
-    searchTerm: string;
-    signal: AbortSignal;
-  }) => Promise<T[]>;
-  onEmptyActionClick?: () => void;
 }
 
 export interface UseAutoCompleteReturn<T> {
