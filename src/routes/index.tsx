@@ -39,6 +39,7 @@ function BasicExample() {
     getInputProps,
     getListProps,
     getOptionProps,
+    getOptionState,
     getItems,
   } = useAutoComplete({
     state: {
@@ -80,12 +81,13 @@ function BasicExample() {
                   {...getOptionProps(user)}
                   className={cn(
                     getOptionProps(user).className,
-                    "px-4 py-2 cursor-pointer hover:bg-gray-100"
+                    "px-4 py-2 cursor-pointer hover:bg-gray-100",
+                    getOptionState(user).isActive && "bg-gray-100"
                   )}
                 >
                   <div className="flex items-center justify-between">
                     {user.name}
-                    {getOptionProps(user).isActive && (
+                    {getOptionState(user).isSelected && (
                       <Check className="text-blue-500" />
                     )}
                   </div>
@@ -128,6 +130,7 @@ function CustomRenderingExample() {
     getInputProps,
     getListProps,
     getOptionProps,
+    getOptionState,
     getItems,
   } = useAutoComplete({
     state: {
@@ -170,13 +173,14 @@ function CustomRenderingExample() {
                   {...getOptionProps(user)}
                   className={cn(
                     getOptionProps(user).className,
-                    "px-4 py-2 cursor-pointer hover:bg-gray-100"
+                    "px-4 py-2 cursor-pointer hover:bg-gray-100",
+                    getOptionState(user).isActive && "bg-gray-100"
                   )}
                 >
                   <div>
                     <div className="font-medium flex">
                       <p className="flex-1">{user.name}</p>
-                      {getOptionProps(user).isActive && (
+                      {getOptionState(user).isSelected && (
                         <Check className="text-blue-500" />
                       )}
                     </div>

@@ -82,6 +82,11 @@ export interface UseAutoCompleteOptions<T> {
   }) => Promise<void>;
 }
 
+export interface OptionState {
+  isActive: boolean;
+  isSelected: boolean;
+}
+
 export interface UseAutoCompleteReturn<T> {
   getItems: () => T[];
   getSelectedItem: () => T | undefined;
@@ -97,9 +102,8 @@ export interface UseAutoCompleteReturn<T> {
   getInputProps: () => React.InputHTMLAttributes<HTMLInputElement>;
   getClearProps: () => React.ButtonHTMLAttributes<HTMLButtonElement>;
   getDisclosureProps: () => React.ButtonHTMLAttributes<HTMLButtonElement>;
-  getOptionProps: (
-    item: T
-  ) => React.LiHTMLAttributes<HTMLLIElement> & { isActive: boolean };
+  getOptionProps: (item: T) => React.LiHTMLAttributes<HTMLLIElement>;
+  getOptionState: (item: T) => OptionState;
   getGroupProps: (group: Group<T>) => React.HTMLAttributes<HTMLDivElement>;
   getGroupLabelProps: (
     group: Group<T>
@@ -175,7 +179,7 @@ export function useAutoComplete<T>({
           event.preventDefault();
           if (!isOpen) {
             setIsOpen(true);
-            if (items.length > 0) setActiveItem(items[0]);
+            if (items.length) setActiveItem(items[0]);
           } else {
             const next = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
             setActiveItem(items[next]);
@@ -188,7 +192,7 @@ export function useAutoComplete<T>({
           event.preventDefault();
           if (!isOpen) {
             setIsOpen(true);
-            if (items.length > 0) setActiveItem(items[items.length - 1]);
+            if (items.length) setActiveItem(items[items.length - 1]);
           } else {
             const prev = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
             setActiveItem(items[prev]);
@@ -254,6 +258,7 @@ export function useAutoComplete<T>({
       "aria-expanded": isOpen,
       "aria-haspopup": "listbox",
       "aria-controls": "autocomplete-listbox",
+      "data-combobox": true,
     }),
     [isOpen]
   );
@@ -267,6 +272,7 @@ export function useAutoComplete<T>({
       "aria-label": label,
       ref: listboxRef,
       tabIndex: -1,
+      "data-listbox": true,
     }),
     [label]
   );
@@ -280,9 +286,8 @@ export function useAutoComplete<T>({
       onFocus: () => {
         setIsFocused(true);
         setIsOpen(true);
-        if (items.length === 0 && onFilterAsync)
-          debouncedAsyncOperation(inputValue);
-        if (items.length > 0 && !activeItem) setActiveItem(items[0]);
+        if (!items.length && onFilterAsync) debouncedAsyncOperation(inputValue);
+        if (items.length && !activeItem) setActiveItem(items[0]);
       },
       onBlur: () => setIsFocused(false),
       // narrow to the literal union React expects
@@ -291,6 +296,7 @@ export function useAutoComplete<T>({
       "aria-activedescendant": activeItem
         ? `option-${items.indexOf(activeItem)}`
         : undefined,
+      "data-input": true,
     }),
     [
       inputValue,
@@ -307,6 +313,7 @@ export function useAutoComplete<T>({
     () => ({
       htmlFor: "autocomplete-input",
       className: labelSrOnly ? "sr-only" : "",
+      "data-label": true,
     }),
     [labelSrOnly]
   );
@@ -315,19 +322,27 @@ export function useAutoComplete<T>({
     (item: T) => {
       const index = items.indexOf(item);
       const isItemActive = item === activeItem;
+      const isItemSelected = item === selectedValue;
       return {
         role: "option",
-        "aria-selected": item === selectedValue,
+        "aria-selected": isItemSelected,
         "aria-posinset": index + 1,
         "aria-setsize": items.length,
         id: `option-${index}`,
         onClick: () => handleSelect(item),
-        className: isItemActive ? "bg-gray-100" : "",
-        "data-active": isItemActive ? true : undefined,
-        isActive: isItemActive,
+        "data-active": isItemActive || undefined,
+        "data-selected": isItemSelected || undefined,
       };
     },
     [selectedValue, items, activeItem, handleSelect]
+  );
+
+  const getOptionState = useCallback(
+    (item: T): OptionState => ({
+      isActive: item === activeItem,
+      isSelected: item === selectedValue,
+    }),
+    [activeItem, selectedValue]
   );
 
   return {
@@ -336,12 +351,13 @@ export function useAutoComplete<T>({
     hasActiveItem: () => !!activeItem,
     isFocused: () => isFocused,
     getRootProps,
+    getListProps,
     getLabelProps,
     getInputProps,
     getClearProps: () => ({}),
     getDisclosureProps: () => ({}),
-    getListProps,
     getOptionProps,
+    getOptionState,
     getGroupProps: () => ({}),
     getGroupLabelProps: () => ({}),
   };
