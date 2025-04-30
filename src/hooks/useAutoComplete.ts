@@ -59,20 +59,21 @@ export interface UseAutoCompleteOptions<T> {
   onEmptyActionClick?: () => void;
 }
 
-// Notice the updated return type for getOptionProps
 export interface UseAutoCompleteReturn<T> {
   getItems: () => T[];
   getSelectedItem: () => T | undefined;
   hasActiveItem: () => boolean;
   isFocused: () => boolean;
-  getRootProps: () => React.HTMLAttributes<HTMLDivElement>;
+  getRootProps: () => React.HTMLAttributes<HTMLDivElement> & {
+    ref: React.Ref<HTMLDivElement>;
+  };
+  getListProps: () => React.HTMLAttributes<HTMLUListElement> & {
+    ref: React.Ref<HTMLUListElement>;
+  };
   getLabelProps: () => React.LabelHTMLAttributes<HTMLLabelElement>;
   getInputProps: () => React.InputHTMLAttributes<HTMLInputElement>;
   getClearProps: () => React.ButtonHTMLAttributes<HTMLButtonElement>;
   getDisclosureProps: () => React.ButtonHTMLAttributes<HTMLButtonElement>;
-  getPopoverProps: () => React.HTMLAttributes<HTMLDivElement>;
-  getListProps: () => React.HTMLAttributes<HTMLUListElement>;
-  // Now includes `isActive` on the returned props
   getOptionProps: (
     item: T
   ) => React.LiHTMLAttributes<HTMLLIElement> & { isActive: boolean };
@@ -222,7 +223,9 @@ export function useAutoComplete<T>({
   );
 
   const getRootProps = useCallback(
-    () => ({
+    (): React.HTMLAttributes<HTMLDivElement> & {
+      ref: React.Ref<HTMLDivElement>;
+    } => ({
       ref: rootRef,
       role: "combobox",
       "aria-expanded": isOpen,
@@ -232,16 +235,21 @@ export function useAutoComplete<T>({
     [isOpen]
   );
 
-  const getLabelProps = useCallback(
-    () => ({
-      htmlFor: "autocomplete-input",
-      className: labelSrOnly ? "sr-only" : "",
+  const getListProps = useCallback(
+    (): React.HTMLAttributes<HTMLUListElement> & {
+      ref: React.Ref<HTMLUListElement>;
+    } => ({
+      id: "autocomplete-listbox",
+      role: "listbox",
+      "aria-label": label,
+      ref: listboxRef,
+      tabIndex: -1,
     }),
-    [labelSrOnly]
+    [label]
   );
 
   const getInputProps = useCallback(
-    () => ({
+    (): React.InputHTMLAttributes<HTMLInputElement> => ({
       id: "autocomplete-input",
       value: inputValue,
       onChange: handleInputChange,
@@ -254,6 +262,7 @@ export function useAutoComplete<T>({
         if (items.length > 0 && !activeItem) setActiveItem(items[0]);
       },
       onBlur: () => setIsFocused(false),
+      // narrow to the literal union React expects
       "aria-autocomplete": "list",
       "aria-controls": "autocomplete-listbox",
       "aria-activedescendant": activeItem
@@ -271,15 +280,12 @@ export function useAutoComplete<T>({
     ]
   );
 
-  const getListProps = useCallback(
+  const getLabelProps = useCallback(
     () => ({
-      id: "autocomplete-listbox",
-      role: "listbox",
-      "aria-label": label,
-      ref: listboxRef,
-      tabIndex: -1,
+      htmlFor: "autocomplete-input",
+      className: labelSrOnly ? "sr-only" : "",
     }),
-    [label]
+    [labelSrOnly]
   );
 
   const getOptionProps = useCallback(
@@ -311,7 +317,6 @@ export function useAutoComplete<T>({
     getInputProps,
     getClearProps: () => ({}),
     getDisclosureProps: () => ({}),
-    getPopoverProps: () => ({}),
     getListProps,
     getOptionProps,
     getGroupProps: () => ({}),
