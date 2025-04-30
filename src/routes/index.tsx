@@ -54,10 +54,15 @@ function BasicExample() {
       label: "Search users",
     },
     onFilterAsync: async ({ searchTerm }) => {
+      // console.log({ onFilterAsync: searchTerm });
       return users.filter((user) =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     },
+    // onInputValueChange: (value) => {
+    //   console.log({ onInputValueChange: value });
+    // },
+    asyncDebounceMs: 400,
   });
 
   return (
@@ -75,24 +80,30 @@ function BasicExample() {
               {...getListProps()}
               className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
             >
-              {getItems().map((user) => (
-                <li
-                  key={user.id}
-                  {...getOptionProps(user)}
-                  className={cn(
-                    getOptionProps(user).className,
-                    "px-4 py-2 cursor-pointer hover:bg-gray-100",
-                    getOptionState(user).isActive && "bg-gray-100"
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    {user.name}
-                    {getOptionState(user).isSelected && (
-                      <Check className="text-blue-500" />
-                    )}
-                  </div>
-                </li>
-              ))}
+              {getItems().length === 0 ? (
+                <li className="px-4 py-2 text-gray-500">No results found</li>
+              ) : (
+                <>
+                  {getItems().map((user) => (
+                    <li
+                      key={user.id}
+                      {...getOptionProps(user)}
+                      className={cn(
+                        getOptionProps(user).className,
+                        "px-4 py-2 cursor-pointer hover:bg-gray-100",
+                        getOptionState(user).isActive && "bg-gray-100"
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        {user.name}
+                        {getOptionState(user).isSelected && (
+                          <Check className="text-blue-500" />
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </>
+              )}
             </ul>
           )}
         </div>
@@ -167,27 +178,35 @@ function CustomRenderingExample() {
               {...getListProps()}
               className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
             >
-              {getItems().map((user) => (
-                <li
-                  key={user.id}
-                  {...getOptionProps(user)}
-                  className={cn(
-                    getOptionProps(user).className,
-                    "px-4 py-2 cursor-pointer hover:bg-gray-100",
-                    getOptionState(user).isActive && "bg-gray-100"
-                  )}
-                >
-                  <div>
-                    <div className="font-medium flex">
-                      <p className="flex-1">{user.name}</p>
-                      {getOptionState(user).isSelected && (
-                        <Check className="text-blue-500" />
+              {getItems().length === 0 ? (
+                <li className="px-4 py-2 text-gray-500">No results found</li>
+              ) : (
+                <>
+                  {getItems().map((user) => (
+                    <li
+                      key={user.id}
+                      {...getOptionProps(user)}
+                      className={cn(
+                        getOptionProps(user).className,
+                        "px-4 py-2 cursor-pointer hover:bg-gray-100",
+                        getOptionState(user).isActive && "bg-gray-100"
                       )}
-                    </div>
-                    <div className="text-sm text-gray-500">{user.email}</div>
-                  </div>
-                </li>
-              ))}
+                    >
+                      <div>
+                        <div className="font-medium flex">
+                          <p className="flex-1">{user.name}</p>
+                          {getOptionState(user).isSelected && (
+                            <Check className="text-blue-500" />
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {user.email}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </>
+              )}
             </ul>
           )}
         </div>

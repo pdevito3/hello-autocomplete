@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useDebouncedValue } from "./use-debounced-value";
 
 export type Placement = "top" | "bottom" | "left" | "right";
 
@@ -36,6 +37,7 @@ export interface UseAutoCompleteOptions<T> {
   defaultOpen?: boolean;
   labelSrOnly?: boolean;
   placement?: Placement;
+  /** Debounce delay (ms) for async filtering */
   asyncDebounceMs?: number;
   allowCustomValue?: boolean;
   /**
@@ -115,7 +117,7 @@ export function useAutoComplete<T>({
   defaultOpen = false,
   labelSrOnly = false,
   placement = "bottom",
-  asyncDebounceMs = 300,
+  asyncDebounceMs = 0,
   allowCustomValue = false,
   onInputValueChange,
   onSelectValue,
@@ -143,6 +145,42 @@ export function useAutoComplete<T>({
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   // Close dropdown on outside click
+  // keep a ref to the latest onFilterAsync
+  const onFilterAsyncRef = useRef(onFilterAsync);
+  useEffect(() => {
+    onFilterAsyncRef.current = onFilterAsync;
+  }, [onFilterAsync]);
+
+  // now only created once
+  const debouncedAsyncOperation = useCallback(async (value: string) => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+    try {
+      const filterFn = onFilterAsyncRef.current;
+      if (filterFn) {
+        const results = await filterFn({
+          searchTerm: value,
+          signal: abortControllerRef.current.signal,
+        });
+        setItems(results);
+      }
+    } catch (err) {
+      if (!(err instanceof Error && err.name === "AbortError"))
+        console.error(err);
+    }
+  }, []);
+
+  // debounce the raw inputValue
+  const [debouncedInputValue] = useDebouncedValue(inputValue, asyncDebounceMs);
+
+  // now only fires when the debounced value actually changes
+  useEffect(() => {
+    if (onFilterAsyncRef.current) {
+      debouncedAsyncOperation(debouncedInputValue);
+    }
+  }, [debouncedInputValue, debouncedAsyncOperation]);
+
+  // close on outside click
   useEffect(() => {
     function onClickOutside(event: MouseEvent) {
       if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
@@ -219,34 +257,13 @@ export function useAutoComplete<T>({
     [items, activeItem, isOpen, setIsOpen, setActiveItem, handleSelect]
   );
 
-  const debouncedAsyncOperation = useCallback(
-    async (value: string) => {
-      abortControllerRef.current?.abort();
-      abortControllerRef.current = new AbortController();
-      try {
-        if (onFilterAsync) {
-          const results = await onFilterAsync({
-            searchTerm: value,
-            signal: abortControllerRef.current.signal,
-          });
-          setItems(results);
-        }
-      } catch (err) {
-        if (!(err instanceof Error && err.name === "AbortError"))
-          console.error(err);
-      }
-    },
-    [onFilterAsync]
-  );
-
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const v = e.target.value;
       setInputValue(v);
       onInputValueChange?.(v);
-      if (onFilterAsync) debouncedAsyncOperation(v);
     },
-    [setInputValue, onInputValueChange, onFilterAsync, debouncedAsyncOperation]
+    [setInputValue, onInputValueChange]
   );
 
   const getRootProps = useCallback(
