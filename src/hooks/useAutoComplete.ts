@@ -59,6 +59,7 @@ export interface UseAutoCompleteOptions<T> {
   onEmptyActionClick?: () => void;
 }
 
+// Notice the updated return type for getOptionProps
 export interface UseAutoCompleteReturn<T> {
   getItems: () => T[];
   getSelectedItem: () => T | undefined;
@@ -71,7 +72,10 @@ export interface UseAutoCompleteReturn<T> {
   getDisclosureProps: () => React.ButtonHTMLAttributes<HTMLButtonElement>;
   getPopoverProps: () => React.HTMLAttributes<HTMLDivElement>;
   getListProps: () => React.HTMLAttributes<HTMLUListElement>;
-  getOptionProps: (item: T) => React.LiHTMLAttributes<HTMLLIElement>;
+  // Now includes `isActive` on the returned props
+  getOptionProps: (
+    item: T
+  ) => React.LiHTMLAttributes<HTMLLIElement> & { isActive: boolean };
   getGroupProps: (group: Group<T>) => React.HTMLAttributes<HTMLDivElement>;
   getGroupLabelProps: (
     group: Group<T>
@@ -122,6 +126,7 @@ export function useAutoComplete<T>({
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [setIsOpen, setActiveItem]);
 
+  // Handle default value
   useEffect(() => {
     if (state.defaultValue) {
       setSelectedValue(state.defaultValue);
@@ -141,7 +146,6 @@ export function useAutoComplete<T>({
     (event: React.KeyboardEvent<HTMLInputElement>) => {
       const { key } = event;
       const currentIndex = items.findIndex((i) => i === activeItem);
-
       switch (key) {
         case "ArrowDown":
           event.preventDefault();
@@ -279,15 +283,21 @@ export function useAutoComplete<T>({
   );
 
   const getOptionProps = useCallback(
-    (item: T) => ({
-      role: "option",
-      "aria-selected": item === selectedValue,
-      "aria-posinset": items.indexOf(item) + 1,
-      "aria-setsize": items.length,
-      id: `option-${items.indexOf(item)}`,
-      onClick: () => handleSelect(item),
-      className: item === activeItem ? "bg-gray-100" : "",
-    }),
+    (item: T) => {
+      const index = items.indexOf(item);
+      const isItemActive = item === activeItem;
+      return {
+        role: "option",
+        "aria-selected": item === selectedValue,
+        "aria-posinset": index + 1,
+        "aria-setsize": items.length,
+        id: `option-${index}`,
+        onClick: () => handleSelect(item),
+        className: isItemActive ? "bg-gray-100" : "",
+        "data-active": isItemActive ? true : undefined,
+        isActive: isItemActive,
+      };
+    },
     [selectedValue, items, activeItem, handleSelect]
   );
 

@@ -83,7 +83,12 @@ function BasicExample() {
                     "px-4 py-2 cursor-pointer hover:bg-gray-100"
                   )}
                 >
-                  {user.name}
+                  <div className="flex items-center justify-between">
+                    {user.name}
+                    {getOptionProps(user).isActive && (
+                      <Check className="text-blue-500" />
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -169,7 +174,12 @@ function CustomRenderingExample() {
                   )}
                 >
                   <div>
-                    <div className="font-medium">{user.name}</div>
+                    <div className="font-medium flex">
+                      <p className="flex-1">{user.name}</p>
+                      {getOptionProps(user).isActive && (
+                        <Check className="text-blue-500" />
+                      )}
+                    </div>
                     <div className="text-sm text-gray-500">{user.email}</div>
                   </div>
                 </li>
@@ -216,5 +226,24 @@ export default function HomePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function Check({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={24}
+      height={24}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("w-4 h-4", className)}
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
   );
 }
