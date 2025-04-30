@@ -20,7 +20,6 @@ export interface Group<T> {
 }
 
 export interface UseAutoCompleteOptions<T> {
-  // State Management
   state: {
     inputValue: string;
     setInputValue: (value: string) => void;
@@ -31,17 +30,14 @@ export interface UseAutoCompleteOptions<T> {
     grouping?: GroupingOptions<T>;
     defaultValue?: T;
     activeItem: T | null;
+    setActiveItem: (item: T | null) => void;
     label: string;
   };
-
-  // Configuration
   defaultOpen?: boolean;
   labelSrOnly?: boolean;
   placement?: Placement;
   asyncDebounceMs?: number;
   allowCustomValue?: boolean;
-
-  // Event Handlers
   onInputValueChange?: (value: string) => void;
   onSelectValue?: (value: T) => void;
   onCustomValueAsync?: (params: {
@@ -64,13 +60,10 @@ export interface UseAutoCompleteOptions<T> {
 }
 
 export interface UseAutoCompleteReturn<T> {
-  // State Accessors
   getItems: () => T[];
   getSelectedItem: () => T | undefined;
   hasActiveItem: () => boolean;
   isFocused: () => boolean;
-
-  // Component Props
   getRootProps: () => React.HTMLAttributes<HTMLDivElement>;
   getLabelProps: () => React.LabelHTMLAttributes<HTMLLabelElement>;
   getInputProps: () => React.InputHTMLAttributes<HTMLInputElement>;
@@ -98,7 +91,6 @@ export function useAutoComplete<T>({
   onInputValueChangeAsync,
   onBlurAsync,
   onFilterAsync,
-  onEmptyActionClick,
 }: UseAutoCompleteOptions<T>): UseAutoCompleteReturn<T> {
   const {
     inputValue,
@@ -107,70 +99,35 @@ export function useAutoComplete<T>({
     setSelectedValue,
     isOpen,
     setIsOpen,
-    grouping,
-    defaultValue,
     activeItem,
+    setActiveItem,
     label,
   } = state;
 
   const [items, setItems] = useState<T[]>([]);
   const [isFocused, setIsFocused] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const listboxRef = useRef<HTMLUListElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
-  // Initialize with default value
+  // Close dropdown on outside click
   useEffect(() => {
-    if (defaultValue) {
-      setSelectedValue(defaultValue);
+    function onClickOutside(event: MouseEvent) {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        setActiveItem(null);
+      }
     }
-  }, [defaultValue, setSelectedValue]);
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [setIsOpen, setActiveItem]);
 
-  // Handle async operations
-  const debouncedAsyncOperation = useCallback(
-    async (value: string) => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
+  useEffect(() => {
+    if (state.defaultValue) {
+      setSelectedValue(state.defaultValue);
+    }
+  }, [state.defaultValue, setSelectedValue]);
 
-      abortControllerRef.current = new AbortController();
-
-      try {
-        if (onFilterAsync) {
-          const filteredItems = await onFilterAsync({
-            searchTerm: value,
-            signal: abortControllerRef.current.signal,
-          });
-          setItems(filteredItems);
-        }
-      } catch (error) {
-        if (error instanceof Error && error.name === "AbortError") {
-          return;
-        }
-        console.error("Error in async operation:", error);
-      }
-    },
-    [onFilterAsync]
-  );
-
-  // Handle input changes
-  const handleInputChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const newValue = event.target.value;
-      setInputValue(newValue);
-      onInputValueChange?.(newValue);
-
-      if (onInputValueChangeAsync) {
-        debouncedAsyncOperation(newValue);
-      }
-    },
-    [
-      setInputValue,
-      onInputValueChange,
-      onInputValueChangeAsync,
-      debouncedAsyncOperation,
-    ]
-  );
-
-  // Handle selection
   const handleSelect = useCallback(
     (item: T) => {
       setSelectedValue(item);
@@ -180,12 +137,92 @@ export function useAutoComplete<T>({
     [setSelectedValue, onSelectValue, setIsOpen]
   );
 
-  // Component props
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      const { key } = event;
+      const currentIndex = items.findIndex((i) => i === activeItem);
+
+      switch (key) {
+        case "ArrowDown":
+          event.preventDefault();
+          if (!isOpen) {
+            setIsOpen(true);
+            if (items.length > 0) setActiveItem(items[0]);
+          } else {
+            const next = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+            setActiveItem(items[next]);
+            document
+              .getElementById(`option-${next}`)
+              ?.scrollIntoView({ block: "nearest" });
+          }
+          break;
+        case "ArrowUp":
+          event.preventDefault();
+          if (!isOpen) {
+            setIsOpen(true);
+            if (items.length > 0) setActiveItem(items[items.length - 1]);
+          } else {
+            const prev = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+            setActiveItem(items[prev]);
+            document
+              .getElementById(`option-${prev}`)
+              ?.scrollIntoView({ block: "nearest" });
+          }
+          break;
+        case "Enter":
+          event.preventDefault();
+          if (activeItem) handleSelect(activeItem);
+          break;
+        case "Escape":
+          event.preventDefault();
+          setIsOpen(false);
+          setActiveItem(null);
+          break;
+        case "Tab":
+          setIsOpen(false);
+          setActiveItem(null);
+          break;
+      }
+    },
+    [items, activeItem, isOpen, setIsOpen, setActiveItem, handleSelect]
+  );
+
+  const debouncedAsyncOperation = useCallback(
+    async (value: string) => {
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = new AbortController();
+      try {
+        if (onFilterAsync) {
+          const results = await onFilterAsync({
+            searchTerm: value,
+            signal: abortControllerRef.current.signal,
+          });
+          setItems(results);
+        }
+      } catch (err) {
+        if (!(err instanceof Error && err.name === "AbortError"))
+          console.error(err);
+      }
+    },
+    [onFilterAsync]
+  );
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const v = e.target.value;
+      setInputValue(v);
+      onInputValueChange?.(v);
+      if (onFilterAsync) debouncedAsyncOperation(v);
+    },
+    [setInputValue, onInputValueChange, onFilterAsync, debouncedAsyncOperation]
+  );
+
   const getRootProps = useCallback(
     () => ({
+      ref: rootRef,
       role: "combobox",
       "aria-expanded": isOpen,
-      "aria-haspopup": "listbox" as const,
+      "aria-haspopup": "listbox",
       "aria-controls": "autocomplete-listbox",
     }),
     [isOpen]
@@ -204,28 +241,29 @@ export function useAutoComplete<T>({
       id: "autocomplete-input",
       value: inputValue,
       onChange: handleInputChange,
+      onKeyDown: handleKeyDown,
       onFocus: () => {
         setIsFocused(true);
         setIsOpen(true);
-      },
-      onBlur: () => {
-        setIsFocused(false);
-        if (onBlurAsync) {
+        if (items.length === 0 && onFilterAsync)
           debouncedAsyncOperation(inputValue);
-        }
+        if (items.length > 0 && !activeItem) setActiveItem(items[0]);
       },
-      "aria-autocomplete": "list" as const,
+      onBlur: () => setIsFocused(false),
+      "aria-autocomplete": "list",
       "aria-controls": "autocomplete-listbox",
-      "aria-activedescendant": activeItem ? "option-" + activeItem : undefined,
+      "aria-activedescendant": activeItem
+        ? `option-${items.indexOf(activeItem)}`
+        : undefined,
     }),
     [
       inputValue,
       handleInputChange,
-      setIsFocused,
-      setIsOpen,
-      onBlurAsync,
-      debouncedAsyncOperation,
+      handleKeyDown,
+      items,
       activeItem,
+      onFilterAsync,
+      debouncedAsyncOperation,
     ]
   );
 
@@ -234,6 +272,8 @@ export function useAutoComplete<T>({
       id: "autocomplete-listbox",
       role: "listbox",
       "aria-label": label,
+      ref: listboxRef,
+      tabIndex: -1,
     }),
     [label]
   );
@@ -242,9 +282,13 @@ export function useAutoComplete<T>({
     (item: T) => ({
       role: "option",
       "aria-selected": item === selectedValue,
+      "aria-posinset": items.indexOf(item) + 1,
+      "aria-setsize": items.length,
+      id: `option-${items.indexOf(item)}`,
       onClick: () => handleSelect(item),
+      className: item === activeItem ? "bg-gray-100" : "",
     }),
-    [selectedValue, handleSelect]
+    [selectedValue, items, activeItem, handleSelect]
   );
 
   return {
