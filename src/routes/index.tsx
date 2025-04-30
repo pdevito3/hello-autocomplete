@@ -42,6 +42,7 @@ function BasicExample() {
     getOptionState,
     getItems,
   } = useAutoComplete({
+    items: users,
     state: {
       inputValue,
       setInputValue,
@@ -62,7 +63,7 @@ function BasicExample() {
     // onInputValueChange: (value) => {
     //   console.log({ onInputValueChange: value });
     // },
-    asyncDebounceMs: 400,
+    asyncDebounceMs: 300,
   });
 
   return (
@@ -144,6 +145,7 @@ function CustomRenderingExample() {
     getOptionState,
     getItems,
   } = useAutoComplete({
+    items: users,
     state: {
       inputValue,
       setInputValue,
@@ -157,6 +159,7 @@ function CustomRenderingExample() {
     },
     labelSrOnly: true,
     onFilterAsync: async ({ searchTerm }) => {
+      // console.log({ onFilterAsync: searchTerm });
       return users.filter((user) =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase())
       );

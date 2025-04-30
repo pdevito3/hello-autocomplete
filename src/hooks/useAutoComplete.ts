@@ -41,6 +41,11 @@ export interface UseAutoCompleteOptions<T> {
   asyncDebounceMs?: number;
   allowCustomValue?: boolean;
   /**
+   * Static list of items to drive the dropdown data.
+   * When this changes, the internal items list will update.
+   */
+  items?: T[];
+  /**
    * Called immediately on every keystroke with the current input value.
    * Use for side-effects (e.g. analytics, external state sync).
    */
@@ -124,6 +129,7 @@ export function useAutoComplete<T>({
   onCustomValueAsync,
   onInputValueChangeAsync,
   onBlurAsync,
+  items: itemsProp = [],
   onFilterAsync,
 }: UseAutoCompleteOptions<T>): UseAutoCompleteReturn<T> {
   const {
@@ -138,13 +144,23 @@ export function useAutoComplete<T>({
     label,
   } = state;
 
-  const [items, setItems] = useState<T[]>([]);
+  const [items, setItems] = useState<T[]>(itemsProp);
   const [isFocused, setIsFocused] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const listboxRef = useRef<HTMLUListElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
-  // Close dropdown on outside click
+  // track the last itemsProp reference
+  const prevItemsPropRef = useRef<T[]>(itemsProp);
+
+  useEffect(() => {
+    // if the prop array reference is new, sync it in
+    if (prevItemsPropRef.current !== itemsProp) {
+      setItems(itemsProp);
+      prevItemsPropRef.current = itemsProp;
+    }
+  }, [itemsProp]);
+
   // keep a ref to the latest onFilterAsync
   const onFilterAsyncRef = useRef(onFilterAsync);
   useEffect(() => {
@@ -300,14 +316,24 @@ export function useAutoComplete<T>({
       value: inputValue,
       onChange: handleInputChange,
       onKeyDown: handleKeyDown,
-      onFocus: () => {
+      // onFocus: () => {
+      //   setIsFocused(true);
+      //   setIsOpen(true);
+      //   if (!items.length && onFilterAsync) debouncedAsyncOperation(inputValue);
+      //   if (items.length && !activeItem) setActiveItem(items[0]);
+      // },
+      onFocus: async () => {
         setIsFocused(true);
+        if (onFilterAsyncRef.current) {
+          // run the filter immediately…
+          await debouncedAsyncOperation(inputValue);
+        }
+        // …then open the list once items is non-empty
         setIsOpen(true);
-        if (!items.length && onFilterAsync) debouncedAsyncOperation(inputValue);
         if (items.length && !activeItem) setActiveItem(items[0]);
       },
+
       onBlur: () => setIsFocused(false),
-      // narrow to the literal union React expects
       "aria-autocomplete": "list",
       "aria-controls": "autocomplete-listbox",
       "aria-activedescendant": activeItem
