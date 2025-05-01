@@ -212,37 +212,42 @@ function CustomRenderingExample() {
   );
 }
 
+// Mock users for infinite example
+const mockUsers: User[] = Array.from({ length: 80 }, (_, i) => ({
+  id: i + 1,
+  name: `User ${i + 1}`,
+  email: `user${i + 1}@example.com`,
+}));
+
 // Simulate a paged API that accepts a searchTerm
-async function fetchServerPage(
+async function fetchUserPage(
   limit: number,
   offset: number = 0,
   searchTerm: string = ""
-): Promise<{ rows: string[]; nextOffset: number }> {
-  // generate dummy rows for this page
-  const start = offset * limit;
-  let rows = Array.from(
-    { length: limit },
-    (_, i) => `Async loaded row #${i + start}`
-  );
-
-  // simulate server‐side filtering
+): Promise<{ rows: User[]; nextOffset: number }> {
+  let filtered = mockUsers;
   if (searchTerm) {
-    const lower = searchTerm.toLowerCase();
-    rows = rows.filter((r) => r.toLowerCase().includes(lower));
+    const term = searchTerm.toLowerCase();
+    filtered = filtered.filter(
+      (u) =>
+        u.name.toLowerCase().includes(term) ||
+        u.email.toLowerCase().includes(term)
+    );
   }
-
+  const start = offset * limit;
+  const rows = filtered.slice(start, start + limit);
   // simulate network latency
   await new Promise((r) => setTimeout(r, 500));
   return { rows, nextOffset: offset + 1 };
 }
 
 export function InfiniteAutocompleteExample() {
-  const [inputValue, setInputValue] = useState("");
-  const [selectedValue, setSelectedValue] = useState<string | undefined>();
+  const [filter, setFilter] = useState("");
+  const [selectedValue, setSelectedValue] = useState<User | undefined>();
   const [isOpen, setIsOpen] = useState(false);
-  const [activeItem, setActiveItem] = useState<string | null>(null);
+  const [activeItem, setActiveItem] = useState<User | null>(null);
 
-  // re‐runs and resets pages whenever inputValue changes
+  // React Query: re‐runs & resets when `filter` changes
   const {
     data,
     error,
@@ -252,46 +257,41 @@ export function InfiniteAutocompleteExample() {
     isLoading,
     isError,
   } = useInfiniteQuery({
-    queryKey: ["rows", inputValue],
-    queryFn: ({ pageParam = 0 }) => fetchServerPage(10, pageParam, inputValue),
-    getNextPageParam: (last) => last.nextOffset,
+    queryKey: ["users", filter],
+    queryFn: ({ pageParam = 0 }) => fetchUserPage(20, pageParam, filter),
+    getNextPageParam: (last) =>
+      last.rows.length === 20 ? last.nextOffset : undefined,
   });
 
-  // flatten all pages into one array
-  const allRows = useMemo(
+  const allUsers = useMemo(
     () => data?.pages.flatMap((d) => d.rows) ?? [],
     [data?.pages]
   );
 
-  // virtualization setup
+  // virtualizer setup
   const parentRef = useRef<HTMLDivElement | null>(null);
   const rowVirtualizer = useVirtualizer({
-    count: hasNextPage ? allRows.length + 1 : allRows.length,
+    count: hasNextPage ? allUsers.length + 1 : allUsers.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 50,
     overscan: 5,
   });
 
-  // auto‐load next page when you scroll to the bottom
+  // auto‐load next page on scroll end
   useEffect(() => {
-    const [lastItem] = [...rowVirtualizer.getVirtualItems()].reverse();
+    const items = rowVirtualizer.getVirtualItems();
+    const lastItem = items[items.length - 1];
     if (
       lastItem &&
-      lastItem.index >= allRows.length - 1 &&
+      lastItem.index >= allUsers.length - 1 &&
       hasNextPage &&
       !isFetchingNextPage
     ) {
       fetchNextPage();
     }
-  }, [
-    rowVirtualizer.getVirtualItems(),
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-    allRows.length,
-  ]);
+  }, [rowVirtualizer.getVirtualItems(), hasNextPage, isFetchingNextPage]);
 
-  // wire up the autocomplete to the filtered rows
+  // wire up autocomplete so typing drives `filter`
   const {
     getRootProps,
     getLabelProps,
@@ -299,84 +299,115 @@ export function InfiniteAutocompleteExample() {
     getListProps,
     getOptionProps,
     getOptionState,
-  } = useAutoComplete<string>({
+  } = useAutoComplete<User>({
     state: {
-      inputValue,
-      setInputValue,
+      inputValue: filter,
+      setInputValue: setFilter,
       selectedValue,
       setSelectedValue,
       isOpen,
       setIsOpen,
       activeItem,
       setActiveItem,
-      label: "Infinite Autocomplete",
+      label: "Search users",
     },
-    items: allRows,
-    itemToString: (r) => r,
+    items: allUsers,
+    itemToString: (u) => u.name,
+    asyncDebounceMs: 300,
+    onFilterAsync: async ({ searchTerm }) => {
+      // update the React Query filter
+      setFilter(searchTerm);
+      // return allUsers so hook’s internal list stays in sync
+      return allUsers;
+    },
   });
 
   return (
     <div className="relative max-w-md">
-      <label {...getLabelProps()}>Infinite Autocomplete</label>
+      <label {...getLabelProps()}>Search users</label>
       <div {...getRootProps()}>
         <input
           {...getInputProps()}
-          placeholder="Type to filter…"
+          placeholder="Type to filter users…"
           className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         {isOpen && (
-          <div
+          <ul
             {...getListProps()}
             ref={parentRef}
             className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg h-80 overflow-auto"
           >
             {isLoading ? (
-              <div className="p-4">Loading...</div>
+              <p className="p-4">Loading...</p>
             ) : isError ? (
-              <div className="p-4 text-red-500">
+              <p className="p-4 text-red-500">
                 Error: {(error as Error).message}
-              </div>
+              </p>
             ) : (
               rowVirtualizer.getVirtualItems().map((virtualRow) => {
                 const idx = virtualRow.index;
-                const isLoader = idx > allRows.length - 1;
-                const key = isLoader ? `loader-${idx}` : allRows[idx];
+                const isLoader = idx > allUsers.length - 1;
+                const key = isLoader ? `loader-${idx}` : allUsers[idx].id;
                 const style = {
                   position: "absolute" as const,
                   top: virtualRow.start,
-                  height: virtualRow.size,
                   width: "100%",
                 };
 
                 if (isLoader) {
                   return (
-                    <div
+                    <p
                       key={key}
                       style={style}
                       className="flex items-center justify-center"
                     >
-                      {hasNextPage ? "Loading more…" : "End of list"}
-                    </div>
+                      {hasNextPage ? "Loading more…" : "End of users"}
+                    </p>
                   );
                 }
 
-                const item = allRows[idx];
+                const user = allUsers[idx];
                 return (
-                  <div
-                    key={item}
-                    {...getOptionProps(item)}
+                  <li
+                    key={user.id}
+                    {...getOptionProps(user)}
                     style={style}
                     className={cn(
-                      "px-4 py-2 cursor-pointer",
-                      getOptionState(item).isActive && "bg-gray-100"
+                      "px-4 py-2 cursor-pointer hover:bg-gray-100",
+                      getOptionState(user).isActive && "bg-gray-100"
                     )}
                   >
-                    {item}
-                  </div>
+                    <div>
+                      <div className="font-medium flex">
+                        <p className="flex-1">{user.name}</p>
+                        {getOptionState(user).isSelected && (
+                          <Check className="text-blue-500" />
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-500">{user.email}</div>
+                    </div>
+                  </li>
+                  // <div
+                  //   key={user.id}
+                  //   {...getOptionProps(user)}
+                  //   style={style}
+                  //   className={cn(
+                  //     "px-4 py-2 cursor-pointer",
+                  //     getOptionState(user).isActive && "bg-gray-100"
+                  //   )}
+                  // >
+                  //   <div className="flex justify-between">
+                  //     {user.name}
+                  //     {getOptionState(user).isSelected && (
+                  //       <Check className="text-blue-500" />
+                  //     )}
+                  //   </div>
+                  //   <div className="text-sm text-gray-500">{user.email}</div>
+                  // </div>
                 );
               })
             )}
-          </div>
+          </ul>
         )}
       </div>
     </div>
