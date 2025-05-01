@@ -214,10 +214,46 @@ export function useAutoComplete<T>({
     (event: React.KeyboardEvent<HTMLInputElement>) => {
       const { key } = event;
       const currentIndex = items.findIndex((i) => i === activeItem);
-      switch (
-        key
-        // ... existing navigation logic ...
-      ) {
+      switch (key) {
+        case "ArrowDown":
+          event.preventDefault();
+          if (!isOpen) {
+            setIsOpen(true);
+            if (items.length) setActiveItem(items[0]);
+          } else {
+            const next = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+            setActiveItem(items[next]);
+            document
+              .getElementById(`option-${next}`)
+              ?.scrollIntoView({ block: "nearest" });
+          }
+          break;
+        case "ArrowUp":
+          event.preventDefault();
+          if (!isOpen) {
+            setIsOpen(true);
+            if (items.length) setActiveItem(items[items.length - 1]);
+          } else {
+            const prev = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+            setActiveItem(items[prev]);
+            document
+              .getElementById(`option-${prev}`)
+              ?.scrollIntoView({ block: "nearest" });
+          }
+          break;
+        case "Enter":
+          event.preventDefault();
+          if (activeItem) handleSelect(activeItem);
+          break;
+        case "Escape":
+          event.preventDefault();
+          setIsOpen(false);
+          setActiveItem(null);
+          break;
+        case "Tab":
+          setIsOpen(false);
+          setActiveItem(null);
+          break;
       }
     },
     [items, activeItem, isOpen, setIsOpen, setActiveItem, handleSelect]
