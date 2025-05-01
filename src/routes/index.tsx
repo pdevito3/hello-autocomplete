@@ -27,17 +27,12 @@ const users: User[] = [
 
 // React Query client
 const queryClient = new QueryClient();
-
 // Basic autocomplete example
 function BasicExample() {
   const [inputValue, setInputValue] = useState("");
   const [selectedValue, setSelectedValue] = useState<User | undefined>();
   const [isOpen, setIsOpen] = useState(false);
   const [activeItem, setActiveItem] = useState<User | null>(null);
-
-  useEffect(() => {
-    if (selectedValue) setInputValue(selectedValue.name);
-  }, [selectedValue]);
 
   const {
     getRootProps,
@@ -65,6 +60,7 @@ function BasicExample() {
       users.filter((u) =>
         u.name.toLowerCase().includes(searchTerm.toLowerCase())
       ),
+    itemToString: (u) => u.name,
   });
 
   return (
@@ -129,10 +125,6 @@ function CustomRenderingExample() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeItem, setActiveItem] = useState<User | null>(null);
 
-  useEffect(() => {
-    if (selectedValue) setInputValue(selectedValue.name);
-  }, [selectedValue]);
-
   const {
     getRootProps,
     getLabelProps,
@@ -159,6 +151,7 @@ function CustomRenderingExample() {
       users.filter((u) =>
         u.name.toLowerCase().includes(searchTerm.toLowerCase())
       ),
+    itemToString: (u) => u.name,
   });
 
   return (
@@ -249,13 +242,6 @@ export function InfiniteAutocompleteExample() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeItem, setActiveItem] = useState<string | null>(null);
 
-  // <-- sync selection back into the input
-  useEffect(() => {
-    if (selectedValue !== undefined) {
-      setInputValue(selectedValue);
-    }
-  }, [selectedValue]);
-
   // re‐runs and resets pages whenever inputValue changes
   const {
     data,
@@ -326,6 +312,7 @@ export function InfiniteAutocompleteExample() {
       label: "Infinite Autocomplete",
     },
     items: allRows,
+    itemToString: (r) => r,
   });
 
   return (

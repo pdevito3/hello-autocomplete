@@ -49,6 +49,8 @@ export interface UseAutoCompleteOptions<T> {
    * Called immediately on every keystroke with the current input value.
    * Use for side-effects (e.g. analytics, external state sync).
    */
+  /** Convert an item to string for input display */
+  itemToString?: (item: T) => string;
   onInputValueChange?: (value: string) => void;
 
   /**
@@ -131,6 +133,7 @@ export function useAutoComplete<T>({
   onBlurAsync,
   items: itemsProp = [],
   onFilterAsync,
+  itemToString,
 }: UseAutoCompleteOptions<T>): UseAutoCompleteReturn<T> {
   const {
     inputValue,
@@ -142,7 +145,14 @@ export function useAutoComplete<T>({
     activeItem,
     setActiveItem,
     label,
+    defaultValue,
   } = state;
+
+  // Map an item to its display string
+  const itemToStringFn = useCallback(
+    (item: T) => (itemToString ? itemToString(item) : String(item)),
+    [itemToString]
+  );
 
   const [items, setItems] = useState<T[]>(itemsProp);
   const [isFocused, setIsFocused] = useState(false);
@@ -161,7 +171,15 @@ export function useAutoComplete<T>({
     }
   }, [itemsProp]);
 
-  // keep a ref to the latest onFilterAsync
+  // Initialize defaultValue into both selection and input
+  useEffect(() => {
+    if (defaultValue) {
+      setSelectedValue(defaultValue);
+      setInputValue(itemToStringFn(defaultValue));
+    }
+  }, [defaultValue, setSelectedValue, setInputValue, itemToStringFn]);
+
+  // Keep latest filter fn
   const onFilterAsyncRef = useRef(onFilterAsync);
   useEffect(() => {
     onFilterAsyncRef.current = onFilterAsync;
@@ -208,22 +226,18 @@ export function useAutoComplete<T>({
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [setIsOpen, setActiveItem]);
 
-  // Handle default value
-  useEffect(() => {
-    if (state.defaultValue) {
-      setSelectedValue(state.defaultValue);
-    }
-  }, [state.defaultValue, setSelectedValue]);
-
+  // Selection now syncs inputValue
   const handleSelect = useCallback(
     (item: T) => {
       setSelectedValue(item);
+      setInputValue(itemToStringFn(item));
       onSelectValue?.(item);
       setIsOpen(false);
     },
-    [setSelectedValue, onSelectValue, setIsOpen]
+    [setSelectedValue, setInputValue, onSelectValue, setIsOpen, itemToStringFn]
   );
 
+  // Keyboard navigation
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
       const { key } = event;
@@ -316,23 +330,12 @@ export function useAutoComplete<T>({
       value: inputValue,
       onChange: handleInputChange,
       onKeyDown: handleKeyDown,
-      // onFocus: () => {
-      //   setIsFocused(true);
-      //   setIsOpen(true);
-      //   if (!items.length && onFilterAsync) debouncedAsyncOperation(inputValue);
-      //   if (items.length && !activeItem) setActiveItem(items[0]);
-      // },
       onFocus: async () => {
         setIsFocused(true);
-        if (onFilterAsyncRef.current) {
-          // run the filter immediately…
-          await debouncedAsyncOperation(inputValue);
-        }
-        // …then open the list once items is non-empty
+        if (onFilterAsyncRef.current) await debouncedAsyncOperation(inputValue);
         setIsOpen(true);
         if (items.length && !activeItem) setActiveItem(items[0]);
       },
-
       onBlur: () => setIsFocused(false),
       "aria-autocomplete": "list",
       "aria-controls": "autocomplete-listbox",
