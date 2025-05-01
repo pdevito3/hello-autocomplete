@@ -4,6 +4,7 @@ import { DisclosureExample } from "@/examples/disclosure";
 import { GroupedFruitExample } from "@/examples/grouping";
 import { InfiniteAutocompleteExample } from "@/examples/infinite";
 import { MultiGroupedFruitExample } from "@/examples/multi-grouping";
+import MultiFruitExample from "@/examples/multiselect";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -37,6 +38,9 @@ export default function HomePage() {
           </Example>
           <Example title="Multi Grouping">
             <MultiGroupedFruitExample />
+          </Example>
+          <Example title="Multi Select">
+            <MultiFruitExample />
           </Example>
           <Example title="Animation">
             <p>TODO</p>
