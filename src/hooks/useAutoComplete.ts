@@ -13,8 +13,10 @@ export interface GroupingOptions<T> {
 export interface Group<T> {
   /** unique identifier for this group (the group-by value) */
   key: string;
-  /** items in this group */
+  /** items in this group (always entire set even if nested groups) */
   items: T[];
+  /** optional sub-groups for further levels of grouping */
+  groups?: Group<T>[];
   /** aria-label for the group's list container */
   label: string;
   /** props to spread on the group's <ul> element */
@@ -35,7 +37,8 @@ export interface UseAutoCompleteOptions<T> {
     setSelectedValue?: (value: T | undefined) => void;
     isOpen?: boolean;
     setIsOpen?: (isOpen: boolean) => void;
-    grouping?: GroupingOptions<T>;
+    /** one or more levels of grouping definitions */
+    grouping?: GroupingOptions<T>[];
     defaultValue?: T;
     activeItem?: T | null;
     setActiveItem?: (item: T | null) => void;
@@ -95,7 +98,7 @@ export interface UseAutoCompleteReturn<T> {
   getOptionProps: (item: T) => React.LiHTMLAttributes<HTMLLIElement>;
   getOptionState: (item: T) => OptionState;
   /** spread these on the wrapper for each group */
-  getGroupProps: (group: Group<T>) => React.HTMLAttributes<HTMLDivElement>;
+  getGroupProps: (group: Group<T>) => React.HTMLAttributes<HTMLUListElement>;
   /** spread these on the <span> for each group's heading */
   getGroupLabelProps: (
     group: Group<T>
@@ -255,25 +258,74 @@ export function useAutoComplete<T>({
     setIsOpen,
   ]);
 
-  const handleDisclosure = useCallback(() => {
-    setIsOpen((prev) => !prev);
-  }, [setIsOpen]);
+  const handleDisclosure = useCallback(
+    () => setIsOpen((prev) => !prev),
+    [setIsOpen]
+  );
+
+  // ---- multi-level grouping logic ----
+  const groupingOptions = Array.isArray(groupingProp)
+    ? groupingProp
+    : groupingProp
+    ? [groupingProp]
+    : [];
+
+  const createGroups = (itemsToGroup: T[], level = 0): Group<T>[] => {
+    if (level >= groupingOptions.length) return [];
+    const { key: propKey, label: propLabel } = groupingOptions[level];
+
+    const map = itemsToGroup.reduce<Record<string, T[]>>((acc, item) => {
+      const k = String((item as any)[propKey] ?? "");
+      (acc[k] ??= []).push(item);
+      return acc;
+    }, {});
+
+    return Object.entries(map).map(([groupKey, groupItems]) => {
+      const grp: Group<T> = {
+        key: groupKey,
+        items: groupItems,
+        label: propLabel,
+        listProps: { role: "group", "aria-label": propLabel },
+        header: { label: groupKey, headingProps: { role: "presentation" } },
+      };
+
+      const sub = createGroups(groupItems, level + 1);
+      if (sub.length) grp.groups = sub;
+
+      return grp;
+    });
+  };
+
+  const grouped: Group<T>[] = groupingOptions.length ? createGroups(items) : [];
+
+  // Flatten grouped items for keyboard navigation
+  const flattenGroups = (groupsList: Group<T>[]): T[] =>
+    groupsList.reduce<T[]>((acc, grp) => {
+      if (grp.groups && grp.groups.length) {
+        return acc.concat(flattenGroups(grp.groups));
+      }
+      return acc.concat(grp.items);
+    }, []);
+  const flattenedItems = groupingOptions.length
+    ? flattenGroups(grouped)
+    : items;
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
       const { key } = event;
-      const currentIndex = items.findIndex((i) => i === activeItem);
+      const currentIndex = flattenedItems.findIndex((i) => i === activeItem);
       switch (key) {
         case "ArrowDown":
           event.preventDefault();
           if (!isOpen) {
             setIsOpen(true);
-            if (items.length) setActiveItem(items[0]);
+            if (flattenedItems.length) setActiveItem(flattenedItems[0]);
           } else {
-            const next = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
-            setActiveItem(items[next]);
+            const nextIndex =
+              currentIndex < flattenedItems.length - 1 ? currentIndex + 1 : 0;
+            setActiveItem(flattenedItems[nextIndex]);
             document
-              .getElementById(`option-${next}`)
+              .getElementById(`option-${nextIndex}`)
               ?.scrollIntoView({ block: "nearest" });
           }
           break;
@@ -281,12 +333,14 @@ export function useAutoComplete<T>({
           event.preventDefault();
           if (!isOpen) {
             setIsOpen(true);
-            if (items.length) setActiveItem(items[items.length - 1]);
+            if (flattenedItems.length)
+              setActiveItem(flattenedItems[flattenedItems.length - 1]);
           } else {
-            const prev = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
-            setActiveItem(items[prev]);
+            const prevIndex =
+              currentIndex > 0 ? currentIndex - 1 : flattenedItems.length - 1;
+            setActiveItem(flattenedItems[prevIndex]);
             document
-              .getElementById(`option-${prev}`)
+              .getElementById(`option-${prevIndex}`)
               ?.scrollIntoView({ block: "nearest" });
           }
           break;
@@ -305,7 +359,7 @@ export function useAutoComplete<T>({
           break;
       }
     },
-    [items, activeItem, isOpen, setIsOpen, setActiveItem, handleSelect]
+    [flattenedItems, activeItem, isOpen, setIsOpen, setActiveItem, handleSelect]
   );
 
   const handleInputChange = useCallback(
@@ -328,6 +382,7 @@ export function useAutoComplete<T>({
     }),
     [isOpen]
   );
+
   const getListProps = useCallback(
     () => ({
       id: "autocomplete-listbox",
@@ -350,13 +405,14 @@ export function useAutoComplete<T>({
         setIsFocused(true);
         if (onFilterAsyncRef.current) await debouncedAsyncOperation(inputValue);
         setIsOpen(true);
-        if (items.length && !activeItem) setActiveItem(items[0]);
+        if (flattenedItems.length && !activeItem)
+          setActiveItem(flattenedItems[0]);
       },
       onBlur: () => setIsFocused(false),
       "aria-autocomplete": "list",
       "aria-controls": "autocomplete-listbox",
       "aria-activedescendant": activeItem
-        ? `option-${items.indexOf(activeItem)}`
+        ? `option-${flattenedItems.indexOf(activeItem)}`
         : undefined,
       "data-input": true,
     }),
@@ -364,7 +420,7 @@ export function useAutoComplete<T>({
       inputValue,
       handleInputChange,
       handleKeyDown,
-      items,
+      flattenedItems,
       activeItem,
       debouncedAsyncOperation,
       setIsOpen,
@@ -404,21 +460,21 @@ export function useAutoComplete<T>({
 
   const getOptionProps = useCallback(
     (item: T) => {
-      const index = items.indexOf(item);
+      const index = flattenedItems.findIndex((i) => i === item);
       const isItemActive = item === activeItem;
       const isItemSelected = item === selectedValue;
       return {
         role: "option",
         "aria-selected": isItemSelected,
         "aria-posinset": index + 1,
-        "aria-setsize": items.length,
+        "aria-setsize": flattenedItems.length,
         id: `option-${index}`,
         onClick: () => handleSelect(item),
         "data-active": isItemActive || undefined,
         "data-selected": isItemSelected || undefined,
       };
     },
-    [selectedValue, items, activeItem, handleSelect]
+    [selectedValue, flattenedItems, activeItem, handleSelect]
   );
 
   const getOptionState = useCallback(
@@ -429,26 +485,6 @@ export function useAutoComplete<T>({
     [activeItem, selectedValue]
   );
 
-  // grouping logic
-  const grouped: Group<T>[] = groupingProp
-    ? Object.entries(
-        items.reduce<Record<string, T[]>>((acc, item) => {
-          const groupKey = String((item as any)[groupingProp.key] ?? "");
-          (acc[groupKey] ??= []).push(item);
-          return acc;
-        }, {})
-      ).map(([key, groupItems]) => ({
-        key,
-        items: groupItems,
-        label: groupingProp.label,
-        listProps: { role: "group", "aria-label": groupingProp.label },
-        header: {
-          label: key,
-          headingProps: { role: "presentation" },
-        },
-      }))
-    : [];
-
   const getGroupProps = useCallback((group: Group<T>) => group.listProps, []);
   const getGroupLabelProps = useCallback(
     (group: Group<T>) => group.header.headingProps,
@@ -456,7 +492,7 @@ export function useAutoComplete<T>({
   );
 
   return {
-    getItems: () => (groupingProp ? grouped : items),
+    getItems: () => (groupingOptions.length ? grouped : items),
     getSelectedItem: () => selectedValue,
     hasActiveItem: () => !!activeItem,
     isFocused: () => isFocused,
