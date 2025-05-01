@@ -1,4 +1,3 @@
-import isNil from "lodash.isnil";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDebouncedValue } from "./use-debounced-value";
 
@@ -414,9 +413,9 @@ export function useAutoComplete<T>({
 
   return {
     getItems: () => items,
-    hasSelectedItem: () => !isNil(selectedValue),
+    hasSelectedItem: () => !!selectedValue,
     getSelectedItem: () => selectedValue,
-    hasActiveItem: () => !isNil(activeItem),
+    hasActiveItem: () => !!activeItem,
     isFocused: () => isFocused,
     getRootProps,
     getListProps,
