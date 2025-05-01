@@ -1,7 +1,7 @@
 import { BasicExample } from "@/examples/basic";
-import { FruitForm } from "@/examples/controlled-form";
 import { CustomRenderingExample } from "@/examples/custom-options";
 import { DisclosureExample } from "@/examples/disclosure";
+import { GroupedFruitExample } from "@/examples/grouping";
 import { InfiniteAutocompleteExample } from "@/examples/infinite";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -28,10 +28,13 @@ export default function HomePage() {
           <Example title="Disclosure Button">
             <DisclosureExample />
           </Example>
-          <Example title="Controlled on form">
+          {/* <Example title="Controlled on form">
             <FruitForm />
-          </Example>
+          </Example> */}
           <Example title="Grouping">
+            <GroupedFruitExample />
+          </Example>
+          <Example title="Nested Grouping">
             <p>TODO</p>
           </Example>
           <Example title="Animation">

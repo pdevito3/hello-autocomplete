@@ -4,18 +4,25 @@ import { useDebouncedValue } from "./use-debounced-value";
 export type Placement = "top" | "bottom" | "left" | "right";
 
 export interface GroupingOptions<T> {
+  /** property name on item to group by */
   key: string;
-  items: T[];
+  /** optional aria-label or overall label for group list */
   label: string;
 }
 
 export interface Group<T> {
+  /** unique identifier for this group (the group-by value) */
   key: string;
+  /** items in this group */
   items: T[];
+  /** aria-label for the group's list container */
   label: string;
+  /** props to spread on the group's <ul> element */
   listProps: React.HTMLAttributes<HTMLUListElement>;
   header: {
+    /** text to render as the group's heading */
     label: string;
+    /** props to spread on the group's heading <span> */
     headingProps: React.HTMLAttributes<HTMLSpanElement>;
   };
 }
@@ -70,7 +77,8 @@ export interface OptionState {
 }
 
 export interface UseAutoCompleteReturn<T> {
-  getItems: () => T[];
+  /** returns either a flat list of items or grouped data when grouping is enabled */
+  getItems: () => T[] | Group<T>[];
   getSelectedItem: () => T | undefined;
   hasActiveItem: () => boolean;
   isFocused: () => boolean;
@@ -86,7 +94,9 @@ export interface UseAutoCompleteReturn<T> {
   getDisclosureProps: () => React.ButtonHTMLAttributes<HTMLButtonElement>;
   getOptionProps: (item: T) => React.LiHTMLAttributes<HTMLLIElement>;
   getOptionState: (item: T) => OptionState;
+  /** spread these on the wrapper for each group */
   getGroupProps: (group: Group<T>) => React.HTMLAttributes<HTMLDivElement>;
+  /** spread these on the <span> for each group's heading */
   getGroupLabelProps: (
     group: Group<T>
   ) => React.HTMLAttributes<HTMLSpanElement>;
@@ -124,6 +134,7 @@ export function useAutoComplete<T>({
     setActiveItem: setActiveItemProp,
     label: labelProp = "",
     defaultValue,
+    grouping: groupingProp,
   } = state;
 
   // manage inputValue
@@ -418,9 +429,34 @@ export function useAutoComplete<T>({
     [activeItem, selectedValue]
   );
 
+  // grouping logic
+  const grouped: Group<T>[] = groupingProp
+    ? Object.entries(
+        items.reduce<Record<string, T[]>>((acc, item) => {
+          const groupKey = String((item as any)[groupingProp.key] ?? "");
+          (acc[groupKey] ??= []).push(item);
+          return acc;
+        }, {})
+      ).map(([key, groupItems]) => ({
+        key,
+        items: groupItems,
+        label: groupingProp.label,
+        listProps: { role: "group", "aria-label": groupingProp.label },
+        header: {
+          label: key,
+          headingProps: { role: "presentation" },
+        },
+      }))
+    : [];
+
+  const getGroupProps = useCallback((group: Group<T>) => group.listProps, []);
+  const getGroupLabelProps = useCallback(
+    (group: Group<T>) => group.header.headingProps,
+    []
+  );
+
   return {
-    getItems: () => items,
-    hasSelectedItem: () => !!selectedValue,
+    getItems: () => (groupingProp ? grouped : items),
     getSelectedItem: () => selectedValue,
     hasActiveItem: () => !!activeItem,
     isFocused: () => isFocused,
@@ -432,8 +468,9 @@ export function useAutoComplete<T>({
     getDisclosureProps,
     getOptionProps,
     getOptionState,
-    getGroupProps: () => ({}),
-    getGroupLabelProps: () => ({}),
+    getGroupProps,
+    getGroupLabelProps,
+    hasSelectedItem: () => !!selectedValue,
     isOpen: () => isOpen,
     setIsOpen,
   };
