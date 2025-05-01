@@ -210,6 +210,10 @@ export function useAutoComplete<T>({
     setIsOpen,
   ]);
 
+  const handleDisclosure = useCallback(() => {
+    setIsOpen((prev) => !prev);
+  }, [setIsOpen]);
+
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
       const { key } = event;
@@ -318,6 +322,8 @@ export function useAutoComplete<T>({
       items,
       activeItem,
       debouncedAsyncOperation,
+      setIsOpen,
+      setActiveItem,
     ]
   );
 
@@ -332,6 +338,16 @@ export function useAutoComplete<T>({
     [handleClear, inputValue]
   );
 
+  const getDisclosureProps = useCallback(
+    () => ({
+      type: "button",
+      "aria-label": isOpen ? "Close options" : "Open options",
+      onClick: handleDisclosure,
+      "data-disclosure-button": true,
+    }),
+    [handleDisclosure, isOpen]
+  );
+
   const getLabelProps = useCallback(
     () => ({
       htmlFor: "autocomplete-input",
@@ -340,6 +356,7 @@ export function useAutoComplete<T>({
     }),
     [labelSrOnly]
   );
+
   const getOptionProps = useCallback(
     (item: T) => {
       const index = items.indexOf(item);
@@ -378,7 +395,7 @@ export function useAutoComplete<T>({
     getLabelProps,
     getInputProps,
     getClearProps,
-    getDisclosureProps: () => ({}),
+    getDisclosureProps,
     getOptionProps,
     getOptionState,
     getGroupProps: () => ({}),

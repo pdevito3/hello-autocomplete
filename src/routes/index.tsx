@@ -1,5 +1,6 @@
 import { BasicExample } from "@/examples/basic";
 import { CustomRenderingExample } from "@/examples/custom-options";
+import { DisclosureExample } from "@/examples/disclosure";
 import { InfiniteAutocompleteExample } from "@/examples/infinite";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -24,7 +25,7 @@ export default function HomePage() {
             <InfiniteAutocompleteExample />
           </Example>
           <Example title="Disclosure Button">
-            <p>TODO</p>
+            <DisclosureExample />
           </Example>
           <Example title="Controlled on form">
             <p>TODO</p>
