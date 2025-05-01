@@ -1,16 +1,10 @@
-import { users, type User } from "@/datasets/users";
+import { users } from "@/datasets/users";
 import { Check, XIcon } from "@/svgs";
-import { useState } from "react";
 import { useAutoComplete } from "../hooks/useAutoComplete";
 import { cn } from "../utils";
 
 // Basic autocomplete example
 export function BasicExample() {
-  const [inputValue, setInputValue] = useState("");
-  const [selectedValue, setSelectedValue] = useState<User | undefined>();
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeItem, setActiveItem] = useState<User | null>(null);
-
   const {
     getRootProps,
     getLabelProps,
@@ -21,17 +15,11 @@ export function BasicExample() {
     getItems,
     getClearProps,
     hasSelectedItem,
+    isOpen,
+    getSelectedItem,
   } = useAutoComplete({
     items: users,
     state: {
-      inputValue,
-      setInputValue,
-      selectedValue,
-      setSelectedValue,
-      isOpen,
-      setIsOpen,
-      activeItem,
-      setActiveItem,
       label: "Search users",
     },
     asyncDebounceMs: 300,
@@ -62,7 +50,7 @@ export function BasicExample() {
             </button>
           )}
 
-          {isOpen && (
+          {isOpen() && (
             <ul
               {...getListProps()}
               className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
@@ -92,13 +80,15 @@ export function BasicExample() {
           )}
         </div>
       </div>
-      {selectedValue && (
+      {getSelectedItem() && (
         <div className="mt-4 p-4 bg-gray-50 rounded-md">
           <h3 className="text-sm font-medium text-gray-500">Selected User:</h3>
           <div className="mt-2">
-            <p className="text-sm text-gray-900">Name: {selectedValue.name}</p>
             <p className="text-sm text-gray-900">
-              Email: {selectedValue.email}
+              Name: {getSelectedItem()?.name}
+            </p>
+            <p className="text-sm text-gray-900">
+              Email: {getSelectedItem()?.email}
             </p>
           </div>
         </div>

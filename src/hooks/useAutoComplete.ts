@@ -91,6 +91,8 @@ export interface UseAutoCompleteReturn<T> {
     group: Group<T>
   ) => React.HTMLAttributes<HTMLSpanElement>;
   hasSelectedItem: () => boolean;
+  isOpen: () => boolean;
+  setIsOpen: (isOpen: boolean) => void;
 }
 
 export function useAutoComplete<T>({
@@ -432,5 +434,7 @@ export function useAutoComplete<T>({
     getOptionState,
     getGroupProps: () => ({}),
     getGroupLabelProps: () => ({}),
+    isOpen: () => isOpen,
+    setIsOpen,
   };
 }
