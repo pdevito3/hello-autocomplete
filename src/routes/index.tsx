@@ -1,4 +1,5 @@
 import { BasicExample } from "@/examples/basic";
+import { FruitForm } from "@/examples/controlled-form";
 import { CustomRenderingExample } from "@/examples/custom-options";
 import { DisclosureExample } from "@/examples/disclosure";
 import { InfiniteAutocompleteExample } from "@/examples/infinite";
@@ -28,7 +29,7 @@ export default function HomePage() {
             <DisclosureExample />
           </Example>
           <Example title="Controlled on form">
-            <p>TODO</p>
+            <FruitForm />
           </Example>
           <Example title="Grouping">
             <p>TODO</p>

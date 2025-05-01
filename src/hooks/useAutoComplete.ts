@@ -60,6 +60,8 @@ export interface UseAutoCompleteOptions<T> {
     value: string;
     signal: AbortSignal;
   }) => Promise<void>;
+  /** called when the clear button is clicked */
+  onClear?: () => void;
 }
 
 export interface OptionState {
@@ -107,6 +109,7 @@ export function useAutoComplete<T>({
   onFilterAsync,
   itemToString,
   onEmptyActionClick,
+  onClear,
 }: UseAutoCompleteOptions<T>): UseAutoCompleteReturn<T> {
   const {
     inputValue: inputValueProp,
@@ -227,12 +230,14 @@ export function useAutoComplete<T>({
     setInputValue("");
     setSelectedValue(undefined);
     onEmptyActionClick?.();
+    onClear?.();
     setActiveItem(null);
     setIsOpen(false);
   }, [
     setInputValue,
     setSelectedValue,
     onEmptyActionClick,
+    onClear,
     setActiveItem,
     setIsOpen,
   ]);
