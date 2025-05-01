@@ -1,3 +1,4 @@
+import isNil from "lodash.isnil";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDebouncedValue } from "./use-debounced-value";
 
@@ -21,18 +22,18 @@ export interface Group<T> {
 }
 
 export interface UseAutoCompleteOptions<T> {
-  state: {
-    inputValue: string;
-    setInputValue: (value: string) => void;
-    selectedValue: T | undefined;
-    setSelectedValue: (value: T | undefined) => void;
-    isOpen: boolean;
-    setIsOpen: (isOpen: boolean) => void;
+  state?: {
+    inputValue?: string;
+    setInputValue?: (value: string) => void;
+    selectedValue?: T;
+    setSelectedValue?: (value: T | undefined) => void;
+    isOpen?: boolean;
+    setIsOpen?: (isOpen: boolean) => void;
     grouping?: GroupingOptions<T>;
     defaultValue?: T;
-    activeItem: T | null;
-    setActiveItem: (item: T | null) => void;
-    label: string;
+    activeItem?: T | null;
+    setActiveItem?: (item: T | null) => void;
+    label?: string;
   };
   defaultOpen?: boolean;
   labelSrOnly?: boolean;
@@ -92,7 +93,7 @@ export interface UseAutoCompleteReturn<T> {
 }
 
 export function useAutoComplete<T>({
-  state,
+  state = {},
   defaultOpen = false,
   labelSrOnly = false,
   placement = "bottom",
@@ -109,17 +110,44 @@ export function useAutoComplete<T>({
   onEmptyActionClick,
 }: UseAutoCompleteOptions<T>): UseAutoCompleteReturn<T> {
   const {
-    inputValue,
-    setInputValue,
-    selectedValue,
-    setSelectedValue,
-    isOpen,
-    setIsOpen,
-    activeItem,
-    setActiveItem,
-    label,
+    inputValue: inputValueProp,
+    setInputValue: setInputValueProp,
+    selectedValue: selectedValueProp,
+    setSelectedValue: setSelectedValueProp,
+    isOpen: isOpenProp,
+    setIsOpen: setIsOpenProp,
+    activeItem: activeItemProp,
+    setActiveItem: setActiveItemProp,
+    label: labelProp = "",
     defaultValue,
   } = state;
+
+  // manage inputValue
+  const [inputValueState, setInputValueState] = useState<string>(
+    inputValueProp ?? ""
+  );
+  const inputValue =
+    inputValueProp !== undefined ? inputValueProp : inputValueState;
+  const setInputValue = setInputValueProp ?? setInputValueState;
+
+  // manage selectedValue
+  const [selectedValueState, setSelectedValueState] = useState<T | undefined>(
+    defaultValue
+  );
+  const selectedValue =
+    selectedValueProp !== undefined ? selectedValueProp : selectedValueState;
+  const setSelectedValue = setSelectedValueProp ?? setSelectedValueState;
+
+  // manage isOpen
+  const [isOpenState, setIsOpenState] = useState<boolean>(defaultOpen);
+  const isOpen = isOpenProp !== undefined ? isOpenProp : isOpenState;
+  const setIsOpen = setIsOpenProp ?? setIsOpenState;
+
+  // manage activeItem
+  const [activeItemState, setActiveItemState] = useState<T | null>(null);
+  const activeItem =
+    activeItemProp !== undefined ? activeItemProp : activeItemState;
+  const setActiveItem = setActiveItemProp ?? setActiveItemState;
 
   const itemToStringFn = useCallback(
     (item: T) => (itemToString ? itemToString(item) : String(item)),
@@ -287,12 +315,12 @@ export function useAutoComplete<T>({
     () => ({
       id: "autocomplete-listbox",
       role: "listbox",
-      "aria-label": label,
+      "aria-label": labelProp,
       ref: listboxRef,
       tabIndex: -1,
       "data-listbox": true,
     }),
-    [label]
+    [labelProp]
   );
 
   const getInputProps = useCallback(
@@ -386,9 +414,9 @@ export function useAutoComplete<T>({
 
   return {
     getItems: () => items,
-    hasSelectedItem: () => !!selectedValue,
+    hasSelectedItem: () => !isNil(selectedValue),
     getSelectedItem: () => selectedValue,
-    hasActiveItem: () => !!activeItem,
+    hasActiveItem: () => !isNil(activeItem),
     isFocused: () => isFocused,
     getRootProps,
     getListProps,
