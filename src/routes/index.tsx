@@ -17,7 +17,7 @@ export default function HomePage() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto space-y-8">
+        <div className="max-w-6xl mx-auto space-y-8 grid gap-6 grid-cols-2">
           <Example title="Basic Autocomplete with debounce and clear button">
             <BasicExample />
           </Example>

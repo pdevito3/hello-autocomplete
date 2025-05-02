@@ -82,9 +82,7 @@ export interface OptionState {
 }
 
 export interface UseAutoCompleteReturn<T> {
-  /** returns either a flat list of items or grouped data when grouping is enabled */
   getItems: () => T[] | Group<T>[];
-  /** returns selected value(s): T for single, T[] for multiselect */
   getSelectedItem: () => T | T[] | undefined;
   hasActiveItem: () => boolean;
   isFocused: () => boolean;
@@ -100,9 +98,7 @@ export interface UseAutoCompleteReturn<T> {
   getDisclosureProps: () => React.ButtonHTMLAttributes<HTMLButtonElement>;
   getOptionProps: (item: T) => React.LiHTMLAttributes<HTMLLIElement>;
   getOptionState: (item: T) => OptionState;
-  /** spread these on the wrapper for each group */
   getGroupProps: (group: Group<T>) => React.HTMLAttributes<HTMLUListElement>;
-  /** spread these on the <span> for each group's heading */
   getGroupLabelProps: (
     group: Group<T>
   ) => React.HTMLAttributes<HTMLSpanElement>;
@@ -146,7 +142,6 @@ export function useAutoComplete<T>({
     grouping: groupingProp,
   } = state;
 
-  // manage inputValue
   const [inputValueState, setInputValueState] = useState<string>(
     inputValueProp ?? ""
   );
@@ -154,7 +149,6 @@ export function useAutoComplete<T>({
     inputValueProp !== undefined ? inputValueProp : inputValueState;
   const setInputValue = setInputValueProp ?? setInputValueState;
 
-  // manage selected values
   const [selectedValueState, setSelectedValueState] = useState<T | undefined>(
     defaultValue
   );
@@ -168,12 +162,10 @@ export function useAutoComplete<T>({
   const selectedValues = mode === "multiselect" ? selectedValuesState : [];
   const setSelectedValue = setSelectedValueProp ?? setSelectedValueState;
 
-  // manage isOpen
   const [isOpenState, setIsOpenState] = useState<boolean>(defaultOpen);
   const isOpen = isOpenProp !== undefined ? isOpenProp : isOpenState;
   const setIsOpen = setIsOpenProp ?? setIsOpenState;
 
-  // manage activeItem
   const [activeItemState, setActiveItemState] = useState<T | null>(null);
   const activeItem =
     activeItemProp !== undefined ? activeItemProp : activeItemState;
@@ -306,13 +298,11 @@ export function useAutoComplete<T>({
   const createGroups = (itemsToGroup: T[], level = 0): Group<T>[] => {
     if (level >= groupingOptions.length) return [];
     const { key: propKey, label: propLabel } = groupingOptions[level];
-
     const map = itemsToGroup.reduce<Record<string, T[]>>((acc, item) => {
       const k = String((item as any)[propKey] ?? "");
       (acc[k] ??= []).push(item);
       return acc;
     }, {});
-
     return Object.entries(map).map(([groupKey, groupItems]) => {
       const grp: Group<T> = {
         key: groupKey,
@@ -321,10 +311,8 @@ export function useAutoComplete<T>({
         listProps: { role: "group", "aria-label": propLabel },
         header: { label: groupKey, headingProps: { role: "presentation" } },
       };
-
       const sub = createGroups(groupItems, level + 1);
       if (sub.length) grp.groups = sub;
-
       return grp;
     });
   };
@@ -332,12 +320,13 @@ export function useAutoComplete<T>({
   const grouped: Group<T>[] = groupingOptions.length ? createGroups(items) : [];
 
   const flattenGroups = (groupsList: Group<T>[]): T[] =>
-    groupsList.reduce<T[]>((acc, grp) => {
-      if (grp.groups && grp.groups.length) {
-        return acc.concat(flattenGroups(grp.groups));
-      }
-      return acc.concat(grp.items);
-    }, []);
+    groupsList.reduce<T[]>(
+      (acc, grp) =>
+        grp.groups && grp.groups.length
+          ? acc.concat(flattenGroups(grp.groups))
+          : acc.concat(grp.items),
+      []
+    );
   const flattenedItems = groupingOptions.length
     ? flattenGroups(grouped)
     : items;
@@ -465,10 +454,12 @@ export function useAutoComplete<T>({
       type: "button",
       "aria-label": "Clear input",
       onClick: handleClear,
-      disabled: inputValue === "",
+      disabled:
+        inputValue === "" &&
+        (mode === "single" ? !selectedValue : selectedValues.length === 0),
       "data-clear-button": true,
     }),
-    [handleClear, inputValue]
+    [handleClear, inputValue, mode, selectedValue, selectedValues]
   );
 
   const getDisclosureProps = useCallback(
