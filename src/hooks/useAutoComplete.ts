@@ -50,7 +50,8 @@ export interface UseAutoCompleteOptions<T> {
   labelSrOnly?: boolean;
   placement?: Placement;
   asyncDebounceMs?: number;
-  allowCustomValue?: boolean;
+  /** enable selecting values that aren’t in the list */
+  allowsCustomValue?: boolean;
   items?: T[];
   itemToString?: (item: T) => string;
   onInputValueChange?: (value: string) => void;
@@ -105,6 +106,17 @@ export interface UseAutoCompleteReturn<T> {
   hasSelectedItem: () => boolean;
   isOpen: () => boolean;
   setIsOpen: (isOpen: boolean) => void;
+  isCustomValue: (item: T) => boolean;
+}
+
+// shallow-equal utility so inline arrays don't repeatedly trigger updates
+function arraysShallowEqual<T>(a: T[], b: T[]) {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
 }
 
 export function useAutoComplete<T>({
@@ -114,7 +126,7 @@ export function useAutoComplete<T>({
   labelSrOnly = false,
   placement = "bottom",
   asyncDebounceMs = 0,
-  allowCustomValue = false,
+  allowsCustomValue = false,
   onInputValueChange,
   onSelectValue,
   onCustomValueAsync,
@@ -183,8 +195,9 @@ export function useAutoComplete<T>({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const prevItemsPropRef = useRef<T[]>(itemsProp);
 
+  // only reset internal items when the actual contents change
   useEffect(() => {
-    if (prevItemsPropRef.current !== itemsProp) {
+    if (!arraysShallowEqual(prevItemsPropRef.current, itemsProp)) {
       setItems(itemsProp);
       prevItemsPropRef.current = itemsProp;
     }
@@ -210,7 +223,7 @@ export function useAutoComplete<T>({
       if (filterFn) {
         const results = await filterFn({
           searchTerm: value,
-          signal: abortControllerRef.current.signal,
+          signal: abortControllerRef.current!.signal,
         });
         setItems(results);
       }
@@ -327,9 +340,22 @@ export function useAutoComplete<T>({
           : acc.concat(grp.items),
       []
     );
+
+  // incorporate custom entry into the ungrouped list for keyboard nav
+  const ungroupedItemsWithCustom: T[] = (() => {
+    if (
+      allowsCustomValue &&
+      inputValue.trim() !== "" &&
+      !items.some((it) => itemToStringFn(it) === inputValue)
+    ) {
+      return [...items, inputValue as unknown as T];
+    }
+    return items;
+  })();
+
   const flattenedItems = groupingOptions.length
     ? flattenGroups(grouped)
-    : items;
+    : ungroupedItemsWithCustom;
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -526,9 +552,31 @@ export function useAutoComplete<T>({
     (group: Group<T>) => group.header.headingProps,
     []
   );
+  const isCustomValue = useCallback(
+    (item: T) => {
+      return (
+        allowsCustomValue &&
+        inputValue.trim() !== "" &&
+        itemToStringFn(item) === inputValue &&
+        !items.some((it) => itemToStringFn(it) === inputValue)
+      );
+    },
+    [allowsCustomValue, inputValue, itemToStringFn, items]
+  );
 
   return {
-    getItems: () => (groupingOptions.length ? grouped : items),
+    getItems: () => {
+      // mirror flattenedItems logic for rendering
+      if (
+        !groupingOptions.length &&
+        allowsCustomValue &&
+        inputValue.trim() !== "" &&
+        !items.some((it) => itemToStringFn(it) === inputValue)
+      ) {
+        return [...items, inputValue as unknown as T];
+      }
+      return groupingOptions.length ? grouped : items;
+    },
     getSelectedItem: () =>
       mode === "multiselect" ? selectedValues : selectedValue,
     hasActiveItem: () => !!activeItem,
@@ -547,5 +595,6 @@ export function useAutoComplete<T>({
       mode === "multiselect" ? selectedValues.length > 0 : !!selectedValue,
     isOpen: () => isOpen,
     setIsOpen,
+    isCustomValue,
   };
 }

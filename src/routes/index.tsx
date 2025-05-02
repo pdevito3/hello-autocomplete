@@ -1,4 +1,6 @@
 import { BasicExample } from "@/examples/basic";
+import { ControlledCustomEntryExample } from "@/examples/controlled-custom-entry";
+import { CustomEntryExample } from "@/examples/custom-entry";
 import { CustomRenderingExample } from "@/examples/custom-options";
 import { DisclosureExample } from "@/examples/disclosure";
 import { GroupedFruitExample } from "@/examples/grouping";
@@ -45,8 +47,11 @@ export default function HomePage() {
           <Example title="Animation">
             <p>TODO</p>
           </Example>
-          <Example title="Create New Internal">
-            <p>TODO</p>
+          <Example title="Custom Value">
+            <CustomEntryExample />
+          </Example>
+          <Example title="Controlled Custom Value">
+            <ControlledCustomEntryExample />
           </Example>
           <Example title="Create New External Action">
             <p>TODO</p>
