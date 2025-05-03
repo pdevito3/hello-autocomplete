@@ -685,7 +685,7 @@ export function useAutoComplete<T>({
       const isItemActive = item === activeItem;
       const isItemSelected =
         mode === "multiple"
-          ? selectedValues.includes(item)
+          ? selectedValues().includes(item)
           : item === selectedValue;
       const custom = isCustomValue(item);
 
@@ -701,9 +701,7 @@ export function useAutoComplete<T>({
         "data-custom": custom ? "true" : undefined,
         "aria-disabled": disabled,
         disabled,
-        onClick: disabled
-          ? undefined // no-op if disabled
-          : () => handleSelect(item),
+        onClick: disabled ? undefined : () => handleSelect(item),
         "data-disabled": disabled ? "true" : undefined,
       };
     },
