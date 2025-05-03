@@ -2,17 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 
-export function useDebouncedValue<T = any>(
+export function useDebouncedValue<T>(
   value: T,
   wait: number,
-  options = { leading: false }
-) {
+  options: { leading?: boolean } = { leading: false }
+): readonly [T, () => void] {
   const [_value, setValue] = useState(value);
   const mountedRef = useRef(false);
-  const timeoutRef = useRef<number>(null);
+  const timeoutRef = useRef<number | undefined>(undefined);
   const cooldownRef = useRef(false);
 
-  const cancel = () => window.clearTimeout(timeoutRef.current);
+  const cancel = () => {
+    if (timeoutRef.current !== undefined) {
+      window.clearTimeout(timeoutRef.current);
+    }
+  };
 
   useEffect(() => {
     if (mountedRef.current) {
