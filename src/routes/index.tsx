@@ -1,3 +1,4 @@
+import { Animated } from "@/examples/animated";
 import { BasicExample } from "@/examples/basic";
 import { ControlledCustomEntryExample } from "@/examples/controlled-custom-entry";
 import { CustomEntryExample } from "@/examples/custom-entry";
@@ -47,7 +48,7 @@ export default function HomePage() {
             <MultiFruitExample />
           </Example>
           <Example title="Animation">
-            <p>TODO</p>
+            <Animated />
           </Example>
           <Example title="Custom Value">
             <CustomEntryExample />

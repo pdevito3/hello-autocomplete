@@ -19,6 +19,7 @@
     "@tanstack/react-virtual": "^3.13.6",
     "@tanstack/router-plugin": "^1.114.3",
     "clsx": "^2.1.1",
+    "framer-motion": "^12.9.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.1",
