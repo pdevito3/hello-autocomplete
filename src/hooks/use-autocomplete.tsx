@@ -184,7 +184,10 @@ export function useAutoComplete<T>({
         ? selectedValueProp
         : selectedValueState
       : undefined;
-  const selectedValues = mode === "multiselect" ? selectedValuesState : [];
+  const selectedValues = useCallback(
+    () => (mode === "multiselect" ? selectedValuesState : []),
+    [mode, selectedValuesState]
+  );
   const setSelectedValue = setSelectedValueProp ?? setSelectedValueState;
 
   const [isOpenState, setIsOpenState] = useState<boolean>(defaultOpen);
@@ -405,18 +408,19 @@ export function useAutoComplete<T>({
     },
     [
       mode,
+      setActiveItem,
       setSelectedValue,
       setInputValue,
+      itemToStringFn,
       onSelectValue,
       setIsOpen,
-      itemToStringFn,
     ]
   );
 
   const handleClear = useCallback(() => {
-    const disabled =
-      inputValue === "" &&
-      (mode === "single" ? !selectedValue : selectedValues.length === 0);
+    // const disabled =
+    //   inputValue === "" &&
+    //   (mode === "single" ? !selectedValue : selectedValues.length === 0);
     setInputValue("");
     if (mode === "single") {
       setSelectedValue(undefined);
@@ -429,9 +433,6 @@ export function useAutoComplete<T>({
     setIsOpen(false);
   }, [
     mode,
-    inputValue,
-    selectedValue,
-    selectedValues,
     setInputValue,
     setSelectedValue,
     onEmptyActionClick,
@@ -584,11 +585,11 @@ export function useAutoComplete<T>({
     }),
     [
       inputValue,
+      handleInputChange,
       handleKeyDown,
-      debouncedAsyncOperation,
-      flattenedItems,
       activeItem,
-      setIsFocused,
+      flattenedItems,
+      debouncedAsyncOperation,
       setIsOpen,
       setActiveItem,
     ]

@@ -91,7 +91,13 @@ export function InfiniteAutocompleteExample() {
     ) {
       fetchNextPage();
     }
-  }, [rowVirtualizer.getVirtualItems(), hasNextPage, isFetchingNextPage]);
+  }, [
+    allUsers.length,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    rowVirtualizer,
+  ]);
 
   // wire up autocomplete so typing drives `filter`
   const {
