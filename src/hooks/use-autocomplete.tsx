@@ -525,12 +525,27 @@ export function useAutoComplete<T>({
   );
 
   const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const v = e.target.value;
       setInputValue(v);
       onInputValueChange?.(v);
+
+      if (onInputValueChangeAsync) {
+        const controller = new AbortController();
+        try {
+          await onInputValueChangeAsync({
+            value: v,
+            signal: controller.signal,
+          });
+        } catch (err) {
+          // ignore only user‑aborted calls
+          if (!(err instanceof Error && err.name === "AbortError")) {
+            console.error(err);
+          }
+        }
+      }
     },
-    [setInputValue, onInputValueChange]
+    [setInputValue, onInputValueChange, onInputValueChangeAsync]
   );
 
   const getRootProps = useCallback(
@@ -573,6 +588,7 @@ export function useAutoComplete<T>({
     [labelProp, isOpen, groupingOptions.length, flattenedItems]
   );
 
+  // 2) getInputProps’s onBlur now calls onBlurAsync
   const getInputProps = useCallback(
     () => ({
       id: "autocomplete-input",
@@ -581,12 +597,32 @@ export function useAutoComplete<T>({
       onKeyDown: handleKeyDown,
       onFocus: async () => {
         setIsFocused(true);
-        if (onFilterAsyncRef.current) await debouncedAsyncOperation(inputValue);
+        if (onFilterAsyncRef.current) {
+          await debouncedAsyncOperation(inputValue);
+        }
         setIsOpen(true);
-        if (flattenedItems.length && !activeItem)
+        if (flattenedItems.length && !activeItem) {
           setActiveItem(flattenedItems[0]);
+        }
       },
-      onBlur: () => setIsFocused(false),
+      onBlur: async () => {
+        setIsFocused(false);
+
+        if (onBlurAsync) {
+          const controller = new AbortController();
+          try {
+            await onBlurAsync({
+              value: inputValue,
+              signal: controller.signal,
+            });
+          } catch (err) {
+            // ignore only if the user aborted
+            if (!(err instanceof Error && err.name === "AbortError")) {
+              console.error(err);
+            }
+          }
+        }
+      },
       "aria-autocomplete": "list",
       "aria-controls": "autocomplete-listbox",
       "aria-activedescendant": activeItem
@@ -606,6 +642,7 @@ export function useAutoComplete<T>({
       debouncedAsyncOperation,
       setIsOpen,
       setActiveItem,
+      onBlurAsync,
     ]
   );
 
