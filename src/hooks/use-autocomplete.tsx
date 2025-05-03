@@ -147,6 +147,64 @@ function arraysShallowEqual<T>(a: T[], b: T[]) {
   return true;
 }
 
+type UseAutoCompleteUngroupedSingle<T> = Omit<
+  UseAutoCompleteReturn<T>,
+  "getItems" | "getSelectedItem"
+> & {
+  getItems: () => T[];
+  getSelectedItem: () => T | undefined;
+};
+
+type UseAutoCompleteUngroupedMultiple<T> = Omit<
+  UseAutoCompleteReturn<T>,
+  "getItems" | "getSelectedItem"
+> & {
+  getItems: () => T[];
+  getSelectedItem: () => T[];
+};
+
+type UseAutoCompleteGroupedSingle<T> = Omit<
+  UseAutoCompleteReturn<T>,
+  "getItems" | "getSelectedItem"
+> & {
+  getItems: () => Group<T>[];
+  getSelectedItem: () => T | undefined;
+};
+
+type UseAutoCompleteGroupedMultiple<T> = Omit<
+  UseAutoCompleteReturn<T>,
+  "getItems" | "getSelectedItem"
+> & {
+  getItems: () => Group<T>[];
+  getSelectedItem: () => T[];
+};
+
+// Overload signatures for grouping & mode combinations
+export function useAutoComplete<T>(
+  options: UseAutoCompleteOptions<T> & {
+    state?: { grouping?: undefined };
+    mode?: "single";
+  }
+): UseAutoCompleteUngroupedSingle<T>;
+export function useAutoComplete<T>(
+  options: UseAutoCompleteOptions<T> & {
+    state?: { grouping?: undefined };
+    mode: "multiple";
+  }
+): UseAutoCompleteUngroupedMultiple<T>;
+export function useAutoComplete<T>(
+  options: UseAutoCompleteOptions<T> & {
+    state: { grouping: GroupingOptions<T>[] };
+    mode?: "single";
+  }
+): UseAutoCompleteGroupedSingle<T>;
+export function useAutoComplete<T>(
+  options: UseAutoCompleteOptions<T> & {
+    state: { grouping: GroupingOptions<T>[] };
+    mode: "multiple";
+  }
+): UseAutoCompleteGroupedMultiple<T>;
+
 export function useAutoComplete<T>({
   mode: modeProp = "single",
   state = {},
@@ -156,7 +214,7 @@ export function useAutoComplete<T>({
   allowsCustomValue = false,
   onInputValueChange,
   onSelectValue,
-  onCustomValueAsync,
+  // onCustomValueAsync,
   onInputValueChangeAsync,
   onBlurAsync,
   items: itemsProp = [],
