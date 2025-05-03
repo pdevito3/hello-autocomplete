@@ -1,6 +1,6 @@
 import { fruits, type Fruit } from "@/datasets/fruit";
 import { Check, XIcon } from "@/svgs";
-import { useAutoComplete, type Group } from "../hooks/use-autocomplete";
+import { useAutoComplete } from "../hooks/use-autocomplete";
 import { cn } from "../utils";
 
 export function GroupedFruitExample() {
@@ -32,9 +32,6 @@ export function GroupedFruitExample() {
     itemToString: (f) => f.label,
   });
 
-  // since grouping is on, getItems() returns Group<Fruit>[]
-  const groups = getItems() as Group<Fruit>[];
-
   return (
     <div className="max-w-md">
       <div className="relative">
@@ -61,22 +58,25 @@ export function GroupedFruitExample() {
           )}
 
           {isOpen() && (
-            <div
+            <ul
               {...getListProps()}
-              className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+              className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto"
             >
-              {groups.length === 0 ? (
-                <div className="px-4 py-2 text-gray-500">No results found</div>
+              {getItems().length === 0 ? (
+                <li className="px-4 py-2 text-gray-500">No results found</li>
               ) : (
-                groups.map((group) => (
-                  <div {...getGroupProps(group)} key={group.key}>
-                    <span
-                      {...getGroupLabelProps(group)}
-                      className="block px-4 py-1 text-xs uppercase tracking-wider font-bold bg-gray-600 text-gray-200"
-                    >
-                      {group.key}
-                    </span>
-                    <ul {...group.listProps} className="py-1">
+                getItems().map((group) => (
+                  <li key={group.key} className="">
+                    <ul {...getGroupProps(group)} className="py-1">
+                      <li>
+                        <span
+                          {...getGroupLabelProps(group)}
+                          className="block px-4 py-1 text-xs uppercase tracking-wider font-bold bg-gray-600 text-gray-200"
+                        >
+                          {group.key}
+                        </span>
+                      </li>
+                      {/* Actual options */}
                       {group.items.map((fruit) => (
                         <li
                           key={fruit.value}
@@ -86,21 +86,17 @@ export function GroupedFruitExample() {
                             getOptionState(fruit).isActive && "bg-gray-100"
                           )}
                         >
-                          <div className="flex items-center justify-between w-full">
-                            <div className="flex items-center space-x-3">
-                              <span>{fruit.label}</span>
-                            </div>
-                            {getOptionState(fruit).isSelected && (
-                              <Check className="text-green-500 h-5 w-5" />
-                            )}
-                          </div>
+                          <span>{fruit.label}</span>
+                          {getOptionState(fruit).isSelected && (
+                            <Check className="text-green-500 h-5 w-5" />
+                          )}
                         </li>
                       ))}
                     </ul>
-                  </div>
+                  </li>
                 ))
               )}
-            </div>
+            </ul>
           )}
         </div>
       </div>
