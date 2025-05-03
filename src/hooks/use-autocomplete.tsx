@@ -98,7 +98,7 @@ export interface UseAutoCompleteReturn<T> {
   isFocused: () => boolean;
   getRootProps: () => React.HTMLAttributes<HTMLDivElement> & {
     ref: React.Ref<HTMLDivElement>;
-  };
+  } & { [key: `data-${string}`]: string | boolean | undefined };
   getListProps: () => React.HTMLAttributes<HTMLUListElement> & {
     ref: React.Ref<HTMLUListElement>;
   };
@@ -548,7 +548,9 @@ export function useAutoComplete<T>({
   );
 
   const getRootProps = useCallback(
-    () => ({
+    (): React.HTMLAttributes<HTMLDivElement> & {
+      ref: React.Ref<HTMLDivElement>;
+    } & { [key: `data-${string}`]: string | boolean | undefined } => ({
       ref: rootRef,
       role: "combobox",
       "aria-expanded": isOpen,
@@ -560,7 +562,7 @@ export function useAutoComplete<T>({
       "data-mode": mode,
       "data-has-selected":
         mode === "multiple"
-          ? selectedValues.length > 0
+          ? selectedValues().length > 0
             ? "true"
             : undefined
           : selectedValue
@@ -568,7 +570,15 @@ export function useAutoComplete<T>({
           : undefined,
       "data-has-value": inputValue.trim() !== "" ? "true" : undefined,
     }),
-    [isOpen, isFocused, mode, selectedValue, selectedValues, inputValue]
+    [
+      rootRef,
+      isOpen,
+      isFocused,
+      mode,
+      selectedValue,
+      selectedValues,
+      inputValue,
+    ]
   );
 
   const getListProps = useCallback(
@@ -748,7 +758,7 @@ export function useAutoComplete<T>({
       return groupingOptions.length ? grouped : items;
     },
     getSelectedItem: () =>
-      mode === "multiple" ? selectedValues : selectedValue,
+      mode === "multiple" ? selectedValues() : selectedValue,
     hasActiveItem: () => !!activeItem,
     isFocused: () => isFocused,
     getRootProps,
@@ -762,7 +772,7 @@ export function useAutoComplete<T>({
     getGroupProps,
     getGroupLabelProps,
     hasSelectedItem: () =>
-      mode === "multiple" ? selectedValues.length > 0 : !!selectedValue,
+      mode === "multiple" ? selectedValues().length > 0 : !!selectedValue,
     isOpen: () => isOpen,
     setIsOpen,
     isCustomValue,
