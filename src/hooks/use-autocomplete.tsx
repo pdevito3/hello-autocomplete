@@ -103,9 +103,15 @@ export interface UseAutoCompleteReturn<T> {
     ref: React.Ref<HTMLUListElement>;
   };
   getLabelProps: () => React.LabelHTMLAttributes<HTMLLabelElement>;
-  getInputProps: () => React.InputHTMLAttributes<HTMLInputElement>;
-  getClearProps: () => React.ButtonHTMLAttributes<HTMLButtonElement>;
-  getDisclosureProps: () => React.ButtonHTMLAttributes<HTMLButtonElement>;
+  getInputProps: () => React.InputHTMLAttributes<HTMLInputElement> & {
+    [key: `data-${string}`]: string | boolean | undefined;
+  };
+  getClearProps: () => React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    [key: `data-${string}`]: string | boolean | undefined;
+  };
+  getDisclosureProps: () => React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    [key: `data-${string}`]: string | boolean | undefined;
+  };
   getOptionProps: (item: T) => React.LiHTMLAttributes<HTMLLIElement>;
   getOptionState: (item: T) => OptionState;
   getGroupProps: (group: Group<T>) => React.HTMLAttributes<HTMLUListElement>;
@@ -598,7 +604,9 @@ export function useAutoComplete<T>({
   );
 
   const getInputProps = useCallback(
-    () => ({
+    (): React.InputHTMLAttributes<HTMLInputElement> & {
+      [key: `data-${string}`]: string | boolean | undefined;
+    } => ({
       id: "autocomplete-input",
       value: inputValue,
       onChange: handleInputChange,
@@ -615,27 +623,26 @@ export function useAutoComplete<T>({
       },
       onBlur: async () => {
         setIsFocused(false);
-
         if (onBlurAsync) {
           const controller = new AbortController();
           try {
-            await onBlurAsync({
-              value: inputValue,
-              signal: controller.signal,
-            });
+            await onBlurAsync({ value: inputValue, signal: controller.signal });
           } catch (err) {
-            // ignore only if the user aborted
             if (!(err instanceof Error && err.name === "AbortError")) {
               console.error(err);
             }
           }
         }
       },
-      "aria-autocomplete": "list",
+
+      // force this to the exact union member:
+      "aria-autocomplete": "list" as const,
       "aria-controls": "autocomplete-listbox",
       "aria-activedescendant": activeItem
         ? `option-${flattenedItems.indexOf(activeItem)}`
         : undefined,
+
+      // now allowed by our index‑signature
       "data-input": true,
       "data-value": inputValue,
       "data-has-value": inputValue.trim() !== "" ? "true" : undefined,
@@ -654,22 +661,27 @@ export function useAutoComplete<T>({
     ]
   );
 
-  const getClearProps = useCallback(() => {
-    const disabled =
-      inputValue === "" &&
-      (mode === "single" ? !selectedValue : selectedValues.length === 0);
-    return {
-      type: "button",
-      "aria-label": "Clear input",
-      onClick: handleClear,
-      disabled,
-      "data-clear-button": true,
-      "data-disabled": disabled ? "true" : undefined,
-    };
-  }, [handleClear, inputValue, mode, selectedValue, selectedValues]);
+  const getClearProps =
+    useCallback((): React.ButtonHTMLAttributes<HTMLButtonElement> & {
+      [key: `data-${string}`]: string | boolean | undefined;
+    } => {
+      const disabled =
+        inputValue === "" &&
+        (mode === "single" ? !selectedValue : selectedValues.length === 0);
+      return {
+        type: "button",
+        "aria-label": "Clear input",
+        onClick: handleClear,
+        disabled,
+        "data-clear-button": true,
+        "data-disabled": disabled ? "true" : undefined,
+      };
+    }, [handleClear, inputValue, mode, selectedValue, selectedValues]);
 
   const getDisclosureProps = useCallback(
-    () => ({
+    (): React.ButtonHTMLAttributes<HTMLButtonElement> & {
+      [key: `data-${string}`]: string | boolean | undefined;
+    } => ({
       type: "button",
       "aria-label": isOpen ? "Close options" : "Open options",
       onClick: handleDisclosure,
