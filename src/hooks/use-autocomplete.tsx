@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useDebouncedValue } from "./use-debounced-value";
 
 export type Placement = "top" | "bottom" | "left" | "right";
@@ -42,8 +42,13 @@ export interface UseAutoCompleteOptions<T> {
     /** one or more levels of grouping definitions */
     grouping?: GroupingOptions<T>[];
     defaultValue?: T;
+
     activeItem?: T | null;
     setActiveItem?: (item: T | null) => void;
+    /** index of the currently highlighted option */
+    highlightedIndex?: number | null;
+    /** callback to set the highlighted option index */
+    setHighlightedIndex?: (index: number | null) => void;
     label?: string;
   };
   defaultOpen?: boolean;
@@ -107,9 +112,15 @@ export interface UseAutoCompleteReturn<T> {
   isOpen: () => boolean;
   setIsOpen: (isOpen: boolean) => void;
   isCustomValue: (item: T) => boolean;
+  /** get the index of the highlighted option */
+  getHighlightedIndex: () => number | null;
+  /** set the index of the highlighted option */
+  setHighlightedIndex: (index: number | null) => void;
+  getActiveItem: () => T | null;
+  setActiveItem: (item: T | null) => void;
 }
 
-// shallow-equal utility so inline arrays don't repeatedly trigger updates
+// shallow-equal utility so inline arrays don’t repeatedly trigger updates
 function arraysShallowEqual<T>(a: T[], b: T[]) {
   if (a === b) return true;
   if (a.length !== b.length) return false;
@@ -149,6 +160,8 @@ export function useAutoComplete<T>({
     setIsOpen: setIsOpenProp,
     activeItem: activeItemProp,
     setActiveItem: setActiveItemProp,
+    highlightedIndex: highlightedIndexProp,
+    setHighlightedIndex: setHighlightedIndexProp,
     label: labelProp = "",
     defaultValue,
     grouping: groupingProp,
@@ -178,10 +191,64 @@ export function useAutoComplete<T>({
   const isOpen = isOpenProp !== undefined ? isOpenProp : isOpenState;
   const setIsOpen = setIsOpenProp ?? setIsOpenState;
 
-  const [activeItemState, setActiveItemState] = useState<T | null>(null);
-  const activeItem =
-    activeItemProp !== undefined ? activeItemProp : activeItemState;
-  const setActiveItem = setActiveItemProp ?? setActiveItemState;
+  type NavState = { activeItem: T | null; highlightedIndex: number | null };
+  type NavAction =
+    | {
+        type: "SET_ACTIVE_ITEM";
+        payload: { item: T | null; index: number | null };
+      }
+    | {
+        type: "SET_HIGHLIGHTED_INDEX";
+        payload: { item: T | null; index: number | null };
+      };
+
+  // Reducer ensures both activeItem & highlightedIndex stay in sync
+  function navReducer(state: NavState, action: NavAction): NavState {
+    switch (action.type) {
+      case "SET_ACTIVE_ITEM":
+      case "SET_HIGHLIGHTED_INDEX":
+        return {
+          activeItem: action.payload.item,
+          highlightedIndex: action.payload.index,
+        };
+      default:
+        return state;
+    }
+  }
+
+  const [navState, dispatchNav] = useReducer(navReducer, {
+    activeItem: null,
+    highlightedIndex: null,
+  });
+
+  // Derive final activeItem / highlightedIndex (respect external props if provided)
+  const activeItem: T | null =
+    activeItemProp !== undefined ? activeItemProp : navState.activeItem;
+  const highlightedIndex: number | null =
+    highlightedIndexProp !== undefined
+      ? highlightedIndexProp
+      : navState.highlightedIndex;
+
+  // Wrappers that update both pieces via reducer + external setters
+  const setActiveItem = useCallback(
+    (item: T | null) => {
+      const index =
+        item !== null ? itemsProp.findIndex((i) => i === item) : null;
+      setActiveItemProp?.(item);
+      setHighlightedIndexProp?.(index);
+      dispatchNav({ type: "SET_ACTIVE_ITEM", payload: { item, index } });
+    },
+    [itemsProp, setActiveItemProp, setHighlightedIndexProp]
+  );
+  const setHighlightedIndex = useCallback(
+    (index: number | null) => {
+      const item = index !== null ? itemsProp[index] : null;
+      setActiveItemProp?.(item);
+      setHighlightedIndexProp?.(index);
+      dispatchNav({ type: "SET_HIGHLIGHTED_INDEX", payload: { item, index } });
+    },
+    [itemsProp, setActiveItemProp, setHighlightedIndexProp]
+  );
 
   const [isFocused, setIsFocused] = useState(false);
 
@@ -243,11 +310,12 @@ export function useAutoComplete<T>({
       if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
         setIsOpen(false);
         setActiveItem(null);
+        setHighlightedIndex(null);
       }
     }
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [setIsOpen, setActiveItem]);
+  }, [setIsOpen, setActiveItem, setHighlightedIndex]);
 
   const handleSelect = useCallback(
     (item: T) => {
@@ -642,5 +710,9 @@ export function useAutoComplete<T>({
     isOpen: () => isOpen,
     setIsOpen,
     isCustomValue,
+    getHighlightedIndex: () => highlightedIndex,
+    setHighlightedIndex,
+    getActiveItem: () => activeItem,
+    setActiveItem,
   };
 }
