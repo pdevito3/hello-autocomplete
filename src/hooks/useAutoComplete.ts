@@ -183,19 +183,19 @@ export function useAutoComplete<T>({
     activeItemProp !== undefined ? activeItemProp : activeItemState;
   const setActiveItem = setActiveItemProp ?? setActiveItemState;
 
+  const [isFocused, setIsFocused] = useState(false);
+
   const itemToStringFn = useCallback(
     (item: T) => (itemToString ? itemToString(item) : String(item)),
     [itemToString]
   );
 
   const [items, setItems] = useState<T[]>(itemsProp);
-  const [isFocused, setIsFocused] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const listboxRef = useRef<HTMLUListElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const prevItemsPropRef = useRef<T[]>(itemsProp);
 
-  // only reset internal items when the actual contents change
   useEffect(() => {
     if (!arraysShallowEqual(prevItemsPropRef.current, itemsProp)) {
       setItems(itemsProp);
@@ -276,6 +276,9 @@ export function useAutoComplete<T>({
   );
 
   const handleClear = useCallback(() => {
+    const disabled =
+      inputValue === "" &&
+      (mode === "single" ? !selectedValue : selectedValues.length === 0);
     setInputValue("");
     if (mode === "single") {
       setSelectedValue(undefined);
@@ -288,6 +291,9 @@ export function useAutoComplete<T>({
     setIsOpen(false);
   }, [
     mode,
+    inputValue,
+    selectedValue,
+    selectedValues,
     setInputValue,
     setSelectedValue,
     onEmptyActionClick,
@@ -317,20 +323,34 @@ export function useAutoComplete<T>({
       return acc;
     }, {});
     return Object.entries(map).map(([groupKey, groupItems]) => {
+      const sub = createGroups(groupItems, level + 1);
       const grp: Group<T> = {
         key: groupKey,
         items: groupItems,
         label: propLabel,
-        listProps: { role: "group", "aria-label": propLabel },
-        header: { label: groupKey, headingProps: { role: "presentation" } },
+        listProps: {
+          role: "group",
+          "aria-label": propLabel,
+          "data-group": true,
+          "data-group-key": groupKey,
+          "data-group-level": level,
+          "data-has-subgroups": sub.length > 0 ? "true" : undefined,
+        },
+        header: {
+          label: groupKey,
+          headingProps: {
+            role: "presentation",
+            "data-group-label": true,
+            "data-group-key": groupKey,
+          },
+        },
       };
-      const sub = createGroups(groupItems, level + 1);
       if (sub.length) grp.groups = sub;
       return grp;
     });
   };
 
-  const grouped: Group<T>[] = groupingOptions.length ? createGroups(items) : [];
+  const grouped = groupingOptions.length ? createGroups(items) : [];
 
   const flattenGroups = (groupsList: Group<T>[]): T[] =>
     groupsList.reduce<T[]>(
@@ -341,7 +361,6 @@ export function useAutoComplete<T>({
       []
     );
 
-  // incorporate custom entry into the ungrouped list for keyboard nav
   const ungroupedItemsWithCustom: T[] = (() => {
     if (
       allowsCustomValue &&
@@ -356,6 +375,18 @@ export function useAutoComplete<T>({
   const flattenedItems = groupingOptions.length
     ? flattenGroups(grouped)
     : ungroupedItemsWithCustom;
+
+  const isCustomValue = useCallback(
+    (item: T) => {
+      return (
+        allowsCustomValue &&
+        inputValue.trim() !== "" &&
+        itemToStringFn(item) === inputValue &&
+        !items.some((it) => itemToStringFn(it) === inputValue)
+      );
+    },
+    [allowsCustomValue, inputValue, itemToStringFn, items]
+  );
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -426,8 +457,20 @@ export function useAutoComplete<T>({
       "aria-haspopup": "listbox",
       "aria-controls": "autocomplete-listbox",
       "data-combobox": true,
+      "data-expanded": isOpen ? true : false,
+      "data-focused": isFocused ? true : undefined,
+      "data-mode": mode,
+      "data-has-selected":
+        mode === "multiselect"
+          ? selectedValues.length > 0
+            ? "true"
+            : undefined
+          : selectedValue
+          ? "true"
+          : undefined,
+      "data-has-value": inputValue.trim() !== "" ? "true" : undefined,
     }),
-    [isOpen]
+    [isOpen, isFocused, mode, selectedValue, selectedValues, inputValue]
   );
 
   const getListProps = useCallback(
@@ -438,8 +481,12 @@ export function useAutoComplete<T>({
       ref: listboxRef,
       tabIndex: -1,
       "data-listbox": true,
+      "data-state": isOpen ? "open" : "closed",
+      "data-has-groups": groupingOptions.length ? "true" : undefined,
+      "data-empty": flattenedItems.length === 0 ? "true" : undefined,
+      "data-size": flattenedItems.length,
     }),
-    [labelProp]
+    [labelProp, isOpen, groupingOptions.length, flattenedItems]
   );
 
   const getInputProps = useCallback(
@@ -462,31 +509,35 @@ export function useAutoComplete<T>({
         ? `option-${flattenedItems.indexOf(activeItem)}`
         : undefined,
       "data-input": true,
+      "data-value": inputValue,
+      "data-has-value": inputValue.trim() !== "" ? "true" : undefined,
+      "data-autocomplete": "list",
     }),
     [
       inputValue,
-      handleInputChange,
       handleKeyDown,
+      debouncedAsyncOperation,
       flattenedItems,
       activeItem,
-      debouncedAsyncOperation,
+      setIsFocused,
       setIsOpen,
       setActiveItem,
     ]
   );
 
-  const getClearProps = useCallback(
-    () => ({
+  const getClearProps = useCallback(() => {
+    const disabled =
+      inputValue === "" &&
+      (mode === "single" ? !selectedValue : selectedValues.length === 0);
+    return {
       type: "button",
       "aria-label": "Clear input",
       onClick: handleClear,
-      disabled:
-        inputValue === "" &&
-        (mode === "single" ? !selectedValue : selectedValues.length === 0),
+      disabled,
       "data-clear-button": true,
-    }),
-    [handleClear, inputValue, mode, selectedValue, selectedValues]
-  );
+      "data-disabled": disabled ? "true" : undefined,
+    };
+  }, [handleClear, inputValue, mode, selectedValue, selectedValues]);
 
   const getDisclosureProps = useCallback(
     () => ({
@@ -494,8 +545,9 @@ export function useAutoComplete<T>({
       "aria-label": isOpen ? "Close options" : "Open options",
       onClick: handleDisclosure,
       "data-disclosure-button": true,
+      "data-state": isOpen ? "open" : "closed",
     }),
-    [handleDisclosure, isOpen]
+    [isOpen, handleDisclosure]
   );
 
   const getLabelProps = useCallback(
@@ -515,6 +567,7 @@ export function useAutoComplete<T>({
         mode === "multiselect"
           ? selectedValues.includes(item)
           : item === selectedValue;
+      const custom = isCustomValue(item);
       return {
         role: "option",
         "aria-selected": isItemSelected,
@@ -522,17 +575,21 @@ export function useAutoComplete<T>({
         "aria-setsize": flattenedItems.length,
         id: `option-${index}`,
         onClick: () => handleSelect(item),
-        "data-active": isItemActive || undefined,
-        "data-selected": isItemSelected || undefined,
+        "data-active": isItemActive ? "true" : undefined,
+        "data-selected": isItemSelected ? "true" : undefined,
+        "data-index": index,
+        "data-disabled": "false",
+        "data-custom": custom ? "true" : undefined,
       };
     },
     [
+      activeItem,
+      flattenedItems,
+      mode,
       selectedValue,
       selectedValues,
-      flattenedItems,
-      activeItem,
       handleSelect,
-      mode,
+      isCustomValue,
     ]
   );
 
@@ -551,17 +608,6 @@ export function useAutoComplete<T>({
   const getGroupLabelProps = useCallback(
     (group: Group<T>) => group.header.headingProps,
     []
-  );
-  const isCustomValue = useCallback(
-    (item: T) => {
-      return (
-        allowsCustomValue &&
-        inputValue.trim() !== "" &&
-        itemToStringFn(item) === inputValue &&
-        !items.some((it) => itemToStringFn(it) === inputValue)
-      );
-    },
-    [allowsCustomValue, inputValue, itemToStringFn, items]
   );
 
   return {
