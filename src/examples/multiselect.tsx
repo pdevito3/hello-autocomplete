@@ -17,7 +17,7 @@ export default function MultiFruitExample() {
     isOpen,
     getSelectedItem,
   } = useAutoComplete<(typeof fruits)[0]>({
-    mode: "multiselect",
+    mode: "multiple",
     items: fruits,
     state: { label: "Select fruits" },
     asyncDebounceMs: 300,
