@@ -20,13 +20,20 @@ export interface Group<T> {
   groups?: Group<T>[];
   /** aria-label for the group's list container */
   label: string;
-  /** props to spread on the group's <ul> element */
-  listProps: React.HTMLAttributes<HTMLUListElement>;
+
+  /** allow any `data-*` on the <ul> */
+  listProps: React.HTMLAttributes<HTMLUListElement> & {
+    [key: `data-${string}`]: string | boolean | undefined;
+  };
+
   header: {
     /** text to render as the group's heading */
     label: string;
-    /** props to spread on the group's heading <span> */
-    headingProps: React.HTMLAttributes<HTMLSpanElement>;
+
+    /** allow any `data-*` on the <span> */
+    headingProps: React.HTMLAttributes<HTMLSpanElement> & {
+      [key: `data-${string}`]: string | boolean | undefined;
+    };
   };
 }
 
@@ -236,7 +243,7 @@ export function useAutoComplete<T>({
           "aria-label": propLabel,
           "data-group": true,
           "data-group-key": groupKey,
-          "data-group-level": level,
+          "data-group-level": level.toString(),
           "data-has-subgroups": sub.length > 0 ? "true" : undefined,
         },
         header: {
@@ -744,7 +751,7 @@ export function useAutoComplete<T>({
       isActive: item === activeItem,
       isSelected:
         mode === "multiple"
-          ? selectedValues.includes(item)
+          ? selectedValues().includes(item)
           : item === selectedValue,
     }),
     [activeItem, selectedValue, selectedValues, mode]
