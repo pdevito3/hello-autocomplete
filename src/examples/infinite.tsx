@@ -2,7 +2,7 @@ import type { User } from "@/datasets/users";
 import { Check } from "@/svgs";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAutoComplete } from "../hooks/useAutoComplete";
 import { cn } from "../utils";
 
@@ -66,6 +66,15 @@ export function InfiniteAutocompleteExample() {
   const rowVirtualizer = useVirtualizer({
     count: hasNextPage ? allUsers.length + 1 : allUsers.length,
     getScrollElement: () => parentRef.current,
+    getItemKey: useCallback(
+      (index: number) => {
+        if (index > allUsers.length - 1) {
+          return `loader-${index}`;
+        }
+        return allUsers[index].id;
+      },
+      [allUsers]
+    ),
     estimateSize: () => 50,
     overscan: 5,
   });
