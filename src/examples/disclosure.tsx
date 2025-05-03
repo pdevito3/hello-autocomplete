@@ -1,7 +1,7 @@
 import { users, type User } from "@/datasets/users";
 import { Check, XIcon } from "@/svgs";
 import { useState } from "react";
-import { useAutoComplete } from "../hooks/useAutoComplete";
+import { useAutoComplete } from "../hooks/use-autocomplete";
 import { cn } from "../utils";
 
 export function DisclosureExample() {

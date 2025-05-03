@@ -1,6 +1,6 @@
 import { fruits } from "@/datasets/fruit";
 import { Check, XIcon } from "@/svgs";
-import { useAutoComplete } from "../hooks/useAutoComplete";
+import { useAutoComplete } from "../hooks/use-autocomplete";
 import { cn } from "../utils";
 
 export default function MultiFruitExample() {

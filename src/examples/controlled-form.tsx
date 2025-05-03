@@ -3,7 +3,7 @@ import { Check, XIcon } from "@/svgs";
 import { cn } from "@/utils";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { useAutoComplete } from "../hooks/useAutoComplete";
+import { useAutoComplete } from "../hooks/use-autocomplete";
 
 type FormValues = {
   fruit?: Fruit;

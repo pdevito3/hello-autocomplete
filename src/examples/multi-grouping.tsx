@@ -1,6 +1,6 @@
 import { fruits, type Fruit } from "@/datasets/fruit";
 import { Check, XIcon } from "@/svgs";
-import { useAutoComplete, type Group } from "../hooks/useAutoComplete";
+import { useAutoComplete, type Group } from "../hooks/use-autocomplete";
 import { cn } from "../utils";
 
 export function MultiGroupedFruitExample() {
