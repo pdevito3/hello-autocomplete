@@ -191,6 +191,81 @@ export function useAutoComplete<T>({
   const isOpen = isOpenProp !== undefined ? isOpenProp : isOpenState;
   const setIsOpen = setIsOpenProp ?? setIsOpenState;
 
+  const [items, setItems] = useState<T[]>(itemsProp);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const listboxRef = useRef<HTMLUListElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const prevItemsPropRef = useRef<T[]>(itemsProp);
+
+  // ---- grouping logic unchanged ----
+  const groupingOptions = Array.isArray(groupingProp)
+    ? groupingProp
+    : groupingProp
+    ? [groupingProp]
+    : [];
+
+  const createGroups = (itemsToGroup: T[], level = 0): Group<T>[] => {
+    if (level >= groupingOptions.length) return [];
+    const { key: propKey, label: propLabel } = groupingOptions[level];
+    const map = itemsToGroup.reduce<Record<string, T[]>>((acc, item) => {
+      const k = String((item as any)[propKey] ?? "");
+      (acc[k] ??= []).push(item);
+      return acc;
+    }, {});
+    return Object.entries(map).map(([groupKey, groupItems]) => {
+      const sub = createGroups(groupItems, level + 1);
+      const grp: Group<T> = {
+        key: groupKey,
+        items: groupItems,
+        label: propLabel,
+        listProps: {
+          role: "group",
+          "aria-label": propLabel,
+          "data-group": true,
+          "data-group-key": groupKey,
+          "data-group-level": level,
+          "data-has-subgroups": sub.length > 0 ? "true" : undefined,
+        },
+        header: {
+          label: groupKey,
+          headingProps: {
+            role: "presentation",
+            "data-group-label": true,
+            "data-group-key": groupKey,
+          },
+        },
+      };
+      if (sub.length) grp.groups = sub;
+      return grp;
+    });
+  };
+
+  const grouped = groupingOptions.length ? createGroups(items) : [];
+
+  const flattenGroups = (groupsList: Group<T>[]): T[] =>
+    groupsList.reduce<T[]>(
+      (acc, grp) =>
+        grp.groups && grp.groups.length
+          ? acc.concat(flattenGroups(grp.groups))
+          : acc.concat(grp.items),
+      []
+    );
+
+  const ungroupedItemsWithCustom: T[] = (() => {
+    if (
+      allowsCustomValue &&
+      inputValue.trim() !== "" &&
+      !items.some((it) => itemToStringFn(it) === inputValue)
+    ) {
+      return [...items, inputValue as unknown as T];
+    }
+    return items;
+  })();
+
+  const flattenedItems = groupingOptions.length
+    ? flattenGroups(grouped)
+    : ungroupedItemsWithCustom;
+
   type NavState = { activeItem: T | null; highlightedIndex: number | null };
   type NavAction =
     | {
@@ -233,21 +308,22 @@ export function useAutoComplete<T>({
   const setActiveItem = useCallback(
     (item: T | null) => {
       const index =
-        item !== null ? itemsProp.findIndex((i) => i === item) : null;
+        item !== null ? flattenedItems.findIndex((i) => i === item) : null;
       setActiveItemProp?.(item);
       setHighlightedIndexProp?.(index);
       dispatchNav({ type: "SET_ACTIVE_ITEM", payload: { item, index } });
     },
-    [itemsProp, setActiveItemProp, setHighlightedIndexProp]
+    [flattenedItems, setActiveItemProp, setHighlightedIndexProp]
   );
+
   const setHighlightedIndex = useCallback(
     (index: number | null) => {
-      const item = index !== null ? itemsProp[index] : null;
+      const item = index !== null ? flattenedItems[index] : null;
       setActiveItemProp?.(item);
       setHighlightedIndexProp?.(index);
       dispatchNav({ type: "SET_HIGHLIGHTED_INDEX", payload: { item, index } });
     },
-    [itemsProp, setActiveItemProp, setHighlightedIndexProp]
+    [flattenedItems, setActiveItemProp, setHighlightedIndexProp]
   );
 
   const [isFocused, setIsFocused] = useState(false);
@@ -256,12 +332,6 @@ export function useAutoComplete<T>({
     (item: T) => (itemToString ? itemToString(item) : String(item)),
     [itemToString]
   );
-
-  const [items, setItems] = useState<T[]>(itemsProp);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const listboxRef = useRef<HTMLUListElement | null>(null);
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const prevItemsPropRef = useRef<T[]>(itemsProp);
 
   useEffect(() => {
     if (!arraysShallowEqual(prevItemsPropRef.current, itemsProp)) {
@@ -374,75 +444,6 @@ export function useAutoComplete<T>({
     () => setIsOpen((prev) => !prev),
     [setIsOpen]
   );
-
-  // ---- grouping logic unchanged ----
-  const groupingOptions = Array.isArray(groupingProp)
-    ? groupingProp
-    : groupingProp
-    ? [groupingProp]
-    : [];
-
-  const createGroups = (itemsToGroup: T[], level = 0): Group<T>[] => {
-    if (level >= groupingOptions.length) return [];
-    const { key: propKey, label: propLabel } = groupingOptions[level];
-    const map = itemsToGroup.reduce<Record<string, T[]>>((acc, item) => {
-      const k = String((item as any)[propKey] ?? "");
-      (acc[k] ??= []).push(item);
-      return acc;
-    }, {});
-    return Object.entries(map).map(([groupKey, groupItems]) => {
-      const sub = createGroups(groupItems, level + 1);
-      const grp: Group<T> = {
-        key: groupKey,
-        items: groupItems,
-        label: propLabel,
-        listProps: {
-          role: "group",
-          "aria-label": propLabel,
-          "data-group": true,
-          "data-group-key": groupKey,
-          "data-group-level": level,
-          "data-has-subgroups": sub.length > 0 ? "true" : undefined,
-        },
-        header: {
-          label: groupKey,
-          headingProps: {
-            role: "presentation",
-            "data-group-label": true,
-            "data-group-key": groupKey,
-          },
-        },
-      };
-      if (sub.length) grp.groups = sub;
-      return grp;
-    });
-  };
-
-  const grouped = groupingOptions.length ? createGroups(items) : [];
-
-  const flattenGroups = (groupsList: Group<T>[]): T[] =>
-    groupsList.reduce<T[]>(
-      (acc, grp) =>
-        grp.groups && grp.groups.length
-          ? acc.concat(flattenGroups(grp.groups))
-          : acc.concat(grp.items),
-      []
-    );
-
-  const ungroupedItemsWithCustom: T[] = (() => {
-    if (
-      allowsCustomValue &&
-      inputValue.trim() !== "" &&
-      !items.some((it) => itemToStringFn(it) === inputValue)
-    ) {
-      return [...items, inputValue as unknown as T];
-    }
-    return items;
-  })();
-
-  const flattenedItems = groupingOptions.length
-    ? flattenGroups(grouped)
-    : ungroupedItemsWithCustom;
 
   const isCustomValue = useCallback(
     (item: T) => {
