@@ -8,6 +8,7 @@ import { ComplexDisabledExample } from "@/examples/disabled-complex";
 import { DisclosureExample } from "@/examples/disclosure";
 import { GroupedFruitExample } from "@/examples/grouping";
 import { InfiniteAutocompleteExample } from "@/examples/infinite";
+import { LinkOptionsExample } from "@/examples/link-options";
 import { MultiGroupedFruitExample } from "@/examples/multi-grouping";
 import MultiFruitExample from "@/examples/multiselect";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -61,6 +62,9 @@ export default function HomePage() {
           </Example>
           <Example title="Disabled (Complex)">
             <ComplexDisabledExample />
+          </Example>
+          <Example title="Link Options">
+            <LinkOptionsExample />
           </Example>
           <Example title="Create New External Action">
             <p>TODO</p>

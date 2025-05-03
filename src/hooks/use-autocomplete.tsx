@@ -91,6 +91,8 @@ export interface UseAutoCompleteOptions<T> {
 
   /** return true for items that should be rendered and treated as disabled */
   isItemDisabled?: (item: T) => boolean;
+  /** derive a URL for an option (if you want it rendered as a link) */
+  getOptionLink?: (item: T) => string | undefined;
 }
 
 export interface OptionState {
@@ -135,6 +137,9 @@ export interface UseAutoCompleteReturn<T> {
   setHighlightedIndex: (index: number | null) => void;
   getActiveItem: () => T | null;
   setActiveItem: (item: T | null) => void;
+  getOptionLinkProps: (
+    item: T
+  ) => React.AnchorHTMLAttributes<HTMLAnchorElement> & { role: "option" };
 }
 
 // shallow-equal utility so inline arrays don’t repeatedly trigger updates
@@ -223,6 +228,7 @@ export function useAutoComplete<T>({
   onEmptyActionClick,
   onClear,
   isItemDisabled: isItemDisabledProp,
+  getOptionLink,
 }: UseAutoCompleteOptions<T>): UseAutoCompleteReturn<T> {
   const mode = modeProp;
 
@@ -805,6 +811,47 @@ export function useAutoComplete<T>({
     ]
   );
 
+  const getOptionLinkProps = useCallback(
+    (
+      item: T
+    ): React.AnchorHTMLAttributes<HTMLAnchorElement> & { role: "option" } => {
+      const index = flattenedItems.findIndex((i) => i === item);
+      const disabled = isItemDisabled(item);
+      const isSelected =
+        mode === "multiple"
+          ? selectedValues().includes(item)
+          : item === selectedValue;
+      const href = getOptionLink?.(item);
+
+      return {
+        role: "option",
+        href: href,
+        tabIndex: disabled ? -1 : 0,
+        "aria-selected": isSelected,
+        "aria-posinset": index + 1,
+        "aria-setsize": flattenedItems.length,
+        "aria-disabled": disabled || undefined,
+
+        // no preventDefault — let the <a> do its navigation
+        onClick:
+          !disabled && href
+            ? () => {
+                handleSelect(item);
+              }
+            : undefined,
+      };
+    },
+    [
+      flattenedItems,
+      isItemDisabled,
+      mode,
+      selectedValues,
+      selectedValue,
+      handleSelect,
+      getOptionLink,
+    ]
+  );
+
   const getOptionState = useCallback(
     (item: T): OptionState => ({
       isActive: item === activeItem,
@@ -858,5 +905,6 @@ export function useAutoComplete<T>({
     setHighlightedIndex,
     getActiveItem: () => activeItem,
     setActiveItem,
+    getOptionLinkProps,
   };
 }
