@@ -2,6 +2,8 @@ import { BasicExample } from "@/examples/basic";
 import { ControlledCustomEntryExample } from "@/examples/controlled-custom-entry";
 import { CustomEntryExample } from "@/examples/custom-entry";
 import { CustomRenderingExample } from "@/examples/custom-options";
+import { BasicDisabledExample } from "@/examples/disabled-basic";
+import { ComplexDisabledExample } from "@/examples/disabled-complex";
 import { DisclosureExample } from "@/examples/disclosure";
 import { GroupedFruitExample } from "@/examples/grouping";
 import { InfiniteAutocompleteExample } from "@/examples/infinite";
@@ -52,6 +54,12 @@ export default function HomePage() {
           </Example>
           <Example title="Controlled Custom Value">
             <ControlledCustomEntryExample />
+          </Example>
+          <Example title="Disabled (Simple)">
+            <BasicDisabledExample />
+          </Example>
+          <Example title="Disabled (Complex)">
+            <ComplexDisabledExample />
           </Example>
           <Example title="Create New External Action">
             <p>TODO</p>

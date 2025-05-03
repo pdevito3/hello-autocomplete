@@ -81,6 +81,9 @@ export interface UseAutoCompleteOptions<T> {
   }) => Promise<void>;
   /** called when the clear button is clicked */
   onClear?: () => void;
+
+  /** return true for items that should be rendered and treated as disabled */
+  isItemDisabled?: (item: T) => boolean;
 }
 
 export interface OptionState {
@@ -149,6 +152,7 @@ export function useAutoComplete<T>({
   itemToString,
   onEmptyActionClick,
   onClear,
+  isItemDisabled: isItemDisabledProp,
 }: UseAutoCompleteOptions<T>): UseAutoCompleteReturn<T> {
   const mode = modeProp;
 
@@ -269,6 +273,11 @@ export function useAutoComplete<T>({
   const flattenedItems = groupingOptions.length
     ? flattenGroups(grouped)
     : ungroupedItemsWithCustom;
+
+  const isItemDisabled = useCallback(
+    (item: T) => isItemDisabledProp?.(item) ?? false,
+    [isItemDisabledProp]
+  );
 
   type NavState = { activeItem: T | null; highlightedIndex: number | null };
   type NavAction =
@@ -393,6 +402,9 @@ export function useAutoComplete<T>({
 
   const handleSelect = useCallback(
     (item: T) => {
+      if (isItemDisabled(item)) {
+        return; // do nothing if the item is disabled
+      }
       if (mode === "single") {
         setSelectedValue(item);
         setInputValue(itemToStringFn(item));
@@ -408,6 +420,7 @@ export function useAutoComplete<T>({
       setActiveItem(null);
     },
     [
+      isItemDisabled,
       mode,
       setActiveItem,
       setSelectedValue,
@@ -633,34 +646,41 @@ export function useAutoComplete<T>({
   const getOptionProps = useCallback(
     (item: T) => {
       const index = flattenedItems.findIndex((i) => i === item);
+      const disabled = isItemDisabled(item);
       const isItemActive = item === activeItem;
       const isItemSelected =
         mode === "multiple"
           ? selectedValues.includes(item)
           : item === selectedValue;
       const custom = isCustomValue(item);
+
       return {
         role: "option",
         "aria-selected": isItemSelected,
         "aria-posinset": index + 1,
         "aria-setsize": flattenedItems.length,
         id: `option-${index}`,
-        onClick: () => handleSelect(item),
         "data-active": isItemActive ? "true" : undefined,
         "data-selected": isItemSelected ? "true" : undefined,
         "data-index": index,
-        "data-disabled": "false",
         "data-custom": custom ? "true" : undefined,
+        "aria-disabled": disabled,
+        disabled,
+        onClick: disabled
+          ? undefined // no-op if disabled
+          : () => handleSelect(item),
+        "data-disabled": disabled ? "true" : undefined,
       };
     },
     [
-      activeItem,
       flattenedItems,
+      isItemDisabled,
+      activeItem,
       mode,
-      selectedValue,
       selectedValues,
-      handleSelect,
+      selectedValue,
       isCustomValue,
+      handleSelect,
     ]
   );
 
