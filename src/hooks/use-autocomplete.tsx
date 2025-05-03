@@ -139,7 +139,6 @@ export function useAutoComplete<T>({
   state = {},
   defaultOpen = false,
   labelSrOnly = false,
-  placement = "bottom",
   asyncDebounceMs = 0,
   allowsCustomValue = false,
   onInputValueChange,
@@ -456,8 +455,8 @@ export function useAutoComplete<T>({
   ]);
 
   const handleDisclosure = useCallback(
-    () => setIsOpen((prev) => !prev),
-    [setIsOpen]
+    () => setIsOpen(!isOpen),
+    [setIsOpen, isOpen]
   );
 
   const isCustomValue = useCallback(
@@ -588,7 +587,6 @@ export function useAutoComplete<T>({
     [labelProp, isOpen, groupingOptions.length, flattenedItems]
   );
 
-  // 2) getInputProps’s onBlur now calls onBlurAsync
   const getInputProps = useCallback(
     () => ({
       id: "autocomplete-input",
