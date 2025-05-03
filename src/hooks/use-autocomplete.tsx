@@ -6,7 +6,7 @@ export type Mode = "single" | "multiple";
 
 export interface GroupingOptions<T> {
   /** property name on item to group by */
-  key: string;
+  key: keyof T;
   /** optional aria-label or overall label for group list */
   label: string;
 }
@@ -286,7 +286,8 @@ export function useAutoComplete<T>({
     if (level >= groupingOptions.length) return [];
     const { key: propKey, label: propLabel } = groupingOptions[level];
     const map = itemsToGroup.reduce<Record<string, T[]>>((acc, item) => {
-      const k = String((item as any)[propKey] ?? "");
+      const raw = item[propKey];
+      const k = String(raw ?? "");
       (acc[k] ??= []).push(item);
       return acc;
     }, {});
