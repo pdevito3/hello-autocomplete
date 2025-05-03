@@ -22,7 +22,7 @@ export function GroupedFruitExample() {
     items: fruits,
     state: {
       label: "Search fruits",
-      grouping: { key: "type", label: "Fruit Type" },
+      grouping: [{ key: "type", label: "Fruit Type" }],
     },
     asyncDebounceMs: 300,
     onFilterAsync: async ({ searchTerm }) =>
