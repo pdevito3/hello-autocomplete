@@ -7,7 +7,7 @@ interface LinkItem {
   id: number;
   name: string;
   url: string;
-  target: "internal" | "external";
+  target: "internal" | "external" | "download" | "ping";
 }
 
 const links: LinkItem[] = [
@@ -27,6 +27,18 @@ const links: LinkItem[] = [
     url: "https://developer.mozilla.org",
     target: "external",
   },
+  {
+    id: 7,
+    name: "Download Report",
+    url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    target: "download",
+  },
+  {
+    id: 8,
+    name: "Ping Example",
+    url: "https://example.com/ping-endpoint",
+    target: "ping",
+  },
 ];
 
 export function LinkOptionsExample() {
@@ -42,12 +54,16 @@ export function LinkOptionsExample() {
     getClearProps,
     hasSelectedItem,
     isOpen,
-    getSelectedItem,
   } = useAutoComplete<LinkItem>({
     items: links,
-    // for externals we return a string→href, for internals an object→{ to }
     getOptionLink: (item) =>
-      item.target === "internal" ? { to: item.url } : item.url,
+      item.target === "internal"
+        ? { to: item.url }
+        : item.target === "download"
+        ? { href: item.url, download: "" }
+        : item.target === "ping"
+        ? { href: item.url, ping: item.url }
+        : item.url,
     state: { label: "Search links" },
     asyncDebounceMs: 300,
     onFilterAsync: async ({ searchTerm }) =>
@@ -107,6 +123,17 @@ export function LinkOptionsExample() {
                           <Check className="text-blue-500" />
                         )}
                       </Link>
+                    ) : link.target === "download" ? (
+                      <a
+                        {...getOptionLinkProps(link)}
+                        className="flex items-center justify-between w-full"
+                        download
+                      >
+                        <span>{link.name}</span>
+                        {getOptionState(link).isSelected && (
+                          <Check className="text-blue-500" />
+                        )}
+                      </a>
                     ) : (
                       <a
                         {...getOptionLinkProps(link)}
@@ -127,27 +154,6 @@ export function LinkOptionsExample() {
           )}
         </div>
       </div>
-
-      {getSelectedItem() && (
-        <div className="mt-4 p-4 bg-gray-50 rounded-md">
-          <h3 className="text-sm font-medium text-gray-500">Selected Link:</h3>
-          <div className="mt-2">
-            <p className="text-sm text-gray-900">
-              Name: {getSelectedItem()!.name}
-            </p>
-            <p className="text-sm text-blue-600 underline">
-              URL:{" "}
-              <a
-                href={getSelectedItem()!.url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {getSelectedItem()!.url}
-              </a>
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
