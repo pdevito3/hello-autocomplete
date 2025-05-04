@@ -1,3 +1,4 @@
+import { CustomActions } from "@/examples/actions";
 import { Animated } from "@/examples/animated";
 import { BasicExample } from "@/examples/basic";
 import { ControlledCustomEntryExample } from "@/examples/controlled-custom-entry";
@@ -66,8 +67,8 @@ export default function HomePage() {
           <Example title="Link Options">
             <LinkOptionsExample />
           </Example>
-          <Example title="Create New External Action">
-            <p>TODO</p>
+          <Example title="Custom Actions">
+            <CustomActions />
           </Example>
           <Example title="Placement">
             <p>TODO</p>

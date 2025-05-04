@@ -37,6 +37,22 @@ export interface Group<T> {
   };
 }
 
+// ----------------------------------------------------------------
+// New: ActionItem type to represent “action” entries in the list
+// ----------------------------------------------------------------
+interface ActionItem {
+  /** marker so we can detect these at runtime */
+  __isAction?: true;
+  /** text to render for this action */
+  label: string;
+  /** what to do when it’s “selected” */
+  onAction: () => void;
+  /** placement: top or bottom of the list (default bottom) */
+  placement?: "top" | "bottom";
+  /** if true, only render when the list of real items is empty */
+  showWhenEmpty?: boolean;
+}
+
 export interface UseAutoCompleteOptions<T> {
   /** 'single' for one selection, 'multiple' for multiple */
   mode?: Mode;
@@ -80,7 +96,6 @@ export interface UseAutoCompleteOptions<T> {
     value: string;
     signal: AbortSignal;
   }) => Promise<void>;
-  onEmptyActionClick?: () => void;
   onSelectValue?: (value: T) => void;
   onCustomValueAsync?: (params: {
     value: string;
@@ -99,16 +114,28 @@ export interface UseAutoCompleteOptions<T> {
   getOptionLink?: (
     item: T
   ) => string | Partial<Record<string, unknown>> | undefined;
+  /**
+   * zero or more “action” entries that appear alongside your normal items,
+   * can be clicked or keyboard‑selected to run `onAction()`
+   */
+  actions?: ActionItem[];
 }
 
 export interface OptionState {
   isActive: boolean;
   isSelected: boolean;
   isDisabled: boolean;
+  isAction: boolean;
 }
 
-export interface UseAutoCompleteReturn<T> {
-  getItems: () => T[] | Group<T>[];
+// ----------------------------------------------------------------
+// 1) Define two distinct return types:
+//    - NoActions → getItems(): T[]
+//    - WithActions → getItems(): Array<T|ActionItem>
+// ----------------------------------------------------------------
+
+interface UseAutoCompleteReturnNoActions<T> {
+  getItems: () => T[];
   getSelectedItem: () => T | T[] | undefined;
   hasActiveItem: () => boolean;
   isFocused: () => boolean;
@@ -128,7 +155,10 @@ export interface UseAutoCompleteReturn<T> {
   getDisclosureProps: () => React.ButtonHTMLAttributes<HTMLButtonElement> & {
     [key: `data-${string}`]: string | boolean | undefined;
   };
-  getOptionProps: (item: T) => React.LiHTMLAttributes<HTMLLIElement>;
+  getOptionProps: (
+    item: T | ActionItem
+  ) => React.LiHTMLAttributes<HTMLLIElement>;
+
   getOptionState: (item: T) => OptionState;
   getGroupProps: (group: Group<T>) => React.HTMLAttributes<HTMLUListElement>;
   getGroupLabelProps: (
@@ -136,17 +166,59 @@ export interface UseAutoCompleteReturn<T> {
   ) => React.HTMLAttributes<HTMLSpanElement>;
   hasSelectedItem: () => boolean;
   isOpen: () => boolean;
-  setIsOpen: (isOpen: boolean) => void;
+  setIsOpen: (open: boolean) => void;
   isCustomValue: (item: T) => boolean;
-  /** get the index of the highlighted option */
   getHighlightedIndex: () => number | null;
-  /** set the index of the highlighted option */
-  setHighlightedIndex: (index: number | null) => void;
+  setHighlightedIndex: (i: number | null) => void;
   getActiveItem: () => T | null;
   setActiveItem: (item: T | null) => void;
   getOptionLinkProps: (
     item: T
   ) => React.AnchorHTMLAttributes<HTMLAnchorElement> & { role: "option" };
+  clear: () => void;
+}
+
+interface UseAutoCompleteReturnWithActions<T> {
+  getItems: () => Array<T | ActionItem>;
+  getSelectedItem: () => T | T[] | undefined;
+  hasActiveItem: () => boolean;
+  isFocused: () => boolean;
+  getRootProps: () => React.HTMLAttributes<HTMLDivElement> & {
+    ref: React.Ref<HTMLDivElement>;
+  } & { [key: `data-${string}`]: string | boolean | undefined };
+  getListProps: () => React.HTMLAttributes<HTMLUListElement> & {
+    ref: React.Ref<HTMLUListElement>;
+  };
+  getLabelProps: () => React.LabelHTMLAttributes<HTMLLabelElement>;
+  getInputProps: () => React.InputHTMLAttributes<HTMLInputElement> & {
+    [key: `data-${string}`]: string | boolean | undefined;
+  };
+  getClearProps: () => React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    [key: `data-${string}`]: string | boolean | undefined;
+  };
+  getDisclosureProps: () => React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    [key: `data-${string}`]: string | boolean | undefined;
+  };
+  getOptionProps: (
+    item: T | ActionItem
+  ) => React.LiHTMLAttributes<HTMLLIElement>;
+  getOptionState: (item: T | ActionItem) => OptionState;
+  getGroupProps: (group: Group<T>) => React.HTMLAttributes<HTMLUListElement>;
+  getGroupLabelProps: (
+    group: Group<T>
+  ) => React.HTMLAttributes<HTMLSpanElement>;
+  hasSelectedItem: () => boolean;
+  isOpen: () => boolean;
+  setIsOpen: (open: boolean) => void;
+  isCustomValue: (item: T) => boolean;
+  getHighlightedIndex: () => number | null;
+  setHighlightedIndex: (i: number | null) => void;
+  getActiveItem: () => T | ActionItem | null;
+  setActiveItem: (item: T | ActionItem | null) => void;
+  getOptionLinkProps: (
+    item: T
+  ) => React.AnchorHTMLAttributes<HTMLAnchorElement> & { role: "option" };
+  clear: () => void;
 }
 
 // shallow-equal utility so inline arrays don’t repeatedly trigger updates
@@ -159,63 +231,145 @@ function arraysShallowEqual<T>(a: T[], b: T[]) {
   return true;
 }
 
-type UseAutoCompleteUngroupedSingle<T> = Omit<
-  UseAutoCompleteReturn<T>,
+// ——————————————————————————————
+// No‐actions variants: getItems(): T[]
+// ——————————————————————————————
+
+type UseAutoCompleteUngroupedSingleNoActions<T> = Omit<
+  UseAutoCompleteReturnNoActions<T>,
   "getItems" | "getSelectedItem"
 > & {
   getItems: () => T[];
   getSelectedItem: () => T | undefined;
 };
 
-type UseAutoCompleteUngroupedMultiple<T> = Omit<
-  UseAutoCompleteReturn<T>,
+type UseAutoCompleteUngroupedMultipleNoActions<T> = Omit<
+  UseAutoCompleteReturnNoActions<T>,
   "getItems" | "getSelectedItem"
 > & {
   getItems: () => T[];
   getSelectedItem: () => T[];
 };
 
-type UseAutoCompleteGroupedSingle<T> = Omit<
-  UseAutoCompleteReturn<T>,
+// grouped versions:
+type UseAutoCompleteGroupedSingleNoActions<T> = Omit<
+  UseAutoCompleteReturnNoActions<T>,
   "getItems" | "getSelectedItem"
 > & {
   getItems: () => Group<T>[];
   getSelectedItem: () => T | undefined;
 };
 
-type UseAutoCompleteGroupedMultiple<T> = Omit<
-  UseAutoCompleteReturn<T>,
+type UseAutoCompleteGroupedMultipleNoActions<T> = Omit<
+  UseAutoCompleteReturnNoActions<T>,
   "getItems" | "getSelectedItem"
 > & {
   getItems: () => Group<T>[];
   getSelectedItem: () => T[];
 };
 
-// Overload signatures for grouping & mode combinations
+// ——————————————————————————————
+// With‐actions variants: getItems(): Array<T|ActionItem>
+// ——————————————————————————————
+
+type UseAutoCompleteUngroupedSingleWithActions<T> = Omit<
+  UseAutoCompleteReturnWithActions<T>,
+  "getItems" | "getSelectedItem"
+> & {
+  getItems: () => Array<T | ActionItem>;
+  getSelectedItem: () => T | undefined;
+};
+
+type UseAutoCompleteUngroupedMultipleWithActions<T> = Omit<
+  UseAutoCompleteReturnWithActions<T>,
+  "getItems" | "getSelectedItem"
+> & {
+  getItems: () => Array<T | ActionItem>;
+  getSelectedItem: () => T[];
+};
+
+// grouped versions:
+type UseAutoCompleteGroupedSingleWithActions<T> = Omit<
+  UseAutoCompleteReturnWithActions<T>,
+  "getItems" | "getSelectedItem"
+> & {
+  getItems: () => Group<T>[];
+  getSelectedItem: () => T | undefined;
+};
+
+type UseAutoCompleteGroupedMultipleWithActions<T> = Omit<
+  UseAutoCompleteReturnWithActions<T>,
+  "getItems" | "getSelectedItem"
+> & {
+  getItems: () => Group<T>[];
+  getSelectedItem: () => T[];
+};
+
+// 2) Wire them up in your overloads:
+
 export function useAutoComplete<T>(
   options: UseAutoCompleteOptions<T> & {
+    actions?: undefined;
     state?: { grouping?: undefined };
     mode?: "single";
   }
-): UseAutoCompleteUngroupedSingle<T>;
+): UseAutoCompleteUngroupedSingleNoActions<T>;
+
 export function useAutoComplete<T>(
   options: UseAutoCompleteOptions<T> & {
+    actions?: undefined;
     state?: { grouping?: undefined };
     mode: "multiple";
   }
-): UseAutoCompleteUngroupedMultiple<T>;
+): UseAutoCompleteUngroupedMultipleNoActions<T>;
+
 export function useAutoComplete<T>(
   options: UseAutoCompleteOptions<T> & {
+    actions?: undefined;
     state: { grouping: GroupingOptions<T>[] };
     mode?: "single";
   }
-): UseAutoCompleteGroupedSingle<T>;
+): UseAutoCompleteGroupedSingleNoActions<T>;
+
 export function useAutoComplete<T>(
   options: UseAutoCompleteOptions<T> & {
+    actions?: undefined;
     state: { grouping: GroupingOptions<T>[] };
     mode: "multiple";
   }
-): UseAutoCompleteGroupedMultiple<T>;
+): UseAutoCompleteGroupedMultipleNoActions<T>;
+
+export function useAutoComplete<T>(
+  options: UseAutoCompleteOptions<T> & {
+    actions: ActionItem[];
+    state?: { grouping?: undefined };
+    mode?: "single";
+  }
+): UseAutoCompleteUngroupedSingleWithActions<T>;
+
+export function useAutoComplete<T>(
+  options: UseAutoCompleteOptions<T> & {
+    actions: ActionItem[];
+    state?: { grouping?: undefined };
+    mode: "multiple";
+  }
+): UseAutoCompleteUngroupedMultipleWithActions<T>;
+
+export function useAutoComplete<T>(
+  options: UseAutoCompleteOptions<T> & {
+    actions: ActionItem[];
+    state: { grouping: GroupingOptions<T>[] };
+    mode?: "single";
+  }
+): UseAutoCompleteGroupedSingleWithActions<T>;
+
+export function useAutoComplete<T>(
+  options: UseAutoCompleteOptions<T> & {
+    actions: ActionItem[];
+    state: { grouping: GroupingOptions<T>[] };
+    mode: "multiple";
+  }
+): UseAutoCompleteGroupedMultipleWithActions<T>;
 
 export function useAutoComplete<T>({
   mode: modeProp = "single",
@@ -226,17 +380,24 @@ export function useAutoComplete<T>({
   allowsCustomValue = false,
   onInputValueChange,
   onSelectValue,
-  // onCustomValueAsync,
   onInputValueChangeAsync,
   onBlurAsync,
   items: itemsProp = [],
   onFilterAsync,
   itemToString,
-  onEmptyActionClick,
   onClear,
   isItemDisabled: isItemDisabledProp,
   getOptionLink,
-}: UseAutoCompleteOptions<T>): UseAutoCompleteReturn<T> {
+  actions,
+}: UseAutoCompleteOptions<T>):
+  | UseAutoCompleteUngroupedSingleNoActions<T>
+  | UseAutoCompleteUngroupedMultipleNoActions<T>
+  | UseAutoCompleteGroupedSingleNoActions<T>
+  | UseAutoCompleteGroupedMultipleNoActions<T>
+  | UseAutoCompleteUngroupedSingleWithActions<T>
+  | UseAutoCompleteUngroupedMultipleWithActions<T>
+  | UseAutoCompleteGroupedSingleWithActions<T>
+  | UseAutoCompleteGroupedMultipleWithActions<T> {
   const mode = modeProp;
 
   const {
@@ -343,6 +504,7 @@ export function useAutoComplete<T>({
       []
     );
 
+  // ---- ungrouped items + optional “create custom” item as before ----
   const ungroupedItemsWithCustom: T[] = (() => {
     if (
       allowsCustomValue &&
@@ -354,27 +516,49 @@ export function useAutoComplete<T>({
     return items;
   })();
 
-  const flattenedItems = groupingOptions.length
-    ? flattenGroups(grouped)
-    : ungroupedItemsWithCustom;
+  // ---- now weave in any ActionItem[] from options.actions ----  // ----------------------------------------------------------------
+  // New: auto‑inject the __isAction flag on every action item
+  // ----------------------------------------------------------------
+  const builtActions: ActionItem[] = (actions ?? []).map((a) => ({
+    ...a,
+    __isAction: true as const,
+  }));
+  const ungroupedWithActions: Array<T | ActionItem> = (() => {
+    const base = ungroupedItemsWithCustom;
+    // filter out “empty-only” if we have items
+    const visible = builtActions.filter(
+      (a) => !a.showWhenEmpty || base.length === 0
+    );
+    const top = visible.filter((a) => a.placement === "top");
+    const bottom = visible.filter((a) => a.placement !== "top");
+    return [...top, ...base, ...bottom];
+  })();
+
+  // ---- final flattenedItems now includes real items + ActionItems ----
+  const flattenedItems: Array<T | ActionItem> = groupingOptions.length
+    ? (flattenGroups(grouped) as Array<T | ActionItem>)
+    : ungroupedWithActions;
 
   const isItemDisabled = useCallback(
     (item: T) => isItemDisabledProp?.(item) ?? false,
     [isItemDisabledProp]
   );
 
-  type NavState = { activeItem: T | null; highlightedIndex: number | null };
+  type NavState = {
+    activeItem: T | ActionItem | null;
+    highlightedIndex: number | null;
+  };
+
   type NavAction =
     | {
         type: "SET_ACTIVE_ITEM";
-        payload: { item: T | null; index: number | null };
+        payload: { item: T | ActionItem | null; index: number | null };
       }
     | {
         type: "SET_HIGHLIGHTED_INDEX";
-        payload: { item: T | null; index: number | null };
+        payload: { item: T | ActionItem | null; index: number | null };
       };
 
-  // Reducer ensures both activeItem & highlightedIndex stay in sync
   function navReducer(state: NavState, action: NavAction): NavState {
     switch (action.type) {
       case "SET_ACTIVE_ITEM":
@@ -393,8 +577,7 @@ export function useAutoComplete<T>({
     highlightedIndex: null,
   });
 
-  // Derive final activeItem / highlightedIndex (respect external props if provided)
-  const activeItem: T | null =
+  const activeItem: T | ActionItem | null =
     activeItemProp !== undefined ? activeItemProp : navState.activeItem;
   const highlightedIndex: number | null =
     highlightedIndexProp !== undefined
@@ -403,10 +586,11 @@ export function useAutoComplete<T>({
 
   // Wrappers that update both pieces via reducer + external setters
   const setActiveItem = useCallback(
-    (item: T | null) => {
+    (item: T | ActionItem | null) => {
       const index =
         item !== null ? flattenedItems.findIndex((i) => i === item) : null;
-      setActiveItemProp?.(item);
+      // only pass real T back to any external prop
+      setActiveItemProp?.((item as T) || null);
       setHighlightedIndexProp?.(index);
       dispatchNav({ type: "SET_ACTIVE_ITEM", payload: { item, index } });
     },
@@ -416,7 +600,8 @@ export function useAutoComplete<T>({
   const setHighlightedIndex = useCallback(
     (index: number | null) => {
       const item = index !== null ? flattenedItems[index] : null;
-      setActiveItemProp?.(item);
+      // only pass real T back to any external prop
+      setActiveItemProp?.((item as T) || null);
       setHighlightedIndexProp?.(index);
       dispatchNav({ type: "SET_HIGHLIGHTED_INDEX", payload: { item, index } });
     },
@@ -525,7 +710,6 @@ export function useAutoComplete<T>({
     } else {
       setSelectedValuesState([]);
     }
-    onEmptyActionClick?.();
     onClear?.();
     setActiveItem(null);
     setIsOpen(false);
@@ -533,7 +717,6 @@ export function useAutoComplete<T>({
     mode,
     setInputValue,
     setSelectedValue,
-    onEmptyActionClick,
     onClear,
     setActiveItem,
     setIsOpen,
@@ -560,6 +743,7 @@ export function useAutoComplete<T>({
     (event: React.KeyboardEvent<HTMLInputElement>) => {
       const { key } = event;
       const currentIndex = flattenedItems.findIndex((i) => i === activeItem);
+
       switch (key) {
         case "ArrowDown":
           event.preventDefault();
@@ -575,6 +759,7 @@ export function useAutoComplete<T>({
               ?.scrollIntoView({ block: "nearest" });
           }
           break;
+
         case "ArrowUp":
           event.preventDefault();
           if (!isOpen) {
@@ -590,15 +775,24 @@ export function useAutoComplete<T>({
               ?.scrollIntoView({ block: "nearest" });
           }
           break;
+
         case "Enter":
           event.preventDefault();
-          if (activeItem) handleSelect(activeItem);
+          if (activeItem) {
+            if ((activeItem as ActionItem).__isAction) {
+              (activeItem as ActionItem).onAction();
+            } else {
+              handleSelect(activeItem as T);
+            }
+          }
           break;
+
         case "Escape":
           event.preventDefault();
           setIsOpen(false);
           setActiveItem(null);
           break;
+
         case "Tab":
           setIsOpen(false);
           setActiveItem(null);
@@ -780,15 +974,35 @@ export function useAutoComplete<T>({
   );
 
   const getOptionProps = useCallback(
-    (item: T) => {
-      const index = flattenedItems.findIndex((i) => i === item);
-      const disabled = isItemDisabled(item);
-      const isItemActive = item === activeItem;
+    (item: T | ActionItem) => {
+      // if this is one of our “action” entries:
+      if ((item as ActionItem).__isAction) {
+        const action = item as ActionItem;
+        return {
+          role: "option",
+          "data-action-item": true,
+          tabIndex: 0,
+          onClick: () => action.onAction(),
+          onKeyDown: (e: React.KeyboardEvent) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              action.onAction();
+            }
+          },
+          // visually you can style via [data-action-item]
+        };
+      }
+
+      // otherwise, your existing item logic:
+      const real = item as T;
+      const index = flattenedItems.findIndex((i) => i === real);
+      const disabled = isItemDisabled(real);
+      const isItemActive = real === activeItem;
       const isItemSelected =
         mode === "multiple"
-          ? selectedValues().includes(item)
-          : item === selectedValue;
-      const custom = isCustomValue(item);
+          ? selectedValues().includes(real)
+          : real === selectedValue;
+      const custom = isCustomValue(real);
 
       return {
         role: "option",
@@ -802,7 +1016,7 @@ export function useAutoComplete<T>({
         "data-custom": custom ? "true" : undefined,
         "aria-disabled": disabled,
         disabled,
-        onClick: disabled ? undefined : () => handleSelect(item),
+        onClick: disabled ? undefined : () => handleSelect(real),
         "data-disabled": disabled ? "true" : undefined,
       };
     },
@@ -871,6 +1085,7 @@ export function useAutoComplete<T>({
     (item: T): OptionState => ({
       isActive: item === activeItem,
       isDisabled: isItemDisabled(item),
+      isAction: (item as ActionItem).__isAction ? true : false,
       isSelected:
         mode === "multiple"
           ? selectedValues().includes(item)
@@ -887,16 +1102,13 @@ export function useAutoComplete<T>({
 
   return {
     getItems: () => {
-      // mirror flattenedItems logic for rendering
-      if (
-        !groupingOptions.length &&
-        allowsCustomValue &&
-        inputValue.trim() !== "" &&
-        !items.some((it) => itemToStringFn(it) === inputValue)
-      ) {
-        return [...items, inputValue as unknown as T];
+      // if grouped, render groups
+      if (groupingOptions.length) {
+        return grouped;
       }
-      return groupingOptions.length ? grouped : items;
+
+      // otherwise, render items + custom‐value + action items
+      return ungroupedWithActions as T[];
     },
     getSelectedItem: () =>
       mode === "multiple" ? selectedValues() : selectedValue,
@@ -922,5 +1134,14 @@ export function useAutoComplete<T>({
     getActiveItem: () => activeItem,
     setActiveItem,
     getOptionLinkProps,
-  };
+    clear: handleClear,
+  } as unknown as
+    | UseAutoCompleteUngroupedSingleNoActions<T>
+    | UseAutoCompleteUngroupedMultipleNoActions<T>
+    | UseAutoCompleteGroupedSingleNoActions<T>
+    | UseAutoCompleteGroupedMultipleNoActions<T>
+    | UseAutoCompleteUngroupedSingleWithActions<T>
+    | UseAutoCompleteUngroupedMultipleWithActions<T>
+    | UseAutoCompleteGroupedSingleWithActions<T>
+    | UseAutoCompleteGroupedMultipleWithActions<T>;
 }
