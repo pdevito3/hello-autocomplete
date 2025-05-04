@@ -40,7 +40,6 @@ export function InfiniteAutocompleteExample() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeItem, setActiveItem] = useState<User | null>(null);
 
-  // React Query: re‐runs & resets when `filter` changes
   const {
     data,
     error,
@@ -51,7 +50,8 @@ export function InfiniteAutocompleteExample() {
     isError,
   } = useInfiniteQuery({
     queryKey: ["users", filter],
-    queryFn: ({ pageParam = 0 }) => fetchUserPage(20, pageParam, filter),
+    queryFn: ({ pageParam }) => fetchUserPage(20, pageParam as number, filter),
+    initialPageParam: 0,
     getNextPageParam: (last) =>
       last.rows.length === 20 ? last.nextOffset : undefined,
   });
@@ -61,8 +61,8 @@ export function InfiniteAutocompleteExample() {
     [data?.pages]
   );
 
-  // virtualizer setup
-  const parentRef = useRef<HTMLDivElement | null>(null);
+  const parentRef = useRef<HTMLUListElement | null>(null);
+
   const rowVirtualizer = useVirtualizer({
     count: hasNextPage ? allUsers.length + 1 : allUsers.length,
     getScrollElement: () => parentRef.current,
@@ -80,9 +80,9 @@ export function InfiniteAutocompleteExample() {
   });
 
   // auto‐load next page on scroll end
+  const virtualItems = rowVirtualizer.getVirtualItems();
   useEffect(() => {
-    const items = rowVirtualizer.getVirtualItems();
-    const lastItem = items[items.length - 1];
+    const lastItem = virtualItems[virtualItems.length - 1];
     if (
       lastItem &&
       lastItem.index >= allUsers.length - 1 &&
@@ -96,7 +96,7 @@ export function InfiniteAutocompleteExample() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    rowVirtualizer,
+    virtualItems,
   ]);
 
   // wire up autocomplete so typing drives `filter`
@@ -125,7 +125,7 @@ export function InfiniteAutocompleteExample() {
     onFilterAsync: async ({ searchTerm }) => {
       // update the React Query filter
       setFilter(searchTerm);
-      // return allUsers so hook’s internal list stays in sync
+      // return allUsers so hook's internal list stays in sync
       return allUsers;
     },
   });
@@ -195,23 +195,6 @@ export function InfiniteAutocompleteExample() {
                       <div className="text-sm text-gray-500">{user.email}</div>
                     </div>
                   </li>
-                  // <div
-                  //   key={user.id}
-                  //   {...getOptionProps(user)}
-                  //   style={style}
-                  //   className={cn(
-                  //     "px-4 py-2 cursor-pointer",
-                  //     getOptionState(user).isActive && "bg-gray-100"
-                  //   )}
-                  // >
-                  //   <div className="flex justify-between">
-                  //     {user.name}
-                  //     {getOptionState(user).isSelected && (
-                  //       <Check className="text-blue-500" />
-                  //     )}
-                  //   </div>
-                  //   <div className="text-sm text-gray-500">{user.email}</div>
-                  // </div>
                 );
               })
             )}
