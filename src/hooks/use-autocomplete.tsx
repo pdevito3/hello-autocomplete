@@ -104,6 +104,7 @@ export interface UseAutoCompleteOptions<T> {
 export interface OptionState {
   isActive: boolean;
   isSelected: boolean;
+  isDisabled: boolean;
 }
 
 export interface UseAutoCompleteReturn<T> {
@@ -869,12 +870,13 @@ export function useAutoComplete<T>({
   const getOptionState = useCallback(
     (item: T): OptionState => ({
       isActive: item === activeItem,
+      isDisabled: isItemDisabled(item),
       isSelected:
         mode === "multiple"
           ? selectedValues().includes(item)
           : item === selectedValue,
     }),
-    [activeItem, selectedValue, selectedValues, mode]
+    [activeItem, isItemDisabled, mode, selectedValues, selectedValue]
   );
 
   const getGroupProps = useCallback((group: Group<T>) => group.listProps, []);
