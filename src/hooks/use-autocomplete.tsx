@@ -119,6 +119,8 @@ export interface UseAutoCompleteOptions<T> {
    * can be clicked or keyboard‑selected to run `onAction()`
    */
   actions?: ActionItem[];
+  /** whether the combo box allows the menu to open even when the item collection is empty */
+  allowsEmptyCollection?: boolean;
 }
 
 export interface OptionState {
@@ -389,6 +391,7 @@ export function useAutoComplete<T>({
   isItemDisabled: isItemDisabledProp,
   getOptionLink,
   actions,
+  allowsEmptyCollection = false,
 }: UseAutoCompleteOptions<T>):
   | UseAutoCompleteUngroupedSingleNoActions<T>
   | UseAutoCompleteUngroupedMultipleNoActions<T>
@@ -722,10 +725,13 @@ export function useAutoComplete<T>({
     setIsOpen,
   ]);
 
-  const handleDisclosure = useCallback(
-    () => setIsOpen(!isOpen),
-    [setIsOpen, isOpen]
-  );
+  const handleDisclosure = useCallback(() => {
+    if (isOpen) {
+      setIsOpen(false);
+    } else if (allowsEmptyCollection || flattenedItems.length > 0) {
+      setIsOpen(true);
+    }
+  }, [isOpen, setIsOpen, allowsEmptyCollection, flattenedItems.length]);
 
   const isCustomValue = useCallback(
     (item: T) => {
@@ -748,9 +754,13 @@ export function useAutoComplete<T>({
         case "ArrowDown":
           event.preventDefault();
           if (!isOpen) {
-            setIsOpen(true);
-            if (flattenedItems.length) setActiveItem(flattenedItems[0]);
+            // only open if we have items or the flag is on
+            if (allowsEmptyCollection || flattenedItems.length > 0) {
+              setIsOpen(true);
+              if (flattenedItems.length) setActiveItem(flattenedItems[0]);
+            }
           } else {
+            // move highlight down
             const nextIndex =
               currentIndex < flattenedItems.length - 1 ? currentIndex + 1 : 0;
             setActiveItem(flattenedItems[nextIndex]);
@@ -763,10 +773,13 @@ export function useAutoComplete<T>({
         case "ArrowUp":
           event.preventDefault();
           if (!isOpen) {
-            setIsOpen(true);
-            if (flattenedItems.length)
-              setActiveItem(flattenedItems[flattenedItems.length - 1]);
+            if (allowsEmptyCollection || flattenedItems.length > 0) {
+              setIsOpen(true);
+              if (flattenedItems.length)
+                setActiveItem(flattenedItems[flattenedItems.length - 1]);
+            }
           } else {
+            // move highlight up
             const prevIndex =
               currentIndex > 0 ? currentIndex - 1 : flattenedItems.length - 1;
             setActiveItem(flattenedItems[prevIndex]);
@@ -799,7 +812,15 @@ export function useAutoComplete<T>({
           break;
       }
     },
-    [flattenedItems, activeItem, isOpen, setIsOpen, setActiveItem, handleSelect]
+    [
+      allowsEmptyCollection,
+      flattenedItems,
+      activeItem,
+      isOpen,
+      setIsOpen,
+      setActiveItem,
+      handleSelect,
+    ]
   );
 
   const handleInputChange = useCallback(
@@ -889,9 +910,12 @@ export function useAutoComplete<T>({
         if (onFilterAsyncRef.current) {
           await debouncedAsyncOperation(inputValue);
         }
-        setIsOpen(true);
-        if (flattenedItems.length && !activeItem) {
-          setActiveItem(flattenedItems[0]);
+        // only open if we have items or it's explicitly allowed
+        if (allowsEmptyCollection || flattenedItems.length > 0) {
+          setIsOpen(true);
+          if (flattenedItems.length && !activeItem) {
+            setActiveItem(flattenedItems[0]);
+          }
         }
       },
       onBlur: async () => {
@@ -925,9 +949,11 @@ export function useAutoComplete<T>({
       inputValue,
       handleInputChange,
       handleKeyDown,
-      activeItem,
-      flattenedItems,
       debouncedAsyncOperation,
+      allowsEmptyCollection,
+      flattenedItems,
+      activeItem,
+      setIsFocused,
       setIsOpen,
       setActiveItem,
       onBlurAsync,
