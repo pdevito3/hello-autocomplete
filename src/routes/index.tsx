@@ -12,6 +12,7 @@ import { InfiniteAutocompleteExample } from "@/examples/infinite";
 import { LinkOptionsExample } from "@/examples/link-options";
 import { MultiGroupedFruitExample } from "@/examples/multi-grouping";
 import MultiFruitExample from "@/examples/multiselect";
+import { PlacementExample } from "@/examples/placement";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -71,7 +72,7 @@ export default function HomePage() {
             <CustomActions />
           </Example>
           <Example title="Placement">
-            <p>TODO</p>
+            <PlacementExample />
           </Example>
           <Example title="Radix/Shadcn popover">
             <p>TODO</p>
