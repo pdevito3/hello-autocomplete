@@ -91,8 +91,14 @@ export interface UseAutoCompleteOptions<T> {
 
   /** return true for items that should be rendered and treated as disabled */
   isItemDisabled?: (item: T) => boolean;
-  /** derive a URL for an option (if you want it rendered as a link) */
-  getOptionLink?: (item: T) => string | undefined;
+  /**
+   * derive link props for an option.
+   * Can return a string (will be used as href)
+   * or an object of props (e.g. { to, params, search } for a router Link).
+   */
+  getOptionLink?: (
+    item: T
+  ) => string | Partial<Record<string, unknown>> | undefined;
 }
 
 export interface OptionState {
@@ -812,33 +818,42 @@ export function useAutoComplete<T>({
   );
 
   const getOptionLinkProps = useCallback(
-    (
-      item: T
-    ): React.AnchorHTMLAttributes<HTMLAnchorElement> & { role: "option" } => {
+    (item: T): Record<string, unknown> & { role: "option" } => {
       const index = flattenedItems.findIndex((i) => i === item);
       const disabled = isItemDisabled(item);
       const isSelected =
         mode === "multiple"
           ? selectedValues().includes(item)
           : item === selectedValue;
-      const href = getOptionLink?.(item);
+
+      // user‑returned link value
+      const linkResult = getOptionLink?.(item);
+      // build base props: if string, treat as href; else spread object
+      const linkProps: Record<string, unknown> =
+        typeof linkResult === "string"
+          ? { href: linkResult }
+          : linkResult && typeof linkResult === "object"
+          ? { ...linkResult }
+          : {};
 
       return {
         role: "option",
-        href: href,
-        tabIndex: disabled ? -1 : 0,
         "aria-selected": isSelected,
         "aria-posinset": index + 1,
         "aria-setsize": flattenedItems.length,
         "aria-disabled": disabled || undefined,
+        id: `option-${index}`,
+        tabIndex: disabled ? -1 : 0,
 
-        // no preventDefault — let the <a> do its navigation
-        onClick:
-          !disabled && href
-            ? () => {
-                handleSelect(item);
-              }
-            : undefined,
+        // spread whatever the consumer needs (href, to, params, etc)
+        ...linkProps,
+
+        onClick: !disabled
+          ? (e: React.MouseEvent) => {
+              // don't use handleSelect(item) for link
+              e.stopPropagation();
+            }
+          : undefined,
       };
     },
     [
@@ -847,7 +862,6 @@ export function useAutoComplete<T>({
       mode,
       selectedValues,
       selectedValue,
-      handleSelect,
       getOptionLink,
     ]
   );

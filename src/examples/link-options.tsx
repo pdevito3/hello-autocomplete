@@ -1,4 +1,5 @@
 import { Check, XIcon } from "@/svgs";
+import { Link } from "@tanstack/react-router";
 import { useAutoComplete } from "../hooks/use-autocomplete";
 import { cn } from "../utils";
 
@@ -6,14 +7,26 @@ interface LinkItem {
   id: number;
   name: string;
   url: string;
+  target: "internal" | "external";
 }
 
 const links: LinkItem[] = [
-  { id: 1, name: "Google", url: "https://www.google.com" },
-  { id: 2, name: "GitHub", url: "https://github.com" },
-  { id: 3, name: "Twitter", url: "https://twitter.com" },
-  { id: 4, name: "Stack Overflow", url: "https://stackoverflow.com" },
-  { id: 5, name: "MDN Web Docs", url: "https://developer.mozilla.org" },
+  { id: 1, name: "Party Time 🎉", url: "/party-time", target: "internal" },
+  { id: 2, name: "Google", url: "https://www.google.com", target: "external" },
+  { id: 3, name: "GitHub", url: "https://github.com", target: "external" },
+  { id: 4, name: "BlueSky", url: "https://bsky.app", target: "external" },
+  {
+    id: 5,
+    name: "Stack Overflow",
+    url: "https://stackoverflow.com",
+    target: "external",
+  },
+  {
+    id: 6,
+    name: "MDN Web Docs",
+    url: "https://developer.mozilla.org",
+    target: "external",
+  },
 ];
 
 export function LinkOptionsExample() {
@@ -32,10 +45,10 @@ export function LinkOptionsExample() {
     getSelectedItem,
   } = useAutoComplete<LinkItem>({
     items: links,
-    getOptionLink: (item) => item.url,
-    state: {
-      label: "Search links",
-    },
+    // for externals we return a string→href, for internals an object→{ to }
+    getOptionLink: (item) =>
+      item.target === "internal" ? { to: item.url } : item.url,
+    state: { label: "Search links" },
     asyncDebounceMs: 300,
     onFilterAsync: async ({ searchTerm }) =>
       links.filter((link) =>
@@ -81,17 +94,32 @@ export function LinkOptionsExample() {
                       getOptionState(link).isActive && "bg-gray-100"
                     )}
                   >
-                    <a
-                      {...getOptionLinkProps(link)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-between w-full"
-                    >
-                      <span>{link.name}</span>
-                      {getOptionState(link).isSelected && (
-                        <Check className="text-blue-500" />
-                      )}
-                    </a>
+                    {link.target === "internal" ? (
+                      <Link
+                        {...getOptionLinkProps(link)}
+                        to={link.url}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                        className="flex items-center justify-between w-full"
+                      >
+                        <span>{link.name}</span>
+                        {getOptionState(link).isSelected && (
+                          <Check className="text-blue-500" />
+                        )}
+                      </Link>
+                    ) : (
+                      <a
+                        {...getOptionLinkProps(link)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between w-full"
+                      >
+                        <span>{link.name}</span>
+                        {getOptionState(link).isSelected && (
+                          <Check className="text-blue-500" />
+                        )}
+                      </a>
+                    )}
                   </li>
                 ))
               )}
