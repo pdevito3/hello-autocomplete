@@ -60,7 +60,7 @@ function Autocomplete<T extends { value: string; label: string }>({
     itemToString,
     onClear: () => {
       // TODO why do i need to do this??? seems like the built in undefined doesn't fully fly when controlled?
-      onChange("" as T);
+      onChange("" as unknown as T);
     },
   });
 
