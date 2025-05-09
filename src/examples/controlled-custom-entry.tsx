@@ -1,5 +1,5 @@
 import { Check, XIcon } from "@/svgs";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAutoComplete } from "../hooks/use-autocomplete";
 import { cn } from "../utils";
 
@@ -8,7 +8,10 @@ export function ControlledCustomEntryExample({
 }: {
   allowsCustomValue?: boolean;
 }) {
-  const languages = ["JavaScript", "TypeScript", "Python", "Ruby"];
+  const languages = useMemo(
+    () => ["JavaScript", "TypeScript", "Python", "Ruby"],
+    []
+  );
 
   const [inputValue, setInputValue] = useState("");
   const [selectedValue, setSelectedValue] = useState<string | undefined>(
