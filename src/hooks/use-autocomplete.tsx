@@ -62,8 +62,6 @@ export interface Tab<T> {
   filter?: (item: T) => boolean;
   /** optional custom props for the tab button */
   tabProps?: React.HTMLAttributes<HTMLButtonElement>;
-  /** mark this tab as the default selection */
-  default?: boolean;
 }
 
 export interface UseAutoCompleteOptions<T> {
