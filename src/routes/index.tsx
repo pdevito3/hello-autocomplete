@@ -13,6 +13,7 @@ import { LinkOptionsExample } from "@/examples/link-options";
 import { MultiGroupedFruitExample } from "@/examples/multi-grouping";
 import MultiFruitExample from "@/examples/multiselect";
 import { PlacementExample } from "@/examples/placement";
+import { TabLinksExample } from "@/examples/tab-links";
 import { TabsExample } from "@/examples/tabs";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -47,6 +48,9 @@ export default function HomePage() {
           </Example>
           <Example title="Tabs">
             <TabsExample />
+          </Example>
+          <Example title="Tab Links">
+            <TabLinksExample />
           </Example>
           <Example title="Multi Grouping">
             <MultiGroupedFruitExample />
