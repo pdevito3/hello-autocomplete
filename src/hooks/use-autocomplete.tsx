@@ -745,6 +745,14 @@ export function useAutoComplete<T>({
     [allowsCustomValue, inputValue, itemToStringFn, items]
   );
 
+  // Automatically highlight when exactly one option remains
+  useEffect(() => {
+    // only run when there's exactly one item and it isn’t already active
+    if (flattenedItems.length === 1 && activeItem !== flattenedItems[0]) {
+      setActiveItem(flattenedItems[0] as T | ActionItem);
+    }
+  }, [flattenedItems, activeItem, setActiveItem]);
+
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
       const { key } = event;
