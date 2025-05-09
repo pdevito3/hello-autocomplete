@@ -149,6 +149,7 @@ export interface OptionState {
 export interface TabState {
   isSelected: boolean;
   isDisabled: boolean;
+  itemCount: number;
 }
 
 // ----------------------------------------------------------------
@@ -618,8 +619,11 @@ export function useAutoComplete<T>({
     (tab: Tab<T>): TabState => ({
       isSelected: tab.key === tabs[activeTabIndex].key,
       isDisabled: false,
+      itemCount: rawItems.filter((item) =>
+        tab.filter ? tab.filter(item) : true
+      ).length,
     }),
-    [activeTabIndex, tabs]
+    [activeTabIndex, rawItems, tabs]
   );
 
   const isItemDisabled = useCallback(

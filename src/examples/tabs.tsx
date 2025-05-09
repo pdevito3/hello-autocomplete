@@ -71,23 +71,25 @@ export function TabsExample() {
                 className="flex space-x-2 p-3 bg-gray-50 relative"
               >
                 {tabs.map((tab, i) => {
-                  const { isSelected } = getTabState(tab);
+                  const { isSelected, itemCount } = getTabState(tab);
                   return (
                     <div key={tab.key} className="relative z-10">
                       <button
                         {...getTabProps(tab, i)}
                         className={cn(
-                          "px-4 py-1 text-sm font-medium rounded-full focus:outline-none relative z-10",
+                          "pl-3 pr-2 py-1 text-sm font-medium rounded-full focus:outline-none relative z-10 flex items-center space-x-2",
                           isSelected
-                            ? "text-white"
-                            : "text-gray-600 hover:text-gray-800 hover:bg-emerald-100 focus:bg-emerald-100"
+                            ? "text-slate-900 bg-slate-300 rounded-full"
+                            : "text-slate-600 hover:text-gray-800 hover:bg-slate-200 focus:bg-emerald-500"
                         )}
                       >
-                        {tab.label}
+                        <p>{tab.label}</p>
+                        {itemCount > 0 && (
+                          <span className="bg-green-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                            {itemCount}
+                          </span>
+                        )}
                       </button>
-                      {isSelected && (
-                        <div className="absolute inset-0 bg-green-500 rounded-full -z-0" />
-                      )}
                     </div>
                   );
                 })}
