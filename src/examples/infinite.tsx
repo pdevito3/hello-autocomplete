@@ -1,5 +1,5 @@
 import type { User } from "@/datasets/users";
-import { Check } from "@/svgs";
+import { Check, XIcon } from "@/svgs";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -107,6 +107,8 @@ export function InfiniteAutocompleteExample() {
     getListProps,
     getOptionProps,
     getOptionState,
+    hasSelectedItem,
+    getClearProps,
   } = useAutoComplete<User>({
     state: {
       inputValue: filter,
@@ -133,12 +135,33 @@ export function InfiniteAutocompleteExample() {
   return (
     <div className="relative max-w-md">
       <label {...getLabelProps()}>Search users</label>
-      <div {...getRootProps()}>
+      <div {...getRootProps()} className="relative">
         <input
           {...getInputProps()}
           placeholder="Type to filter users…"
           className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+        {isLoading || isFetchingNextPage ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center"
+          >
+            <span className="sr-only">Loading…</span>
+            <div
+              className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"
+              aria-hidden="true"
+            />
+          </div>
+        ) : hasSelectedItem() ? (
+          <button
+            {...getClearProps()}
+            type="button"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            <XIcon />
+          </button>
+        ) : null}
         {isOpen && (
           <ul
             {...getListProps()}
