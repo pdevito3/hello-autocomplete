@@ -900,7 +900,6 @@ export function useAutoComplete<T>({
   const getInputProps = useCallback(
     (): React.InputHTMLAttributes<HTMLInputElement> & {
       [key: `data-${string}`]: string | boolean | undefined;
-      autocomplete: string;
     } => ({
       id: "autocomplete-input",
       value: inputValue,
@@ -933,7 +932,7 @@ export function useAutoComplete<T>({
         }
       },
 
-      autocomplete: "off",
+      autoComplete: "off",
       // force this to the exact union member:
       "aria-autocomplete": "list" as const,
       "aria-controls": "autocomplete-listbox",
