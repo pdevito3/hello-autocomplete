@@ -1,3 +1,18 @@
+import { CustomActions } from "@/examples/actions";
+import { Animated } from "@/examples/animated";
+import { BasicExample } from "@/examples/basic";
+import { ControlledCustomEntryExample } from "@/examples/controlled-custom-entry";
+import { CustomEntryExample } from "@/examples/custom-entry";
+import { CustomRenderingExample } from "@/examples/custom-options";
+import { BasicDisabledExample } from "@/examples/disabled-basic";
+import { ComplexDisabledExample } from "@/examples/disabled-complex";
+import { DisclosureExample } from "@/examples/disclosure";
+import { GroupedFruitExample } from "@/examples/grouping";
+import { InfiniteAutocompleteExample } from "@/examples/infinite";
+import { LinkOptionsExample } from "@/examples/link-options";
+import { MultiGroupedFruitExample } from "@/examples/multi-grouping";
+import MultiFruitExample from "@/examples/multiselect";
+import { PlacementExample } from "@/examples/placement";
 import { TabsExample } from "@/examples/tabs";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -12,7 +27,7 @@ export default function HomePage() {
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto space-y-8 grid gap-6 grid-cols-3">
-          {/* <Example title="Basic Autocomplete with debounce and clear button">
+          <Example title="Basic Autocomplete with debounce and clear button">
             <BasicExample />
           </Example>
           <Example title="Custom Rendering">
@@ -23,17 +38,17 @@ export default function HomePage() {
           </Example>
           <Example title="Disclosure Button">
             <DisclosureExample />
-          </Example> */}
+          </Example>
           {/* <Example title="Controlled on form">
             <FruitForm />
           </Example> */}
-          {/* <Example title="Grouping">
+          <Example title="Grouping">
             <GroupedFruitExample />
-          </Example> */}
+          </Example>
           <Example title="Tabs">
             <TabsExample />
           </Example>
-          {/* <Example title="Multi Grouping">
+          <Example title="Multi Grouping">
             <MultiGroupedFruitExample />
           </Example>
           <Example title="Multi Select">
@@ -76,7 +91,7 @@ export default function HomePage() {
           </Example>
           <Example title="Rows">
             <p>TODO</p>
-          </Example> */}
+          </Example>
         </div>
       </div>
     </QueryClientProvider>
