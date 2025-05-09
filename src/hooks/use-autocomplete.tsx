@@ -507,6 +507,11 @@ export function useAutoComplete<T>({
       []
     );
 
+  const itemToStringFn = useCallback(
+    (item: T) => (itemToString ? itemToString(item) : String(item)),
+    [itemToString]
+  );
+
   // ---- ungrouped items + optional “create custom” item as before ----
   const ungroupedItemsWithCustom: T[] = (() => {
     if (
@@ -612,11 +617,6 @@ export function useAutoComplete<T>({
   );
 
   const [isFocused, setIsFocused] = useState(false);
-
-  const itemToStringFn = useCallback(
-    (item: T) => (itemToString ? itemToString(item) : String(item)),
-    [itemToString]
-  );
 
   useEffect(() => {
     if (!arraysShallowEqual(prevItemsPropRef.current, itemsProp)) {
@@ -900,6 +900,7 @@ export function useAutoComplete<T>({
   const getInputProps = useCallback(
     (): React.InputHTMLAttributes<HTMLInputElement> & {
       [key: `data-${string}`]: string | boolean | undefined;
+      autocomplete: string;
     } => ({
       id: "autocomplete-input",
       value: inputValue,
@@ -932,6 +933,7 @@ export function useAutoComplete<T>({
         }
       },
 
+      autocomplete: "off",
       // force this to the exact union member:
       "aria-autocomplete": "list" as const,
       "aria-controls": "autocomplete-listbox",
