@@ -53,6 +53,19 @@ interface ActionItem {
   showWhenEmpty?: boolean;
 }
 
+export interface Tab<T> {
+  /** unique key for this tab */
+  key: string;
+  /** text to render on the tab */
+  label: string;
+  /** filter to apply before other filtering */
+  filter?: (item: T) => boolean;
+  /** optional custom props for the tab button */
+  tabProps?: React.HTMLAttributes<HTMLButtonElement>;
+  /** mark this tab as the default selection */
+  default?: boolean;
+}
+
 export interface UseAutoCompleteOptions<T> {
   /** 'single' for one selection, 'multiple' for multiple */
   mode?: Mode;
@@ -121,6 +134,11 @@ export interface UseAutoCompleteOptions<T> {
   actions?: ActionItem[];
   /** whether the combo box allows the menu to open even when the item collection is empty */
   allowsEmptyCollection?: boolean;
+
+  /** zero or more tabs for pre‐filtering items */
+  tabs?: Tab<T>[];
+  /** key of the tab to select by default */
+  defaultTabKey?: string;
 }
 
 export interface OptionState {
@@ -128,6 +146,11 @@ export interface OptionState {
   isSelected: boolean;
   isDisabled: boolean;
   isAction: boolean;
+}
+
+export interface TabState {
+  isSelected: boolean;
+  isDisabled: boolean;
 }
 
 // ----------------------------------------------------------------
@@ -178,6 +201,14 @@ interface UseAutoCompleteReturnNoActions<T> {
     item: T
   ) => React.AnchorHTMLAttributes<HTMLAnchorElement> & { role: "option" };
   clear: () => void;
+  /** props for the tab list container */
+  getTabListProps: () => React.HTMLAttributes<HTMLDivElement>;
+  /** props for an individual tab */
+  getTabProps: (
+    tab: Tab<T>,
+    index: number
+  ) => React.HTMLAttributes<HTMLButtonElement>;
+  getTabState: (tab: Tab<T>) => TabState;
 }
 
 interface UseAutoCompleteReturnWithActions<T> {
@@ -221,6 +252,14 @@ interface UseAutoCompleteReturnWithActions<T> {
     item: T
   ) => React.AnchorHTMLAttributes<HTMLAnchorElement> & { role: "option" };
   clear: () => void;
+  /** props for the tab list container */
+  getTabListProps: () => React.HTMLAttributes<HTMLDivElement>;
+  /** props for an individual tab */
+  getTabProps: (
+    tab: Tab<T>,
+    index: number
+  ) => React.HTMLAttributes<HTMLButtonElement>;
+  getTabState: (tab: Tab<T>) => TabState;
 }
 
 // shallow-equal utility so inline arrays don’t repeatedly trigger updates
@@ -392,6 +431,8 @@ export function useAutoComplete<T>({
   getOptionLink,
   actions,
   allowsEmptyCollection = false,
+  tabs = [],
+  defaultTabKey,
 }: UseAutoCompleteOptions<T>):
   | UseAutoCompleteUngroupedSingleNoActions<T>
   | UseAutoCompleteUngroupedMultipleNoActions<T>
@@ -447,6 +488,26 @@ export function useAutoComplete<T>({
   const setIsOpen = setIsOpenProp ?? setIsOpenState;
 
   const [items, setItems] = useState<T[]>(itemsProp);
+  const [activeTabIndex, setActiveTabIndex] = useState<number>(() => {
+    if (tabs.length === 0) return -1;
+    const defIdx = defaultTabKey
+      ? tabs.findIndex((t) => t.key === defaultTabKey)
+      : -1;
+    return defIdx >= 0 ? defIdx : 0;
+  });
+  // Raw items from props or async
+  const rawItems = items;
+
+  // Apply tab‐level filter before other filters
+  const filteredItems: T[] =
+    tabs.length && activeTabIndex >= 0
+      ? rawItems.filter((item) =>
+          tabs[activeTabIndex].filter
+            ? tabs[activeTabIndex].filter!(item)
+            : true
+        )
+      : rawItems;
+
   const abortControllerRef = useRef<AbortController | null>(null);
   const listboxRef = useRef<HTMLUListElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -496,7 +557,7 @@ export function useAutoComplete<T>({
     });
   };
 
-  const grouped = groupingOptions.length ? createGroups(items) : [];
+  const grouped = groupingOptions.length ? createGroups(filteredItems) : [];
 
   const flattenGroups = (groupsList: Group<T>[]): T[] =>
     groupsList.reduce<T[]>(
@@ -517,11 +578,11 @@ export function useAutoComplete<T>({
     if (
       allowsCustomValue &&
       inputValue.trim() !== "" &&
-      !items.some((it) => itemToStringFn(it) === inputValue)
+      !filteredItems.some((it) => itemToStringFn(it) === inputValue)
     ) {
-      return [...items, inputValue as unknown as T];
+      return [...filteredItems, inputValue as unknown as T];
     }
-    return items;
+    return filteredItems;
   })();
 
   // ---- now weave in any ActionItem[] from options.actions ----  // ----------------------------------------------------------------
@@ -533,7 +594,7 @@ export function useAutoComplete<T>({
   }));
   const ungroupedWithActions: Array<T | ActionItem> = (() => {
     const base = ungroupedItemsWithCustom;
-    // filter out “empty-only” if we have items
+    // filter out “empty‐only” if we have items
     const visible = builtActions.filter(
       (a) => !a.showWhenEmpty || base.length === 0
     );
@@ -546,6 +607,22 @@ export function useAutoComplete<T>({
   const flattenedItems: Array<T | ActionItem> = groupingOptions.length
     ? (flattenGroups(grouped) as Array<T | ActionItem>)
     : ungroupedWithActions;
+
+  const getTabListProps = useCallback(
+    () => ({
+      role: "tablist",
+      "data-tablist": true,
+    }),
+    []
+  );
+
+  const getTabState = useCallback(
+    (tab: Tab<T>): TabState => ({
+      isSelected: tab.key === tabs[activeTabIndex].key,
+      isDisabled: false,
+    }),
+    [activeTabIndex, tabs]
+  );
 
   const isItemDisabled = useCallback(
     (item: T) => isItemDisabledProp?.(item) ?? false,
@@ -754,7 +831,7 @@ export function useAutoComplete<T>({
   }, [flattenedItems, activeItem, setActiveItem]);
 
   const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
+    (event: React.KeyboardEvent<HTMLElement>) => {
       const { key } = event;
       const currentIndex = flattenedItems.findIndex((i) => i === activeItem);
 
@@ -762,13 +839,11 @@ export function useAutoComplete<T>({
         case "ArrowDown":
           event.preventDefault();
           if (!isOpen) {
-            // only open if we have items or the flag is on
             if (allowsEmptyCollection || flattenedItems.length > 0) {
               setIsOpen(true);
               if (flattenedItems.length) setActiveItem(flattenedItems[0]);
             }
           } else {
-            // move highlight down
             const nextIndex =
               currentIndex < flattenedItems.length - 1 ? currentIndex + 1 : 0;
             setActiveItem(flattenedItems[nextIndex]);
@@ -787,13 +862,34 @@ export function useAutoComplete<T>({
                 setActiveItem(flattenedItems[flattenedItems.length - 1]);
             }
           } else {
-            // move highlight up
             const prevIndex =
               currentIndex > 0 ? currentIndex - 1 : flattenedItems.length - 1;
             setActiveItem(flattenedItems[prevIndex]);
             document
               .getElementById(`option-${prevIndex}`)
               ?.scrollIntoView({ block: "nearest" });
+          }
+          break;
+
+        case "ArrowRight":
+          event.preventDefault();
+          if (tabs.length > 0) {
+            const nextTab = (activeTabIndex + 1) % tabs.length;
+            setActiveTabIndex(nextTab);
+            document
+              .getElementById(`autocomplete-tab-${tabs[nextTab].key}`)
+              ?.focus();
+          }
+          break;
+
+        case "ArrowLeft":
+          event.preventDefault();
+          if (tabs.length > 0) {
+            const prevTab = (activeTabIndex - 1 + tabs.length) % tabs.length;
+            setActiveTabIndex(prevTab);
+            document
+              .getElementById(`autocomplete-tab-${tabs[prevTab].key}`)
+              ?.focus();
           }
           break;
 
@@ -828,7 +924,23 @@ export function useAutoComplete<T>({
       setIsOpen,
       setActiveItem,
       handleSelect,
+      tabs,
+      activeTabIndex,
+      setActiveTabIndex,
     ]
+  );
+
+  const getTabProps = useCallback(
+    (tab: Tab<T>, index: number) => ({
+      role: "tab",
+      id: `autocomplete-tab-${tab.key}`,
+      "aria-selected": index === activeTabIndex || undefined,
+      tabIndex: index === activeTabIndex ? 0 : -1,
+      onClick: () => setActiveTabIndex(index),
+      onKeyDown: handleKeyDown,
+      ...tab.tabProps,
+    }),
+    [activeTabIndex, handleKeyDown]
   );
 
   const handleInputChange = useCallback(
@@ -1170,6 +1282,9 @@ export function useAutoComplete<T>({
     setActiveItem,
     getOptionLinkProps,
     clear: handleClear,
+    getTabListProps,
+    getTabProps,
+    getTabState,
   } as unknown as
     | UseAutoCompleteUngroupedSingleNoActions<T>
     | UseAutoCompleteUngroupedMultipleNoActions<T>
