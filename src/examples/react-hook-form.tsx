@@ -5,30 +5,24 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useAutoComplete } from "../hooks/use-autocomplete";
 
-type FormValues = {
-  fruit?: Fruit;
-};
-
 interface AutocompleteProps<T> {
-  /** the currently selected value */
   value?: T;
-  /** call when a new value is selected (or cleared via `undefined`) */
   onChange: (value: T | undefined) => void;
   items: T[];
   label: string;
-  /** how to render an item as a string */
   itemToString: (item: T) => string;
+  onClear?: () => void;
 }
 
-function Autocomplete<T extends { value: string; label: string }>({
+export function ControllableAutocomplete<T>({
   value,
   onChange,
   items,
   label,
   itemToString,
+  onClear,
 }: AutocompleteProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeItem, setActiveItem] = useState<T | null>(null);
 
   const {
     getRootProps,
@@ -39,7 +33,6 @@ function Autocomplete<T extends { value: string; label: string }>({
     getOptionState,
     getClearProps,
     hasSelectedItem,
-    getSelectedItem,
     getItems,
   } = useAutoComplete<T>({
     items,
@@ -48,8 +41,6 @@ function Autocomplete<T extends { value: string; label: string }>({
       setSelectedValue: onChange,
       isOpen,
       setIsOpen,
-      activeItem,
-      setActiveItem,
       label,
     },
     asyncDebounceMs: 300,
@@ -58,13 +49,12 @@ function Autocomplete<T extends { value: string; label: string }>({
         itemToString(item).toLowerCase().includes(searchTerm.toLowerCase())
       ),
     itemToString,
-    onClear: () => {
-      // TODO why do i need to do this??? seems like the built in undefined doesn't fully fly when controlled?
-      onChange("" as unknown as T);
-    },
+    // onClear: () => {
+    //   // TODO why does RHF need to do this??? built in undefined doesn't fully fly when controlled?
+    //   onChange("" as unknown as T);
+    // },
+    onClear,
   });
-
-  console.log({ selected: getSelectedItem() });
 
   return (
     <div className="relative">
@@ -96,12 +86,12 @@ function Autocomplete<T extends { value: string; label: string }>({
                 No {label.toLowerCase()} found
               </li>
             ) : (
-              getItems().map((item) => (
+              getItems().map((item, index) => (
                 <li
-                  key={item.value}
+                  key={index}
                   {...getOptionProps(item)}
                   className={cn(
-                    "px-4 py-2 cursor-pointer hover:bg-gray-100 flex justify-between",
+                    "px-4 py-2 cursor-pointer flex justify-between",
                     getOptionState(item).isActive && "bg-gray-100"
                   )}
                 >
@@ -117,12 +107,22 @@ function Autocomplete<T extends { value: string; label: string }>({
   );
 }
 
-export function FruitForm() {
-  const { control, handleSubmit, watch } = useForm<FormValues>({
+type FormValues = {
+  fruit?: Fruit;
+};
+
+export function ReactHookFormExample() {
+  const {
+    handleSubmit,
+    control,
+    formState: { isSubmitting },
+  } = useForm<FormValues>({
     defaultValues: { fruit: undefined },
   });
-  const selectedFruit = watch("fruit");
-  const onSubmit = (data: FormValues) => console.log("Submitted:", data);
+
+  const onSubmit = (data: FormValues) => {
+    console.log("Submitted:", data.fruit);
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="max-w-md space-y-4">
@@ -130,8 +130,13 @@ export function FruitForm() {
         name="fruit"
         control={control}
         render={({ field }) => (
-          <Autocomplete
-            {...field}
+          <ControllableAutocomplete<Fruit>
+            value={field.value}
+            onChange={field.onChange}
+            // RHF needs onChange to set to null not undefined
+            onClear={() => {
+              field.onChange(null);
+            }}
             items={fruits}
             label="Fruit"
             itemToString={(f) => f.label}
@@ -141,45 +146,11 @@ export function FruitForm() {
 
       <button
         type="submit"
-        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        disabled={isSubmitting}
+        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
       >
-        Submit
+        {isSubmitting ? "Saving…" : "Submit"}
       </button>
-
-      {selectedFruit && (
-        <div className="mt-4 p-4 bg-gray-50 rounded-md">
-          <h3 className="text-sm font-medium text-gray-500">Selected Fruit:</h3>
-          <p className="text-sm text-gray-900">Label: {selectedFruit.label}</p>
-          <p className="text-sm text-gray-900">Value: {selectedFruit.value}</p>
-        </div>
-      )}
-
-      {/* <div className="p-4 bg-gray-50 rounded-md">
-        <h3 className="text-sm font-medium text-gray-500">
-          Current selection on Form:
-        </h3>
-        <p
-          className={`mt-2 ${
-            selectedFruit ? "text-gray-900" : "text-gray-500"
-          }`}
-        >
-          {selectedFruit?.label ?? "None"}
-        </p>
-      </div>
-
-      <div className="p-4 bg-gray-50 rounded-md">
-        <h3 className="text-sm font-medium text-gray-500">
-          Current selection on State:
-        </h3>
-        <p
-          className={cn(
-            "mt-2",
-            getSelectedItem() ? "text-gray-900" : "text-gray-500"
-          )}
-        >
-          {getSelectedItem()?.label ?? "None"}
-        </p>
-      </div> */}
     </form>
   );
 }

@@ -13,8 +13,10 @@ import { LinkOptionsExample } from "@/examples/link-options";
 import { MultiGroupedFruitExample } from "@/examples/multi-grouping";
 import MultiFruitExample from "@/examples/multiselect";
 import { PlacementExample } from "@/examples/placement";
+import { ReactHookFormExample } from "@/examples/react-hook-form";
 import { TabLinksExample } from "@/examples/tab-links";
 import { TabsExample } from "@/examples/tabs";
+import { TanstackExample } from "@/examples/tanstack";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -85,16 +87,11 @@ export default function HomePage() {
           <Example title="Radix/Shadcn popover">
             <p>TODO</p>
           </Example>
-          <Example title="Select Tab Organization">
-            <a
-              href="https://ariakit.org/examples/combobox-tabs"
-              className="text-blue-500 hover:underline"
-            >
-              TODO
-            </a>
+          <Example title="TanStack Form">
+            <TanstackExample />
           </Example>
-          <Example title="Rows">
-            <p>TODO</p>
+          <Example title="RHF Form">
+            <ReactHookFormExample />
           </Example>
         </div>
       </div>
