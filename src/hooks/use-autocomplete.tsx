@@ -261,16 +261,6 @@ interface UseAutoCompleteReturnWithActions<T> {
   getTabState: (tab: Tab<T>) => TabState;
 }
 
-// shallow-equal utility so inline arrays don’t repeatedly trigger updates
-function arraysShallowEqual<T>(a: T[], b: T[]) {
-  if (a === b) return true;
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-}
-
 // ——————————————————————————————
 // No‐actions variants: getItems(): T[]
 // ——————————————————————————————
@@ -307,6 +297,16 @@ type UseAutoCompleteGroupedMultipleNoActions<T> = Omit<
   getItems: () => Group<T>[];
   getSelectedItem: () => T[];
 };
+
+// shallow-equal utility so inline arrays don’t repeatedly trigger updates
+function arraysShallowEqual<T>(a: T[], b: T[]) {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
 
 // ——————————————————————————————
 // With‐actions variants: getItems(): Array<T|ActionItem>
