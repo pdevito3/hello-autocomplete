@@ -1,4 +1,5 @@
 import { Check, XIcon } from "@/svgs";
+import { useMemo } from "react";
 import { useAutoComplete } from "../hooks/use-autocomplete";
 import { cn } from "../utils";
 
@@ -7,7 +8,10 @@ export function CustomEntryExample({
 }: {
   allowsCustomValue?: boolean;
 }) {
-  const languages = ["JavaScript", "TypeScript", "Python", "Ruby"];
+  const languages = useMemo(
+    () => ["JavaScript", "TypeScript", "Python", "Ruby"],
+    []
+  );
 
   const {
     getRootProps,
