@@ -1089,7 +1089,7 @@ export function useAutoComplete<T>({
     } => {
       const disabled =
         inputValue === "" &&
-        (mode === "single" ? !selectedValue : selectedValues.length === 0);
+        (mode === "single" ? !selectedValue : selectedValues().length === 0);
       return {
         type: "button",
         "aria-label": "Clear input",
