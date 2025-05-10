@@ -14,6 +14,7 @@ import { MultiGroupedFruitExample } from "@/examples/multi-grouping";
 import MultiFruitExample from "@/examples/multiselect";
 import { PlacementExample } from "@/examples/placement";
 import { ReactHookFormExample } from "@/examples/react-hook-form";
+import { SimpleExample } from "@/examples/simple";
 import { TabLinksExample } from "@/examples/tab-links";
 import { TabsExample } from "@/examples/tabs";
 import { TanstackExample } from "@/examples/tanstack";
@@ -30,8 +31,11 @@ export default function HomePage() {
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto space-y-8 grid gap-6 grid-cols-3">
-          <Example title="Basic Autocomplete with debounce and clear button">
+          <Example title="Basic Autocomplete">
             <BasicExample />
+          </Example>
+          <Example title="Simple Autocomplete">
+            <SimpleExample />
           </Example>
           <Example title="Custom Rendering">
             <CustomRenderingExample />
