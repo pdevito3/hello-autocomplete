@@ -783,9 +783,6 @@ export function useAutoComplete<T>({
   );
 
   const handleClear = useCallback(() => {
-    // const disabled =
-    //   inputValue === "" &&
-    //   (mode === "single" ? !selectedValue : selectedValues.length === 0);
     setInputValue("");
     if (mode === "single") {
       setSelectedValue(undefined);
