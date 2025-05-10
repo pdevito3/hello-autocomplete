@@ -49,10 +49,6 @@ export function ControllableAutocomplete<T>({
         itemToString(item).toLowerCase().includes(searchTerm.toLowerCase())
       ),
     itemToString,
-    // onClear: () => {
-    //   // TODO why does RHF need to do this??? built in undefined doesn't fully fly when controlled?
-    //   onChange("" as unknown as T);
-    // },
     onClear,
   });
 

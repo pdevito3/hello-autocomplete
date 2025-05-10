@@ -64,7 +64,7 @@ export function ControllableAutocomplete<T>({
           <button
             type="button"
             {...getClearProps()}
-            className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none"
+            className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-sky-600 bg-transparent text-gray-400 hover:text-gray-600"
           >
             <XIcon />
           </button>
