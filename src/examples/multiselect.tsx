@@ -68,7 +68,7 @@ export default function MultiFruitExample() {
             {hasSelectedItem() && (
               <button
                 type="button"
-                className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-sky-600"
                 {...getClearProps()}
               >
                 <XIcon />

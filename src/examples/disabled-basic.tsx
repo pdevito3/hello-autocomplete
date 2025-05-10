@@ -47,7 +47,7 @@ export function BasicDisabledExample() {
           {hasSelectedItem() && (
             <button
               type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none bg-transparent"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 bg-transparent hover:text-gray-600 focus:outline-sky-600"
               {...getClearProps()}
             >
               <XIcon />

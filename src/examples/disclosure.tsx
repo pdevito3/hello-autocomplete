@@ -57,7 +57,7 @@ export function DisclosureExample() {
             <button
               type="button"
               {...getClearProps()}
-              className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none bg-transparent"
+              className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-sky-600 bg-transparent"
             >
               <XIcon />
             </button>
@@ -66,7 +66,7 @@ export function DisclosureExample() {
           <button
             type="button"
             {...getDisclosureProps()}
-            className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none bg-transparent"
+            className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-sky-600 bg-transparent"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

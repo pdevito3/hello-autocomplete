@@ -157,7 +157,7 @@ export function InfiniteAutocompleteExample() {
           <button
             {...getClearProps()}
             type="button"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-sky-600"
           >
             <XIcon />
           </button>
@@ -190,7 +190,7 @@ export function InfiniteAutocompleteExample() {
                     <p
                       key={key}
                       style={style}
-                      className="flex items-center justify-center"
+                      className="flex items-center justify-center py-2 border-t border-slate-600 mt-3 bg-slate-100"
                     >
                       {hasNextPage ? "Loading more…" : "End of users"}
                     </p>
