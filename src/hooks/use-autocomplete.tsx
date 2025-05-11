@@ -875,9 +875,9 @@ export function useAutoComplete<T>({
           if (tabs.length > 0) {
             const nextTab = (activeTabIndex + 1) % tabs.length;
             setActiveTabIndex(nextTab);
-            document
-              .getElementById(`autocomplete-tab-${tabs[nextTab].key}`)
-              ?.focus();
+            // document
+            //   .getElementById(`autocomplete-tab-${tabs[nextTab].key}`)
+            //   ?.focus();
           }
           break;
 
@@ -886,9 +886,9 @@ export function useAutoComplete<T>({
           if (tabs.length > 0) {
             const prevTab = (activeTabIndex - 1 + tabs.length) % tabs.length;
             setActiveTabIndex(prevTab);
-            document
-              .getElementById(`autocomplete-tab-${tabs[prevTab].key}`)
-              ?.focus();
+            // document
+            //   .getElementById(`autocomplete-tab-${tabs[prevTab].key}`)
+            //   ?.focus();
           }
           break;
 

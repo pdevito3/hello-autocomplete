@@ -79,13 +79,13 @@ export function TabsExample() {
                         className={cn(
                           "pl-3 pr-2 py-1 text-sm font-medium rounded-full focus:outline-none relative z-10 flex items-center space-x-2",
                           isSelected
-                            ? "text-slate-900 bg-slate-300 rounded-full"
+                            ? "text-slate-900 bg-slate-300 rounded-full focus:bg-blue-500"
                             : "text-slate-600 hover:text-gray-800 hover:bg-slate-200 focus:bg-emerald-500"
                         )}
                       >
                         <p>{tab.label}</p>
                         {itemCount > 0 && (
-                          <span className="bg-green-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                          <span className="bg-emerald-500 focus:bg-blue-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
                             {itemCount}
                           </span>
                         )}
