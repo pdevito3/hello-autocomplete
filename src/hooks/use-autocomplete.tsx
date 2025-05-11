@@ -1131,6 +1131,7 @@ export function useAutoComplete<T>({
         return {
           role: "option",
           "data-action-item": true,
+          "aria-label": action.label,
           tabIndex: 0,
           onClick: () => action.onAction(),
           onKeyDown: (e: React.KeyboardEvent) => {
@@ -1159,12 +1160,12 @@ export function useAutoComplete<T>({
         "aria-selected": isItemSelected,
         "aria-posinset": index + 1,
         "aria-setsize": flattenedItems.length,
+        "aria-disabled": disabled,
         id: `option-${index}`,
         "data-active": isItemActive ? "true" : undefined,
         "data-selected": isItemSelected ? "true" : undefined,
         "data-index": index,
         "data-custom": custom ? "true" : undefined,
-        "aria-disabled": disabled,
         disabled,
         onClick: disabled ? undefined : () => handleSelect(real),
         "data-disabled": disabled ? "true" : undefined,

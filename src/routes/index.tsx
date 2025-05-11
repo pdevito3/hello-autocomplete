@@ -46,9 +46,6 @@ export default function HomePage() {
           <Example title="Disclosure Button">
             <DisclosureExample />
           </Example>
-          {/* <Example title="Controlled on form">
-            <FruitForm />
-          </Example> */}
           <Example title="Grouping">
             <GroupedFruitExample />
           </Example>
