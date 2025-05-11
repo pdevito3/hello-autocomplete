@@ -104,7 +104,13 @@ export function useControlled<T>({
     setSelectedValue,
   ]);
 
-  // active item and highlighted index -- separate hook?
+  useEffect(() => {
+    if (!arraysShallowEqual(prevItemsPropRef.current, itemsProp)) {
+      setItems(itemsProp);
+      prevItemsPropRef.current = itemsProp;
+    }
+  }, [itemsProp]);
+
   const {
     activeItem,
     setActiveItem,
@@ -148,6 +154,16 @@ export function useControlled<T>({
     filteredItems,
     prevItemsPropRef,
   };
+}
+
+// shallow-equal utility so inline arrays don’t repeatedly trigger updates
+function arraysShallowEqual<T>(a: T[], b: T[]) {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
 }
 
 function useActiveItemManager<T>(

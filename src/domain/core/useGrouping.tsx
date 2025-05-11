@@ -1,7 +1,24 @@
 import React from "react";
-import type { Group, GroupingOptions } from "../types";
+import type { ActionItem, Group, GroupingOptions } from "../types";
 
-export function useGrouping<T>(items: T[], grouping?: GroupingOptions<T>[]) {
+export function useGrouping<T>({
+  allowsCustomValue,
+  inputValue,
+  itemToStringFn,
+  filteredItems,
+  actions,
+  grouping,
+  items,
+}: {
+  allowsCustomValue: boolean;
+  inputValue: string;
+  itemToStringFn: (item: T) => string;
+  filteredItems: T[];
+  actions?: ActionItem[];
+
+  grouping?: GroupingOptions<T> | GroupingOptions<T>[];
+  items: T[];
+}) {
   // Normalize the grouping definitions array
   const groupingOptions = React.useMemo(
     () => (Array.isArray(grouping) ? grouping : grouping ? [grouping] : []),
@@ -52,15 +69,17 @@ export function useGrouping<T>(items: T[], grouping?: GroupingOptions<T>[]) {
 
   // Flatten nested groups back to a flat list
   const flattenGroups = React.useCallback((groupsList: Group<T>[]): T[] => {
-    return groupsList.reduce<T[]>((acc, grp) => {
-      if (grp.groups && grp.groups.length) {
-        return acc.concat(flattenGroups(grp.groups));
-      }
-      return acc.concat(grp.items);
-    }, []);
+    return groupsList.reduce<T[]>(
+      (acc, grp) =>
+        grp.groups && grp.groups.length
+          ? acc.concat(flattenGroups(grp.groups))
+          : acc.concat(grp.items),
+      []
+    );
   }, []);
 
   // Compute grouped structure and flattened items
+  // const grouped = groupingOptions.length ? createGroups(filteredItems) : [];
   const grouped = React.useMemo(
     () => (groupingOptions.length ? createGroups(items) : []),
     [items, groupingOptions, createGroups]
@@ -71,5 +90,40 @@ export function useGrouping<T>(items: T[], grouping?: GroupingOptions<T>[]) {
     [grouped, groupingOptions.length, flattenGroups, items]
   );
 
-  return { grouped, flattened };
+  // ---- ungrouped items + optional “create custom” item as before ----
+  const ungroupedItemsWithCustom: T[] = (() => {
+    if (
+      allowsCustomValue &&
+      inputValue.trim() !== "" &&
+      !filteredItems.some((it) => itemToStringFn(it) === inputValue)
+    ) {
+      return [...filteredItems, inputValue as unknown as T];
+    }
+    return filteredItems;
+  })();
+
+  // ---- now weave in any ActionItem[] from options.actions ----  // ----------------------------------------------------------------
+  // New: auto‑inject the __isAction flag on every action item
+  // ----------------------------------------------------------------
+  const builtActions: ActionItem[] = (actions ?? []).map((a) => ({
+    ...a,
+    __isAction: true as const,
+  }));
+  const ungroupedWithActions: Array<T | ActionItem> = (() => {
+    const base = ungroupedItemsWithCustom;
+    // filter out “empty‐only” if we have items
+    const visible = builtActions.filter(
+      (a) => !a.showWhenEmpty || base.length === 0
+    );
+    const top = visible.filter((a) => a.placement === "top");
+    const bottom = visible.filter((a) => a.placement !== "top");
+    return [...top, ...base, ...bottom];
+  })();
+
+  // ---- final flattenedItems now includes real items + ActionItems ----
+  const flattenedItems: Array<T | ActionItem> = groupingOptions.length
+    ? (flattenGroups(grouped) as Array<T | ActionItem>)
+    : ungroupedWithActions;
+
+  return { grouped, flattened, flattenedItems };
 }

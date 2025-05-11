@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import type { ActionItem, Mode, OptionState } from "../types";
 
 export interface UseOptionOptions<T> {
@@ -22,6 +22,7 @@ export interface UseOptionOptions<T> {
   getOptionLink?: (
     item: T
   ) => string | Partial<Record<string, unknown>> | undefined;
+  setActiveItem(item: T | ActionItem): void;
 }
 
 export function useOption<T>(opts: UseOptionOptions<T>) {
@@ -145,6 +146,19 @@ export function useOption<T>(opts: UseOptionOptions<T>) {
     },
     [opts]
   );
+
+  // TODO move to main autocomplete hook?
+
+  // Automatically highlight when exactly one option remains
+  useEffect(() => {
+    // only run when there's exactly one item and it isn’t already active
+    if (
+      opts.flattenedItems.length === 1 &&
+      opts.activeItem !== opts.flattenedItems[0]
+    ) {
+      opts.setActiveItem(opts.flattenedItems[0] as T | ActionItem);
+    }
+  }, [opts]);
 
   return { getOptionProps, getOptionState, getOptionLinkProps };
 }
