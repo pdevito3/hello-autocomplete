@@ -64,28 +64,30 @@ export interface Tab<T> {
   tabProps?: React.HTMLAttributes<HTMLButtonElement>;
 }
 
+export interface AutocompleteState<T> {
+  inputValue?: string;
+  setInputValue?: (value: string) => void;
+  selectedValue?: T;
+  setSelectedValue?: (value: T | undefined) => void;
+  isOpen?: boolean;
+  setIsOpen?: (isOpen: boolean) => void;
+  /** one or more levels of grouping definitions */
+  grouping?: GroupingOptions<T>[];
+  defaultValue?: T;
+
+  activeItem?: T | null;
+  setActiveItem?: (item: T | null) => void;
+  /** index of the currently highlighted option */
+  highlightedIndex?: number | null;
+  /** callback to set the highlighted option index */
+  setHighlightedIndex?: (index: number | null) => void;
+  label?: string;
+}
+
 export interface UseAutoCompleteOptions<T> {
   /** 'single' for one selection, 'multiple' for multiple */
   mode?: Mode;
-  state?: {
-    inputValue?: string;
-    setInputValue?: (value: string) => void;
-    selectedValue?: T;
-    setSelectedValue?: (value: T | undefined) => void;
-    isOpen?: boolean;
-    setIsOpen?: (isOpen: boolean) => void;
-    /** one or more levels of grouping definitions */
-    grouping?: GroupingOptions<T>[];
-    defaultValue?: T;
-
-    activeItem?: T | null;
-    setActiveItem?: (item: T | null) => void;
-    /** index of the currently highlighted option */
-    highlightedIndex?: number | null;
-    /** callback to set the highlighted option index */
-    setHighlightedIndex?: (index: number | null) => void;
-    label?: string;
-  };
+  state?: AutocompleteState<T>;
   defaultOpen?: boolean;
   labelSrOnly?: boolean;
   placement?: Placement;
