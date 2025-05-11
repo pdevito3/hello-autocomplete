@@ -1058,6 +1058,10 @@ export function useAutoComplete<T>({
       "aria-activedescendant": activeItem
         ? `option-${flattenedItems.indexOf(activeItem)}`
         : undefined,
+      "aria-description":
+        tabs.length > 0
+          ? "Use Up and Down arrows to navigate options, Left and Right arrows to switch tabs, Enter to select, Escape to close."
+          : "Use Up and Down arrows to navigate options, Enter to select, Escape to close.",
 
       // now allowed by our index‑signature
       "data-input": true,
@@ -1069,11 +1073,11 @@ export function useAutoComplete<T>({
       inputValue,
       handleInputChange,
       handleKeyDown,
-      debouncedAsyncOperation,
-      allowsEmptyCollection,
-      flattenedItems,
       activeItem,
-      setIsFocused,
+      flattenedItems,
+      tabs.length,
+      allowsEmptyCollection,
+      debouncedAsyncOperation,
       setIsOpen,
       setActiveItem,
       onBlurAsync,
