@@ -1,3 +1,4 @@
+import { useAutocompleteRoot } from "@/domain/autocomplete/core/useAutocompleteRoot";
 import { useClearButton } from "@/domain/autocomplete/core/useClearButton";
 import { useDisclosure } from "@/domain/autocomplete/core/useDisclosure";
 import { useInput } from "@/domain/autocomplete/core/useInput";
@@ -746,18 +747,6 @@ export function useAutoComplete<T>({
     if (onFilterAsyncRef.current) debouncedAsyncOperation(debouncedInputValue);
   }, [debouncedInputValue, debouncedAsyncOperation]);
 
-  useEffect(() => {
-    function onClickOutside(event: MouseEvent) {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setActiveItem(null);
-        setHighlightedIndex(null);
-      }
-    }
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [setIsOpen, setActiveItem, setHighlightedIndex]);
-
   const handleSelect = useCallback(
     (item: T) => {
       if (isItemDisabled(item)) {
@@ -941,39 +930,17 @@ export function useAutoComplete<T>({
     }),
     [activeTabIndex, handleKeyDown]
   );
-  const getRootProps = useCallback(
-    (): React.HTMLAttributes<HTMLDivElement> & {
-      ref: React.Ref<HTMLDivElement>;
-    } & { [key: `data-${string}`]: string | boolean | undefined } => ({
-      ref: rootRef,
-      role: "combobox",
-      "aria-expanded": isOpen,
-      "aria-haspopup": "listbox",
-      "aria-controls": "autocomplete-listbox",
-      "data-combobox": true,
-      "data-expanded": isOpen ? true : false,
-      "data-focused": isFocused ? true : undefined,
-      "data-mode": mode,
-      "data-has-selected":
-        mode === "multiple"
-          ? selectedValues().length > 0
-            ? "true"
-            : undefined
-          : selectedValue
-          ? "true"
-          : undefined,
-      "data-has-value": inputValue.trim() !== "" ? "true" : undefined,
-    }),
-    [
-      rootRef,
-      isOpen,
-      isFocused,
-      mode,
-      selectedValue,
-      selectedValues,
-      inputValue,
-    ]
-  );
+  const { getRootProps } = useAutocompleteRoot<T>({
+    isOpen,
+    isFocused,
+    mode,
+    selectedValue,
+    selectedValues: selectedValues(),
+    inputValue,
+    setIsOpen,
+    setActiveItem,
+    setHighlightedIndex,
+  });
 
   // TODO can do better id
   const { getListProps } = useListbox({
