@@ -1,3 +1,4 @@
+import { useActiveItem } from "@/domain/autocomplete/core/useActiveItem";
 import { useAutocompleteRoot } from "@/domain/autocomplete/core/useAutocompleteRoot";
 import { useClearButton } from "@/domain/autocomplete/core/useClearButton";
 import { useDisclosure } from "@/domain/autocomplete/core/useDisclosure";
@@ -24,7 +25,7 @@ import type {
   UseAutoCompleteUngroupedSingleNoActions,
   UseAutoCompleteUngroupedSingleWithActions,
 } from "@/domain/autocomplete/types";
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export function useAutoComplete<T>(
   options: UseAutoCompleteOptions<T> & {
@@ -289,69 +290,14 @@ export function useAutoComplete<T>({
     [isItemDisabledProp]
   );
 
-  type NavState = {
-    activeItem: T | ActionItem | null;
-    highlightedIndex: number | null;
-  };
-
-  type NavAction =
-    | {
-        type: "SET_ACTIVE_ITEM";
-        payload: { item: T | ActionItem | null; index: number | null };
-      }
-    | {
-        type: "SET_HIGHLIGHTED_INDEX";
-        payload: { item: T | ActionItem | null; index: number | null };
-      };
-
-  function navReducer(state: NavState, action: NavAction): NavState {
-    switch (action.type) {
-      case "SET_ACTIVE_ITEM":
-      case "SET_HIGHLIGHTED_INDEX":
-        return {
-          activeItem: action.payload.item,
-          highlightedIndex: action.payload.index,
-        };
-      default:
-        return state;
-    }
-  }
-
-  const [navState, dispatchNav] = useReducer(navReducer, {
-    activeItem: null,
-    highlightedIndex: null,
-  });
-
-  const activeItem: T | ActionItem | null =
-    activeItemProp !== undefined ? activeItemProp : navState.activeItem;
-  const highlightedIndex: number | null =
-    highlightedIndexProp !== undefined
-      ? highlightedIndexProp
-      : navState.highlightedIndex;
-
-  // Wrappers that update both pieces via reducer + external setters
-  const setActiveItem = useCallback(
-    (item: T | ActionItem | null) => {
-      const index =
-        item !== null ? flattenedItems.findIndex((i) => i === item) : null;
-      // only pass real T back to any external prop
-      setActiveItemProp?.((item as T) || null);
-      setHighlightedIndexProp?.(index);
-      dispatchNav({ type: "SET_ACTIVE_ITEM", payload: { item, index } });
-    },
-    [flattenedItems, setActiveItemProp, setHighlightedIndexProp]
-  );
-
-  const setHighlightedIndex = useCallback(
-    (index: number | null) => {
-      const item = index !== null ? flattenedItems[index] : null;
-      // only pass real T back to any external prop
-      setActiveItemProp?.((item as T) || null);
-      setHighlightedIndexProp?.(index);
-      dispatchNav({ type: "SET_HIGHLIGHTED_INDEX", payload: { item, index } });
-    },
-    [flattenedItems, setActiveItemProp, setHighlightedIndexProp]
-  );
+  const { activeItem, setActiveItem, highlightedIndex, setHighlightedIndex } =
+    useActiveItem({
+      activeItemProp,
+      highlightedIndexProp,
+      flattenedItems,
+      setActiveItemProp,
+      setHighlightedIndexProp,
+    });
 
   const [isFocused, setIsFocused] = useState(false);
 
