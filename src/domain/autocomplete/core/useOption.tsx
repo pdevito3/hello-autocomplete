@@ -107,12 +107,12 @@ export function useOption<T>({
         };
       }
 
-      const nonAction = item as T;
-      const disabled = isItemDisabled(nonAction);
+      const nonActionItem = item as T;
+      const disabled = isItemDisabled(nonActionItem);
       const selected =
         mode === "multiple"
-          ? Boolean(selectedValues?.includes(nonAction))
-          : nonAction === selectedValue;
+          ? Boolean(selectedValues?.includes(nonActionItem))
+          : nonActionItem === selectedValue;
 
       return {
         isActive: item === activeItem,
