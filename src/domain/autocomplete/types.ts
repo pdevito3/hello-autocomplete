@@ -73,7 +73,7 @@ export interface AutocompleteState<T> {
   defaultValue?: T;
 
   activeItem?: T | null;
-  setActiveItem?: (item: T | null) => void;
+  setActiveItem?: (item: T | ActionItem | null) => void;
   /** index of the currently highlighted option */
   highlightedIndex?: number | null;
   /** callback to set the highlighted option index */

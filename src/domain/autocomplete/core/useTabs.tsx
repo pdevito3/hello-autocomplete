@@ -3,13 +3,13 @@ import type { Tab, TabState } from "../types";
 
 export function useTabs<T>({
   activeTabIndex,
-  rawItems,
+  items,
   tabs,
   setActiveTabIndex,
   handleKeyDown,
 }: {
   activeTabIndex: number;
-  rawItems: T[];
+  items: T[];
   tabs: Tab<T>[];
   setActiveTabIndex: (index: number) => void;
   handleKeyDown: (event: React.KeyboardEvent<HTMLElement>) => void;
@@ -39,11 +39,10 @@ export function useTabs<T>({
     (tab: Tab<T>): TabState => ({
       isSelected: tab.key === tabs[activeTabIndex].key,
       isDisabled: false,
-      itemCount: rawItems.filter((item) =>
-        tab.filter ? tab.filter(item) : true
-      ).length,
+      itemCount: items.filter((item) => (tab.filter ? tab.filter(item) : true))
+        .length,
     }),
-    [activeTabIndex, rawItems, tabs]
+    [activeTabIndex, items, tabs]
   );
 
   return { getTabProps, getTabListProps, getTabState };

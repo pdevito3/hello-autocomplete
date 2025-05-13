@@ -20,7 +20,7 @@ export function useNavigation<T>({
   onSelectValue,
 }: {
   activeItem: ActionItem | T | null;
-  setActiveItem: (item: T | null) => void;
+  setActiveItem: (item: T | ActionItem | null) => void;
   flattenedItems: (T | ActionItem)[];
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;

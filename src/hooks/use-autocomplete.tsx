@@ -291,9 +291,9 @@ export function useAutoComplete<T>({
     allowsCustomValue,
   });
 
-  const { getTabListProps, getTabState, getTabProps } = useTabs({
+  const { getTabListProps, getTabState, getTabProps } = useTabs<T>({
     activeTabIndex,
-    items: items,
+    items,
     tabs,
     setActiveTabIndex,
     handleKeyDown,
