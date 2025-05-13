@@ -21,7 +21,7 @@ export function useNavigation<T>({
 }: {
   activeItem: ActionItem | T | null;
   setActiveItem: (item: T | null) => void;
-  flattenedItems: Array<T>;
+  flattenedItems: (T | ActionItem)[];
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   allowsEmptyCollection: boolean;
@@ -168,5 +168,5 @@ export function useNavigation<T>({
     ]
   );
 
-  return { handleKeyDown };
+  return { handleKeyDown, handleSelect };
 }
