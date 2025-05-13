@@ -1,23 +1,24 @@
 import React from "react";
-import type { ActionItem, Group, GroupingOptions } from "../types";
+import type { ActionItem, Group, GroupingOptions, Tab } from "../types";
 
 export function useGrouping<T>({
   allowsCustomValue,
   inputValue,
-  itemToStringFn,
-  filteredItems,
+  itemToString,
   actions,
   grouping,
   items,
+  tabs,
+  activeTabIndex,
 }: {
   allowsCustomValue: boolean;
   inputValue: string;
-  itemToStringFn: (item: T) => string;
-  filteredItems: T[];
+  itemToString: (item: T) => string;
   actions?: ActionItem[];
-
-  grouping?: GroupingOptions<T> | GroupingOptions<T>[];
+  grouping?: GroupingOptions<T>[];
   items: T[];
+  tabs: Tab<T>[];
+  activeTabIndex: number;
 }) {
   // Normalize the grouping definitions array
   const groupingOptions = React.useMemo(
@@ -85,21 +86,26 @@ export function useGrouping<T>({
     [items, groupingOptions, createGroups]
   );
 
-  const flattened = React.useMemo(
-    () => (groupingOptions.length ? flattenGroups(grouped) : items),
-    [grouped, groupingOptions.length, flattenGroups, items]
-  );
+  // Apply tab‐level filter before other filters
+  const filteredTabItems: T[] =
+    tabs.length && activeTabIndex >= 0
+      ? items.filter((item) =>
+          tabs[activeTabIndex].filter
+            ? tabs[activeTabIndex].filter!(item)
+            : true
+        )
+      : items;
 
   // ---- ungrouped items + optional “create custom” item as before ----
   const ungroupedItemsWithCustom: T[] = (() => {
     if (
       allowsCustomValue &&
       inputValue.trim() !== "" &&
-      !filteredItems.some((it) => itemToStringFn(it) === inputValue)
+      !filteredTabItems.some((it) => itemToString(it) === inputValue)
     ) {
-      return [...filteredItems, inputValue as unknown as T];
+      return [...filteredTabItems, inputValue as unknown as T];
     }
-    return filteredItems;
+    return filteredTabItems;
   })();
 
   // ---- now weave in any ActionItem[] from options.actions ----  // ----------------------------------------------------------------
@@ -125,5 +131,10 @@ export function useGrouping<T>({
     ? (flattenGroups(grouped) as Array<T | ActionItem>)
     : ungroupedWithActions;
 
-  return { grouped, flattened, flattenedItems };
+  return {
+    grouped,
+    flattenedItems,
+    groupingOptions,
+    ungroupedWithActions,
+  };
 }

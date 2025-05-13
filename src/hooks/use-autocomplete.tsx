@@ -10,10 +10,10 @@ import { useTabs } from "@/domain/autocomplete/core/useTabs";
 import { useCustomValue } from "@/domain/autocomplete/features/useCustomValue";
 import { useFiltering } from "@/domain/autocomplete/features/useFiltering";
 import { useGroup } from "@/domain/autocomplete/features/useGroup";
+import { useGrouping } from "@/domain/autocomplete/features/useGrouping";
 import { useNavigation } from "@/domain/autocomplete/features/useNavigation";
 import type {
   ActionItem,
-  Group,
   GroupingOptions,
   UseAutoCompleteGroupedMultipleNoActions,
   UseAutoCompleteGroupedMultipleWithActions,
@@ -174,116 +174,25 @@ export function useAutoComplete<T>({
       : -1;
     return defIdx >= 0 ? defIdx : 0;
   });
-  // Raw items from props or async
-  const rawItems = items;
-
-  // Apply tab‐level filter before other filters
-  const filteredItems: T[] =
-    tabs.length && activeTabIndex >= 0
-      ? rawItems.filter((item) =>
-          tabs[activeTabIndex].filter
-            ? tabs[activeTabIndex].filter!(item)
-            : true
-        )
-      : rawItems;
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const prevItemsPropRef = useRef<T[]>(itemsProp);
-
-  // ---- grouping logic unchanged ----
-  const groupingOptions = Array.isArray(groupingProp)
-    ? groupingProp
-    : groupingProp
-    ? [groupingProp]
-    : [];
-
-  const createGroups = (itemsToGroup: T[], level = 0): Group<T>[] => {
-    if (level >= groupingOptions.length) return [];
-    const { key: propKey, label: propLabel } = groupingOptions[level];
-    const map = itemsToGroup.reduce<Record<string, T[]>>((acc, item) => {
-      const raw = item[propKey];
-      const k = String(raw ?? "");
-      (acc[k] ??= []).push(item);
-      return acc;
-    }, {});
-    return Object.entries(map).map(([groupKey, groupItems]) => {
-      const sub = createGroups(groupItems, level + 1);
-      const grp: Group<T> = {
-        key: groupKey,
-        items: groupItems,
-        label: propLabel,
-        listProps: {
-          role: "group",
-          "aria-label": propLabel,
-          "data-group": true,
-          "data-group-key": groupKey,
-          "data-group-level": level.toString(),
-          "data-has-subgroups": sub.length > 0 ? "true" : undefined,
-        },
-        header: {
-          label: groupKey,
-          headingProps: {
-            role: "presentation",
-            "data-group-label": true,
-            "data-group-key": groupKey,
-          },
-        },
-      };
-      if (sub.length) grp.groups = sub;
-      return grp;
-    });
-  };
-
-  const grouped = groupingOptions.length ? createGroups(filteredItems) : [];
-
-  const flattenGroups = (groupsList: Group<T>[]): T[] =>
-    groupsList.reduce<T[]>(
-      (acc, grp) =>
-        grp.groups && grp.groups.length
-          ? acc.concat(flattenGroups(grp.groups))
-          : acc.concat(grp.items),
-      []
-    );
 
   const itemToStringFn = useCallback(
     (item: T) => (itemToString ? itemToString(item) : String(item)),
     [itemToString]
   );
-
-  // ---- ungrouped items + optional “create custom” item as before ----
-  const ungroupedItemsWithCustom: T[] = (() => {
-    if (
-      allowsCustomValue &&
-      inputValue.trim() !== "" &&
-      !filteredItems.some((it) => itemToStringFn(it) === inputValue)
-    ) {
-      return [...filteredItems, inputValue as unknown as T];
-    }
-    return filteredItems;
-  })();
-
-  // ---- now weave in any ActionItem[] from options.actions ----  // ----------------------------------------------------------------
-  // New: auto‑inject the __isAction flag on every action item
-  // ----------------------------------------------------------------
-  const builtActions: ActionItem[] = (actions ?? []).map((a) => ({
-    ...a,
-    __isAction: true as const,
-  }));
-  const ungroupedWithActions: Array<T | ActionItem> = (() => {
-    const base = ungroupedItemsWithCustom;
-    // filter out “empty‐only” if we have items
-    const visible = builtActions.filter(
-      (a) => !a.showWhenEmpty || base.length === 0
-    );
-    const top = visible.filter((a) => a.placement === "top");
-    const bottom = visible.filter((a) => a.placement !== "top");
-    return [...top, ...base, ...bottom];
-  })();
-
-  // ---- final flattenedItems now includes real items + ActionItems ----
-  const flattenedItems: Array<T | ActionItem> = groupingOptions.length
-    ? (flattenGroups(grouped) as Array<T | ActionItem>)
-    : ungroupedWithActions;
+  const { grouped, flattenedItems, groupingOptions, ungroupedWithActions } =
+    useGrouping<T>({
+      allowsCustomValue,
+      inputValue,
+      itemToString: itemToStringFn,
+      actions,
+      grouping: groupingProp ?? [],
+      items,
+      tabs,
+      activeTabIndex,
+    });
 
   const isItemDisabled = useCallback(
     (item: T) => isItemDisabledProp?.(item) ?? false,
@@ -384,7 +293,7 @@ export function useAutoComplete<T>({
 
   const { getTabListProps, getTabState, getTabProps } = useTabs({
     activeTabIndex,
-    rawItems: items,
+    items: items,
     tabs,
     setActiveTabIndex,
     handleKeyDown,
