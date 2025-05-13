@@ -1,3 +1,6 @@
+import { useClearButton } from "@/domain/autocomplete/core/useClearButton";
+import { useDisclosure } from "@/domain/autocomplete/core/useDisclosure";
+import { useLabel } from "@/domain/autocomplete/core/useLabel";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useDebouncedValue } from "./use-debounced-value";
 
@@ -784,32 +787,25 @@ export function useAutoComplete<T>({
     ]
   );
 
-  const handleClear = useCallback(() => {
-    setInputValue("");
-    if (mode === "single") {
-      setSelectedValue(undefined);
-    } else {
-      setSelectedValuesState([]);
-    }
-    onClear?.();
-    setActiveItem(null);
-    setIsOpen(false);
-  }, [
+  const { getDisclosureProps } = useDisclosure({
+    isOpen,
+    setIsOpen,
+    allowsEmptyCollection,
+    itemsLength: flattenedItems.length,
+  });
+
+  const { getClearProps, handleClear } = useClearButton<T>({
+    inputValue: inputValue,
+    selectedValue,
+    selectedValues: selectedValues(),
     mode,
+    onClear,
     setInputValue,
     setSelectedValue,
-    onClear,
+    setSelectedValues: setSelectedValuesState,
     setActiveItem,
     setIsOpen,
-  ]);
-
-  const handleDisclosure = useCallback(() => {
-    if (isOpen) {
-      setIsOpen(false);
-    } else if (allowsEmptyCollection || flattenedItems.length > 0) {
-      setIsOpen(true);
-    }
-  }, [isOpen, setIsOpen, allowsEmptyCollection, flattenedItems.length]);
+  });
 
   const isCustomValue = useCallback(
     (item: T) => {
@@ -1086,44 +1082,11 @@ export function useAutoComplete<T>({
     ]
   );
 
-  const getClearProps =
-    useCallback((): React.ButtonHTMLAttributes<HTMLButtonElement> & {
-      [key: `data-${string}`]: string | boolean | undefined;
-    } => {
-      const disabled =
-        inputValue === "" &&
-        (mode === "single" ? !selectedValue : selectedValues().length === 0);
-      return {
-        type: "button",
-        "aria-label": "Clear input",
-        onClick: handleClear,
-        disabled,
-        "data-clear-button": true,
-        "data-disabled": disabled ? "true" : undefined,
-      };
-    }, [handleClear, inputValue, mode, selectedValue, selectedValues]);
-
-  const getDisclosureProps = useCallback(
-    (): React.ButtonHTMLAttributes<HTMLButtonElement> & {
-      [key: `data-${string}`]: string | boolean | undefined;
-    } => ({
-      type: "button",
-      "aria-label": isOpen ? "Close options" : "Open options",
-      onClick: handleDisclosure,
-      "data-disclosure-button": true,
-      "data-state": isOpen ? "open" : "closed",
-    }),
-    [isOpen, handleDisclosure]
-  );
-
-  const getLabelProps = useCallback(
-    () => ({
-      htmlFor: "autocomplete-input",
-      className: labelSrOnly ? "sr-only" : "",
-      "data-label": true,
-    }),
-    [labelSrOnly]
-  );
+  // TODO htmlFor dynamic from input
+  const { getLabelProps } = useLabel({
+    htmlFor: "autocomplete-input",
+    srOnly: labelSrOnly,
+  });
 
   const getOptionProps = useCallback(
     (item: T | ActionItem) => {

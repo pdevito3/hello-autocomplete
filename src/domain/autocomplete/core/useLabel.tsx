@@ -11,6 +11,7 @@ export function useLabel(opts: UseLabelOptions) {
       [key: `data-${string}`]: boolean;
     } => ({
       htmlFor: opts.htmlFor,
+      // TODO don't rely on tailwind here
       className: opts.srOnly ? "sr-only" : undefined,
       "data-label": true,
     }),

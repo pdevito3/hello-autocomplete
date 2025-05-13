@@ -61,5 +61,5 @@ export function useClearButton<T>(opts: UseClearButtonOptions<T>) {
       handleClear,
     ]);
 
-  return { getClearProps };
+  return { getClearProps, handleClear };
 }
