@@ -1,5 +1,6 @@
 import { useClearButton } from "@/domain/autocomplete/core/useClearButton";
 import { useDisclosure } from "@/domain/autocomplete/core/useDisclosure";
+import { useInput } from "@/domain/autocomplete/core/useInput";
 import { useLabel } from "@/domain/autocomplete/core/useLabel";
 import { useListbox } from "@/domain/autocomplete/core/useListbox";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
@@ -940,31 +941,6 @@ export function useAutoComplete<T>({
     }),
     [activeTabIndex, handleKeyDown]
   );
-
-  const handleInputChange = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const v = e.target.value;
-      setInputValue(v);
-      onInputValueChange?.(v);
-
-      if (onInputValueChangeAsync) {
-        const controller = new AbortController();
-        try {
-          await onInputValueChangeAsync({
-            value: v,
-            signal: controller.signal,
-          });
-        } catch (err) {
-          // ignore only user‑aborted calls
-          if (!(err instanceof Error && err.name === "AbortError")) {
-            console.error(err);
-          }
-        }
-      }
-    },
-    [setInputValue, onInputValueChange, onInputValueChangeAsync]
-  );
-
   const getRootProps = useCallback(
     (): React.HTMLAttributes<HTMLDivElement> & {
       ref: React.Ref<HTMLDivElement>;
@@ -1008,73 +984,23 @@ export function useAutoComplete<T>({
     size: flattenedItems.length,
   });
 
-  const getInputProps = useCallback(
-    (): React.InputHTMLAttributes<HTMLInputElement> & {
-      [key: `data-${string}`]: string | boolean | undefined;
-    } => ({
-      id: "autocomplete-input",
-      value: inputValue,
-      onChange: handleInputChange,
-      onKeyDown: handleKeyDown,
-      onFocus: async () => {
-        setIsFocused(true);
-        if (onFilterAsyncRef.current) {
-          await debouncedAsyncOperation(inputValue);
-        }
-        // only open if we have items or it's explicitly allowed
-        if (allowsEmptyCollection || flattenedItems.length > 0) {
-          setIsOpen(true);
-          if (flattenedItems.length && !activeItem) {
-            setActiveItem(flattenedItems[0]);
-          }
-        }
-      },
-      onBlur: async () => {
-        setIsFocused(false);
-        if (onBlurAsync) {
-          const controller = new AbortController();
-          try {
-            await onBlurAsync({ value: inputValue, signal: controller.signal });
-          } catch (err) {
-            if (!(err instanceof Error && err.name === "AbortError")) {
-              console.error(err);
-            }
-          }
-        }
-      },
-
-      autoComplete: "off",
-      // force this to the exact union member:
-      "aria-autocomplete": "list" as const,
-      "aria-controls": "autocomplete-listbox",
-      "aria-activedescendant": activeItem
-        ? `option-${flattenedItems.indexOf(activeItem)}`
-        : undefined,
-      "aria-description":
-        tabs.length > 0
-          ? "Use Up and Down arrows to navigate options, Left and Right arrows to switch tabs, Enter to select, Escape to close."
-          : "Use Up and Down arrows to navigate options, Enter to select, Escape to close.",
-
-      // now allowed by our index‑signature
-      "data-input": true,
-      "data-value": inputValue,
-      "data-has-value": inputValue.trim() !== "" ? "true" : undefined,
-      "data-autocomplete": "list",
-    }),
-    [
-      inputValue,
-      handleInputChange,
-      handleKeyDown,
-      activeItem,
-      flattenedItems,
-      tabs.length,
-      allowsEmptyCollection,
-      debouncedAsyncOperation,
-      setIsOpen,
-      setActiveItem,
-      onBlurAsync,
-    ]
-  );
+  const { getInputProps } = useInput({
+    inputValue,
+    setInputValue,
+    handleKeyDown,
+    activeItem,
+    flattenedItems,
+    tabsCount: tabs.length,
+    allowsEmptyCollection,
+    setIsOpen,
+    setActiveItem,
+    onBlurAsync,
+    onInputValueChangeAsync,
+    onFilterAsyncRef,
+    debouncedAsyncOperation,
+    onInputValueChange,
+    setIsFocused,
+  });
 
   // TODO htmlFor dynamic from input
   const { getLabelProps } = useLabel({

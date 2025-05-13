@@ -3,14 +3,8 @@ import React, { useCallback } from "react";
 export interface UseInputOptions<T> {
   /** Current input text */
   inputValue: string;
-  /** Called on each keystroke */
-  handleInputChange(e: React.ChangeEvent<HTMLInputElement>): void;
   /** Centralized key‑down handler */
   handleKeyDown(e: React.KeyboardEvent<HTMLElement>): void;
-  /** Called when the input gains focus */
-  onFocus(): Promise<void>;
-  /** Called when the input loses focus */
-  onBlur(): Promise<void>;
   /** Currently active (highlighted) item, if any */
   activeItem: T | null;
   /** Full flattened list of items (including any ActionItem) */
@@ -42,22 +36,48 @@ export interface UseInputOptions<T> {
   }) => Promise<void>;
   onInputValueChange?: (value: string) => void;
   setInputValue(value: string): void;
+  setIsFocused(isFocused: boolean): void;
 }
 
 export function useInput<T>(opts: UseInputOptions<T>) {
+  const handleInputChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const v = e.target.value;
+      opts.setInputValue(v);
+      opts.onInputValueChange?.(v);
+
+      if (opts.onInputValueChangeAsync) {
+        const controller = new AbortController();
+        try {
+          await opts.onInputValueChangeAsync({
+            value: v,
+            signal: controller.signal,
+          });
+        } catch (err) {
+          // ignore only user‑aborted calls
+          if (!(err instanceof Error && err.name === "AbortError")) {
+            console.error(err);
+          }
+        }
+      }
+    },
+    [opts]
+  );
+
   const getInputProps = React.useCallback(
     (): React.InputHTMLAttributes<HTMLInputElement> & {
       [key: `data-${string}`]: string | boolean | undefined;
     } => ({
       id: "autocomplete-input",
       value: opts.inputValue,
-      onChange: opts.handleInputChange,
+      onChange: handleInputChange,
       onKeyDown: opts.handleKeyDown,
       onFocus: async () => {
-        await opts.onFocus();
+        opts.setIsFocused(true);
         if (opts.onFilterAsyncRef.current) {
           await opts.debouncedAsyncOperation(opts.inputValue);
         }
+        // only open if we have items or it's explicitly allowed
         if (opts.allowsEmptyCollection || opts.flattenedItems.length > 0) {
           opts.setIsOpen(true);
           if (opts.flattenedItems.length && !opts.activeItem) {
@@ -66,7 +86,7 @@ export function useInput<T>(opts: UseInputOptions<T>) {
         }
       },
       onBlur: async () => {
-        await opts.onBlur();
+        opts.setIsFocused(false);
         if (opts.onBlurAsync) {
           const controller = new AbortController();
           try {
@@ -92,6 +112,8 @@ export function useInput<T>(opts: UseInputOptions<T>) {
         opts.tabsCount > 0
           ? "Use Up and Down arrows to navigate options, Left and Right arrows to switch tabs, Enter to select, Escape to close."
           : "Use Up and Down arrows to navigate options, Enter to select, Escape to close.",
+
+      // now allowed by our index‑signature
       "data-input": true,
       "data-value": opts.inputValue,
       "data-has-value": opts.inputValue.trim() !== "" ? "true" : undefined,
@@ -100,29 +122,5 @@ export function useInput<T>(opts: UseInputOptions<T>) {
     [opts]
   );
 
-  const handleInputChange = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const v = e.target.value;
-      opts.setInputValue(v);
-      opts.onInputValueChange?.(v);
-
-      if (opts.onInputValueChangeAsync) {
-        const controller = new AbortController();
-        try {
-          await opts.onInputValueChangeAsync({
-            value: v,
-            signal: controller.signal,
-          });
-        } catch (err) {
-          // ignore only user‑aborted calls
-          if (!(err instanceof Error && err.name === "AbortError")) {
-            console.error(err);
-          }
-        }
-      }
-    },
-    [opts]
-  );
-
-  return { getInputProps, handleInputChange };
+  return { getInputProps };
 }
