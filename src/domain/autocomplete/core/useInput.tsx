@@ -119,7 +119,7 @@ export function useInput<T>(opts: UseInputOptions<T>) {
       "data-has-value": opts.inputValue.trim() !== "" ? "true" : undefined,
       "data-autocomplete": "list",
     }),
-    [opts]
+    [handleInputChange, opts]
   );
 
   return { getInputProps };
