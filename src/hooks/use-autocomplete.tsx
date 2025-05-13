@@ -6,6 +6,7 @@ import { useLabel } from "@/domain/autocomplete/core/useLabel";
 import { useListbox } from "@/domain/autocomplete/core/useListbox";
 import { useOption } from "@/domain/autocomplete/core/useOption";
 import { useTabs } from "@/domain/autocomplete/core/useTabs";
+import { useFiltering } from "@/domain/autocomplete/features/useFiltering";
 import { useGroup } from "@/domain/autocomplete/features/useGroup";
 import type {
   ActionItem,
@@ -22,9 +23,6 @@ import type {
   UseAutoCompleteUngroupedSingleWithActions,
 } from "@/domain/autocomplete/types";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { useDebouncedValue } from "./use-debounced-value";
-
-// 2) Wire them up in your overloads:
 
 export function useAutoComplete<T>(
   options: UseAutoCompleteOptions<T> & {
@@ -378,34 +376,6 @@ export function useAutoComplete<T>({
     }
   }, [defaultValue, mode, setSelectedValue, setInputValue, itemToStringFn]);
 
-  const onFilterAsyncRef = useRef(onFilterAsync);
-  useEffect(() => {
-    onFilterAsyncRef.current = onFilterAsync;
-  }, [onFilterAsync]);
-
-  const debouncedAsyncOperation = useCallback(async (value: string) => {
-    abortControllerRef.current?.abort();
-    abortControllerRef.current = new AbortController();
-    try {
-      const filterFn = onFilterAsyncRef.current;
-      if (filterFn) {
-        const results = await filterFn({
-          searchTerm: value,
-          signal: abortControllerRef.current!.signal,
-        });
-        setItems(results);
-      }
-    } catch (err) {
-      if (!(err instanceof Error && err.name === "AbortError"))
-        console.error(err);
-    }
-  }, []);
-
-  const [debouncedInputValue] = useDebouncedValue(inputValue, asyncDebounceMs);
-  useEffect(() => {
-    if (onFilterAsyncRef.current) debouncedAsyncOperation(debouncedInputValue);
-  }, [debouncedInputValue, debouncedAsyncOperation]);
-
   const handleSelect = useCallback(
     (item: T) => {
       if (isItemDisabled(item)) {
@@ -436,6 +406,18 @@ export function useAutoComplete<T>({
       setIsOpen,
     ]
   );
+
+  const onFilterAsyncRef = useRef(onFilterAsync);
+  useEffect(() => {
+    onFilterAsyncRef.current = onFilterAsync;
+  }, [onFilterAsync]);
+  const { debouncedAsyncOperation } = useFiltering<T>({
+    inputValue,
+    setItems,
+    abortControllerRef,
+    onFilterAsyncRef,
+    asyncDebounceMs,
+  });
 
   const { getDisclosureProps } = useDisclosure({
     isOpen,
