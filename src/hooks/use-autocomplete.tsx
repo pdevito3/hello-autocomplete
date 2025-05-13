@@ -5,6 +5,7 @@ import { useInput } from "@/domain/autocomplete/core/useInput";
 import { useLabel } from "@/domain/autocomplete/core/useLabel";
 import { useListbox } from "@/domain/autocomplete/core/useListbox";
 import { useOption } from "@/domain/autocomplete/core/useOption";
+import { useTabs } from "@/domain/autocomplete/core/useTabs";
 import { useGroup } from "@/domain/autocomplete/features/useGroup";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useDebouncedValue } from "./use-debounced-value";
@@ -617,25 +618,6 @@ export function useAutoComplete<T>({
     ? (flattenGroups(grouped) as Array<T | ActionItem>)
     : ungroupedWithActions;
 
-  const getTabListProps = useCallback(
-    () => ({
-      role: "tablist",
-      "data-tablist": true,
-    }),
-    []
-  );
-
-  const getTabState = useCallback(
-    (tab: Tab<T>): TabState => ({
-      isSelected: tab.key === tabs[activeTabIndex].key,
-      isDisabled: false,
-      itemCount: rawItems.filter((item) =>
-        tab.filter ? tab.filter(item) : true
-      ).length,
-    }),
-    [activeTabIndex, rawItems, tabs]
-  );
-
   const isItemDisabled = useCallback(
     (item: T) => isItemDisabledProp?.(item) ?? false,
     [isItemDisabledProp]
@@ -912,18 +894,14 @@ export function useAutoComplete<T>({
     ]
   );
 
-  const getTabProps = useCallback(
-    (tab: Tab<T>, index: number) => ({
-      role: "tab",
-      id: `autocomplete-tab-${tab.key}`,
-      "aria-selected": index === activeTabIndex || undefined,
-      tabIndex: index === activeTabIndex ? 0 : -1,
-      onClick: () => setActiveTabIndex(index),
-      onKeyDown: handleKeyDown,
-      ...tab.tabProps,
-    }),
-    [activeTabIndex, handleKeyDown]
-  );
+  const { getTabListProps, getTabState, getTabProps } = useTabs({
+    activeTabIndex,
+    rawItems: items,
+    tabs,
+    setActiveTabIndex,
+    handleKeyDown,
+  });
+
   const { getRootProps } = useAutocompleteRoot<T>({
     isOpen,
     isFocused,

@@ -12,7 +12,7 @@ export function useTabs<T>({
   rawItems: T[];
   tabs: Tab<T>[];
   setActiveTabIndex: (index: number) => void;
-  handleKeyDown: (event: React.KeyboardEvent) => void;
+  handleKeyDown: (event: React.KeyboardEvent<HTMLElement>) => void;
 }) {
   const getTabProps = useCallback(
     (tab: Tab<T>, index: number) => ({
