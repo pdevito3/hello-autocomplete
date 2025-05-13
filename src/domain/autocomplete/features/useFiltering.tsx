@@ -1,22 +1,21 @@
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 
 export function useFiltering<T>({
   inputValue,
   setItems,
-  abortControllerRef,
   onFilterAsyncRef,
   asyncDebounceMs = 0,
 }: {
   inputValue: string;
   setItems: React.Dispatch<React.SetStateAction<T[]>>;
-  abortControllerRef: React.RefObject<AbortController | null>;
   onFilterAsyncRef: React.MutableRefObject<
     | ((params: { searchTerm: string; signal: AbortSignal }) => Promise<T[]>)
     | undefined
   >;
   asyncDebounceMs: number;
 }) {
+  const abortControllerRef = useRef<AbortController | null>(null);
   const debouncedAsyncOperation = useCallback(
     async (value: string) => {
       abortControllerRef.current?.abort();

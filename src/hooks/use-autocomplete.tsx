@@ -175,9 +175,6 @@ export function useAutoComplete<T>({
     return defIdx >= 0 ? defIdx : 0;
   });
 
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const prevItemsPropRef = useRef<T[]>(itemsProp);
-
   const itemToStringFn = useCallback(
     (item: T) => (itemToString ? itemToString(item) : String(item)),
     [itemToString]
@@ -210,29 +207,6 @@ export function useAutoComplete<T>({
 
   const [isFocused, setIsFocused] = useState(false);
 
-  // shallow-equal utility so inline arrays don’t repeatedly trigger updates
-  function arraysShallowEqual<T>(a: T[], b: T[]) {
-    if (a === b) return true;
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) {
-      if (a[i] !== b[i]) return false;
-    }
-    return true;
-  }
-  useEffect(() => {
-    if (!arraysShallowEqual(prevItemsPropRef.current, itemsProp)) {
-      setItems(itemsProp);
-      prevItemsPropRef.current = itemsProp;
-    }
-  }, [itemsProp]);
-
-  useEffect(() => {
-    if (defaultValue && mode === "single") {
-      setSelectedValue(defaultValue);
-      setInputValue(itemToStringFn(defaultValue));
-    }
-  }, [defaultValue, mode, setSelectedValue, setInputValue, itemToStringFn]);
-
   const { handleKeyDown, handleSelect } = useNavigation<T>({
     activeItem,
     setActiveItem,
@@ -256,10 +230,34 @@ export function useAutoComplete<T>({
   useEffect(() => {
     onFilterAsyncRef.current = onFilterAsync;
   }, [onFilterAsync]);
+  const prevItemsPropRef = useRef<T[]>(itemsProp);
+
+  // shallow-equal utility so inline arrays don’t repeatedly trigger updates
+  function arraysShallowEqual<T>(a: T[], b: T[]) {
+    if (a === b) return true;
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+  useEffect(() => {
+    if (!arraysShallowEqual(prevItemsPropRef.current, itemsProp)) {
+      setItems(itemsProp);
+      prevItemsPropRef.current = itemsProp;
+    }
+  }, [itemsProp]);
+
+  useEffect(() => {
+    if (defaultValue && mode === "single") {
+      setSelectedValue(defaultValue);
+      setInputValue(itemToStringFn(defaultValue));
+    }
+  }, [defaultValue, mode, setSelectedValue, setInputValue, itemToStringFn]);
+
   const { debouncedAsyncOperation } = useFiltering<T>({
     inputValue,
     setItems,
-    abortControllerRef,
     onFilterAsyncRef,
     asyncDebounceMs,
   });
