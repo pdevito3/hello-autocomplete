@@ -6,6 +6,7 @@ import { useLabel } from "@/domain/autocomplete/core/useLabel";
 import { useListbox } from "@/domain/autocomplete/core/useListbox";
 import { useOption } from "@/domain/autocomplete/core/useOption";
 import { useTabs } from "@/domain/autocomplete/core/useTabs";
+import { useCustomValue } from "@/domain/autocomplete/features/useCustomValue";
 import { useFiltering } from "@/domain/autocomplete/features/useFiltering";
 import { useGroup } from "@/domain/autocomplete/features/useGroup";
 import { useNavigation } from "@/domain/autocomplete/features/useNavigation";
@@ -352,25 +353,6 @@ export function useAutoComplete<T>({
     [flattenedItems, setActiveItemProp, setHighlightedIndexProp]
   );
 
-  const { handleKeyDown, handleSelect } = useNavigation<T>({
-    activeItem,
-    setActiveItem,
-    flattenedItems,
-    isOpen,
-    setIsOpen,
-    allowsEmptyCollection,
-    tabs,
-    activeTabIndex,
-    setActiveTabIndex,
-    isItemDisabled,
-    itemToString: itemToStringFn,
-    mode,
-    setSelectedValue,
-    setInputValue,
-    setSelectedValuesState,
-    onSelectValue,
-  });
-
   const [isFocused, setIsFocused] = useState(false);
 
   // shallow-equal utility so inline arrays don’t repeatedly trigger updates
@@ -395,6 +377,25 @@ export function useAutoComplete<T>({
       setInputValue(itemToStringFn(defaultValue));
     }
   }, [defaultValue, mode, setSelectedValue, setInputValue, itemToStringFn]);
+
+  const { handleKeyDown, handleSelect } = useNavigation<T>({
+    activeItem,
+    setActiveItem,
+    flattenedItems,
+    isOpen,
+    setIsOpen,
+    allowsEmptyCollection,
+    tabs,
+    activeTabIndex,
+    setActiveTabIndex,
+    isItemDisabled,
+    itemToString: itemToStringFn,
+    mode,
+    setSelectedValue,
+    setInputValue,
+    setSelectedValuesState,
+    onSelectValue,
+  });
 
   const onFilterAsyncRef = useRef(onFilterAsync);
   useEffect(() => {
@@ -428,17 +429,12 @@ export function useAutoComplete<T>({
     setIsOpen,
   });
 
-  const isCustomValue = useCallback(
-    (item: T) => {
-      return (
-        allowsCustomValue &&
-        inputValue.trim() !== "" &&
-        itemToStringFn(item) === inputValue &&
-        !items.some((it) => itemToStringFn(it) === inputValue)
-      );
-    },
-    [allowsCustomValue, inputValue, itemToStringFn, items]
-  );
+  const { isCustomValue } = useCustomValue<T>({
+    items,
+    inputValue,
+    itemToString: itemToStringFn,
+    allowsCustomValue,
+  });
 
   const { getTabListProps, getTabState, getTabProps } = useTabs({
     activeTabIndex,

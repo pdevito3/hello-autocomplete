@@ -1,11 +1,16 @@
 import { useCallback } from "react";
 
-export function useCustomValue<T>(
-  items: T[],
-  inputValue: string,
-  itemToString: (item: T) => string,
-  allowsCustomValue: boolean
-) {
+export function useCustomValue<T>({
+  items,
+  inputValue,
+  itemToString,
+  allowsCustomValue,
+}: {
+  items: T[];
+  inputValue: string;
+  itemToString: (item: T) => string;
+  allowsCustomValue: boolean;
+}) {
   const isCustomValue = useCallback(
     (item: T) => {
       return (
