@@ -1,7 +1,19 @@
 import React, { useCallback, useEffect } from "react";
 import type { ActionItem, Mode, OptionState } from "../types";
 
-export interface UseOptionOptions<T> {
+export function useOption<T>({
+  items,
+  activeItem,
+  selectedValue,
+  selectedValues,
+  isItemDisabled,
+  isCustomValue,
+  onSelect,
+  mode,
+  flattenedItems,
+  getOptionLink,
+  setActiveItem,
+}: {
   /** the full, flattened list (including any ActionItem entries) */
   items: Array<T | ActionItem>;
   /** the currently active/highlighted entry */
@@ -23,9 +35,7 @@ export interface UseOptionOptions<T> {
     item: T
   ) => string | Partial<Record<string, unknown>> | undefined;
   setActiveItem(item: T | ActionItem): void;
-}
-
-export function useOption<T>(opts: UseOptionOptions<T>) {
+}) {
   const getOptionProps = useCallback(
     (item: T | ActionItem) => {
       // --- action entries ---
@@ -47,21 +57,21 @@ export function useOption<T>(opts: UseOptionOptions<T>) {
       }
 
       // --- listbox entries ---
-      const real = item as T;
-      const index = opts.items.findIndex((i) => i === item);
-      const disabled = opts.isItemDisabled(real);
-      const isActive = item === opts.activeItem;
+      const nonActionItem = item as T;
+      const index = items.findIndex((i) => i === item);
+      const disabled = isItemDisabled(nonActionItem);
+      const isActive = item === activeItem;
       const isSelected =
-        opts.mode === "multiple"
-          ? Boolean(opts.selectedValues?.includes(real))
-          : real === opts.selectedValue;
-      const custom = opts.isCustomValue(real);
+        mode === "multiple"
+          ? Boolean(selectedValues?.includes(nonActionItem))
+          : nonActionItem === selectedValue;
+      const custom = isCustomValue(nonActionItem);
 
       return {
         role: "option",
         id: `option-${index}`,
         "aria-posinset": index + 1,
-        "aria-setsize": opts.items.length,
+        "aria-setsize": items.length,
         "aria-selected": isSelected,
         "aria-disabled": disabled,
         "data-active": isActive ? "true" : undefined,
@@ -69,11 +79,20 @@ export function useOption<T>(opts: UseOptionOptions<T>) {
         "data-index": index,
         "data-custom": custom ? "true" : undefined,
         disabled,
-        onClick: disabled ? undefined : () => opts.onSelect(real),
+        onClick: disabled ? undefined : () => onSelect(nonActionItem),
         "data-disabled": disabled ? "true" : undefined,
       };
     },
-    [opts]
+    [
+      items,
+      activeItem,
+      selectedValue,
+      selectedValues,
+      isItemDisabled,
+      mode,
+      onSelect,
+      isCustomValue,
+    ]
   );
 
   const getOptionState = useCallback(
@@ -88,34 +107,34 @@ export function useOption<T>(opts: UseOptionOptions<T>) {
         };
       }
 
-      const real = item as T;
-      const disabled = opts.isItemDisabled(real);
+      const nonAction = item as T;
+      const disabled = isItemDisabled(nonAction);
       const selected =
-        opts.mode === "multiple"
-          ? Boolean(opts.selectedValues?.includes(real))
-          : real === opts.selectedValue;
+        mode === "multiple"
+          ? Boolean(selectedValues?.includes(nonAction))
+          : nonAction === selectedValue;
 
       return {
-        isActive: item === opts.activeItem,
+        isActive: item === activeItem,
         isDisabled: disabled,
         isSelected: selected,
         isAction: false,
       };
     },
-    [opts]
+    [activeItem, isItemDisabled, mode, selectedValue, selectedValues]
   );
 
   const getOptionLinkProps = useCallback(
     (item: T): Record<string, unknown> & { role: "option" } => {
-      const index = opts.flattenedItems.findIndex((i) => i === item);
-      const disabled = opts.isItemDisabled(item);
+      const index = flattenedItems.findIndex((i) => i === item);
+      const disabled = isItemDisabled(item);
       const isSelected =
-        opts.mode === "multiple"
-          ? opts.selectedValues?.includes(item) || false
-          : item === opts.selectedValue;
+        mode === "multiple"
+          ? selectedValues?.includes(item) || false
+          : item === selectedValue;
 
       // user‑returned link value
-      const linkResult = opts.getOptionLink?.(item);
+      const linkResult = getOptionLink?.(item);
       // build base props: if string, treat as href; else spread object
       const linkProps: Record<string, unknown> =
         typeof linkResult === "string"
@@ -128,7 +147,7 @@ export function useOption<T>(opts: UseOptionOptions<T>) {
         role: "option",
         "aria-selected": isSelected,
         "aria-posinset": index + 1,
-        "aria-setsize": opts.flattenedItems.length,
+        "aria-setsize": flattenedItems.length,
         "aria-disabled": disabled || undefined,
         id: `option-${index}`,
         tabIndex: disabled ? -1 : 0,
@@ -144,21 +163,23 @@ export function useOption<T>(opts: UseOptionOptions<T>) {
           : undefined,
       };
     },
-    [opts]
+    [
+      flattenedItems,
+      isItemDisabled,
+      mode,
+      selectedValues,
+      selectedValue,
+      getOptionLink,
+    ]
   );
-
-  // TODO move to main autocomplete hook?
 
   // Automatically highlight when exactly one option remains
   useEffect(() => {
     // only run when there's exactly one item and it isn’t already active
-    if (
-      opts.flattenedItems.length === 1 &&
-      opts.activeItem !== opts.flattenedItems[0]
-    ) {
-      opts.setActiveItem(opts.flattenedItems[0] as T | ActionItem);
+    if (flattenedItems.length === 1 && activeItem !== flattenedItems[0]) {
+      setActiveItem(flattenedItems[0] as T | ActionItem);
     }
-  }, [opts]);
+  }, [flattenedItems, activeItem, setActiveItem]);
 
   return { getOptionProps, getOptionState, getOptionLinkProps };
 }

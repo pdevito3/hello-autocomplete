@@ -4,6 +4,8 @@ import { useDisclosure } from "@/domain/autocomplete/core/useDisclosure";
 import { useInput } from "@/domain/autocomplete/core/useInput";
 import { useLabel } from "@/domain/autocomplete/core/useLabel";
 import { useListbox } from "@/domain/autocomplete/core/useListbox";
+import { useOption } from "@/domain/autocomplete/core/useOption";
+import { useGroup } from "@/domain/autocomplete/features/useGroup";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useDebouncedValue } from "./use-debounced-value";
 
@@ -810,14 +812,6 @@ export function useAutoComplete<T>({
     [allowsCustomValue, inputValue, itemToStringFn, items]
   );
 
-  // Automatically highlight when exactly one option remains
-  useEffect(() => {
-    // only run when there's exactly one item and it isn’t already active
-    if (flattenedItems.length === 1 && activeItem !== flattenedItems[0]) {
-      setActiveItem(flattenedItems[0] as T | ActionItem);
-    }
-  }, [flattenedItems, activeItem, setActiveItem]);
-
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLElement>) => {
       const { key } = event;
@@ -975,127 +969,19 @@ export function useAutoComplete<T>({
     srOnly: labelSrOnly,
   });
 
-  const getOptionProps = useCallback(
-    (item: T | ActionItem) => {
-      // if this is one of our “action” entries:
-      if ((item as ActionItem).__isAction) {
-        const action = item as ActionItem;
-        return {
-          role: "option",
-          "data-action-item": true,
-          "aria-label": action.label,
-          tabIndex: 0,
-          onClick: () => action.onAction(),
-          onKeyDown: (e: React.KeyboardEvent) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              action.onAction();
-            }
-          },
-          // visually you can style via [data-action-item]
-        };
-      }
-
-      // otherwise, your existing item logic:
-      const real = item as T;
-      const index = flattenedItems.findIndex((i) => i === real);
-      const disabled = isItemDisabled(real);
-      const isItemActive = real === activeItem;
-      const isItemSelected =
-        mode === "multiple"
-          ? selectedValues().includes(real)
-          : real === selectedValue;
-      const custom = isCustomValue(real);
-
-      return {
-        role: "option",
-        "aria-selected": isItemSelected,
-        "aria-posinset": index + 1,
-        "aria-setsize": flattenedItems.length,
-        "aria-disabled": disabled,
-        id: `option-${index}`,
-        "data-active": isItemActive ? "true" : undefined,
-        "data-selected": isItemSelected ? "true" : undefined,
-        "data-index": index,
-        "data-custom": custom ? "true" : undefined,
-        disabled,
-        onClick: disabled ? undefined : () => handleSelect(real),
-        "data-disabled": disabled ? "true" : undefined,
-      };
-    },
-    [
-      flattenedItems,
-      isItemDisabled,
-      activeItem,
-      mode,
-      selectedValues,
-      selectedValue,
-      isCustomValue,
-      handleSelect,
-    ]
-  );
-
-  const getOptionLinkProps = useCallback(
-    (item: T): Record<string, unknown> & { role: "option" } => {
-      const index = flattenedItems.findIndex((i) => i === item);
-      const disabled = isItemDisabled(item);
-      const isSelected =
-        mode === "multiple"
-          ? selectedValues().includes(item)
-          : item === selectedValue;
-
-      // user‑returned link value
-      const linkResult = getOptionLink?.(item);
-      // build base props: if string, treat as href; else spread object
-      const linkProps: Record<string, unknown> =
-        typeof linkResult === "string"
-          ? { href: linkResult }
-          : linkResult && typeof linkResult === "object"
-          ? { ...linkResult }
-          : {};
-
-      return {
-        role: "option",
-        "aria-selected": isSelected,
-        "aria-posinset": index + 1,
-        "aria-setsize": flattenedItems.length,
-        "aria-disabled": disabled || undefined,
-        id: `option-${index}`,
-        tabIndex: disabled ? -1 : 0,
-
-        // spread whatever the consumer needs (href, to, params, etc)
-        ...linkProps,
-
-        onClick: !disabled
-          ? (e: React.MouseEvent) => {
-              // don't use handleSelect(item) for link
-              e.stopPropagation();
-            }
-          : undefined,
-      };
-    },
-    [
-      flattenedItems,
-      isItemDisabled,
-      mode,
-      selectedValues,
-      selectedValue,
-      getOptionLink,
-    ]
-  );
-
-  const getOptionState = useCallback(
-    (item: T): OptionState => ({
-      isActive: item === activeItem,
-      isDisabled: isItemDisabled(item),
-      isAction: (item as ActionItem).__isAction ? true : false,
-      isSelected:
-        mode === "multiple"
-          ? selectedValues().includes(item)
-          : item === selectedValue,
-    }),
-    [activeItem, isItemDisabled, mode, selectedValues, selectedValue]
-  );
+  const { getOptionState, getOptionProps, getOptionLinkProps } = useOption<T>({
+    items,
+    activeItem,
+    selectedValue,
+    selectedValues: selectedValues(),
+    isItemDisabled,
+    isCustomValue,
+    onSelect: handleSelect,
+    mode,
+    flattenedItems,
+    getOptionLink,
+    setActiveItem,
+  });
 
   const { getGroupProps, getGroupLabelProps } = useGroup();
 
