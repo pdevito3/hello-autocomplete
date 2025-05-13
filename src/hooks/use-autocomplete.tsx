@@ -1097,11 +1097,7 @@ export function useAutoComplete<T>({
     [activeItem, isItemDisabled, mode, selectedValues, selectedValue]
   );
 
-  const getGroupProps = useCallback((group: Group<T>) => group.listProps, []);
-  const getGroupLabelProps = useCallback(
-    (group: Group<T>) => group.header.headingProps,
-    []
-  );
+  const { getGroupProps, getGroupLabelProps } = useGroup();
 
   return {
     getItems: () => {
