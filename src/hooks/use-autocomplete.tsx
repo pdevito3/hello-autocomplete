@@ -1,6 +1,7 @@
 import { useClearButton } from "@/domain/autocomplete/core/useClearButton";
 import { useDisclosure } from "@/domain/autocomplete/core/useDisclosure";
 import { useLabel } from "@/domain/autocomplete/core/useLabel";
+import { useListbox } from "@/domain/autocomplete/core/useListbox";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useDebouncedValue } from "./use-debounced-value";
 
@@ -998,21 +999,14 @@ export function useAutoComplete<T>({
     ]
   );
 
-  const getListProps = useCallback(
-    () => ({
-      id: "autocomplete-listbox",
-      role: "listbox",
-      "aria-label": labelProp,
-      ref: listboxRef,
-      tabIndex: -1,
-      "data-listbox": true,
-      "data-state": isOpen ? "open" : "closed",
-      "data-has-groups": groupingOptions.length ? "true" : undefined,
-      "data-empty": flattenedItems.length === 0 ? "true" : undefined,
-      "data-size": flattenedItems.length,
-    }),
-    [labelProp, isOpen, groupingOptions.length, flattenedItems]
-  );
+  // TODO can do better id
+  const { getListProps } = useListbox({
+    isOpen,
+    label: labelProp,
+    hasGroups: groupingOptions.length > 0,
+    isEmpty: flattenedItems.length === 0,
+    size: flattenedItems.length,
+  });
 
   const getInputProps = useCallback(
     (): React.InputHTMLAttributes<HTMLInputElement> & {
