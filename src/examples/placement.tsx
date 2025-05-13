@@ -1,4 +1,5 @@
 import { users } from "@/datasets/users";
+import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
 import { Check, XIcon } from "@/svgs";
 import {
   autoUpdate,
@@ -8,7 +9,6 @@ import {
   size,
   useFloating,
 } from "@floating-ui/react";
-import { useAutoComplete } from "../hooks/use-autocomplete";
 import { cn } from "../utils";
 
 function assignRef<T>(ref: React.Ref<T> | undefined, value: T | null) {

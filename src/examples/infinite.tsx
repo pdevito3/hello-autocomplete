@@ -1,9 +1,9 @@
 import type { User } from "@/datasets/users";
+import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
 import { Check, XIcon } from "@/svgs";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useAutoComplete } from "../hooks/use-autocomplete";
 import { cn } from "../utils";
 
 const mockUsers: User[] = Array.from({ length: 80 }, (_, i) => ({

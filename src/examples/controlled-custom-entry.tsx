@@ -1,6 +1,6 @@
+import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
 import { Check, XIcon } from "@/svgs";
 import { useMemo, useState } from "react";
-import { useAutoComplete } from "../hooks/use-autocomplete";
 import { cn } from "../utils";
 
 export function ControlledCustomEntryExample({

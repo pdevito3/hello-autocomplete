@@ -1,7 +1,8 @@
 import { fruits, type Fruit } from "@/datasets/fruit";
+import type { Tab } from "@/domain/autocomplete/types";
+import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
 import { Check, XIcon } from "@/svgs";
 import React, { useMemo } from "react";
-import { useAutoComplete, type Tab } from "../hooks/use-autocomplete";
 import { cn } from "../utils";
 
 export function TabsExample() {

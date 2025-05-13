@@ -1,9 +1,9 @@
 import { fruits, type Fruit } from "@/datasets/fruit";
+import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
 import { Check, XIcon } from "@/svgs";
 import { cn } from "@/utils";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { useAutoComplete } from "../hooks/use-autocomplete";
 
 interface AutocompleteProps<T> {
   value?: T;

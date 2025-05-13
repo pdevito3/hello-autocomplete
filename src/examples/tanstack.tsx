@@ -1,9 +1,9 @@
 import { fruits, type Fruit } from "@/datasets/fruit";
+import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
 import { Check, XIcon } from "@/svgs";
 import { cn } from "@/utils";
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
-import { useAutoComplete } from "../hooks/use-autocomplete";
 
 interface AutocompleteProps<T> {
   value?: T;

@@ -1,6 +1,6 @@
+import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
 import { Check, XIcon } from "@/svgs";
 import { Link } from "@tanstack/react-router";
-import { useAutoComplete } from "../hooks/use-autocomplete";
 import { cn } from "../utils";
 
 interface LinkItem {

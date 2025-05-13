@@ -1,7 +1,9 @@
 import { Check, XIcon } from "@/svgs";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { useAutoComplete, type Tab } from "../hooks/use-autocomplete";
+
+import type { Tab } from "@/domain/autocomplete/types";
+import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
 import { cn } from "../utils";
 
 interface LinkItem {

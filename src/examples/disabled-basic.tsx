@@ -1,6 +1,6 @@
 import { users } from "@/datasets/users";
+import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
 import { Check, XIcon } from "@/svgs";
-import { useAutoComplete } from "../hooks/use-autocomplete";
 import { cn } from "../utils";
 
 export function BasicDisabledExample() {

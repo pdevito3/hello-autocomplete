@@ -1,7 +1,7 @@
 import { fruits, type Fruit } from "@/datasets/fruit";
+import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
 import { Check, XIcon } from "@/svgs";
 import { AnimatePresence, motion } from "framer-motion";
-import { useAutoComplete } from "../hooks/use-autocomplete";
 import { cn } from "../utils";
 
 export function Animated() {
