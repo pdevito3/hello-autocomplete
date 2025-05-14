@@ -29,7 +29,6 @@ export function ControlledCustomEntryExample({
     getItems,
     getClearProps,
     hasSelectedItem,
-    isOpen: open,
     isCustomValue,
     getSelectedItem,
   } = useAutoComplete<string>({
@@ -75,7 +74,7 @@ export function ControlledCustomEntryExample({
           </button>
         )}
 
-        {open() && (
+        {isOpen && (
           <ul
             {...getListProps()}
             className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"

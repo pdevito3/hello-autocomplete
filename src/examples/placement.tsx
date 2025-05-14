@@ -92,7 +92,7 @@ export function PlacementExample() {
         )}
       </div>
 
-      {isOpen() && (
+      {isOpen && (
         <ul
           {...listProps}
           ref={(node) => {

@@ -188,7 +188,7 @@ export interface UseAutoCompleteReturnNoActions<T> {
     group: Group<T>
   ) => React.HTMLAttributes<HTMLSpanElement>;
   hasSelectedItem: () => boolean;
-  isOpen: () => boolean;
+  isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   isCustomValue: (item: T) => boolean;
   getHighlightedIndex: () => number | null;
@@ -239,7 +239,7 @@ export interface UseAutoCompleteReturnWithActions<T> {
     group: Group<T>
   ) => React.HTMLAttributes<HTMLSpanElement>;
   hasSelectedItem: () => boolean;
-  isOpen: () => boolean;
+  isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   isCustomValue: (item: T) => boolean;
   getHighlightedIndex: () => number | null;

@@ -384,7 +384,7 @@ export function useAutoComplete<T>({
     getGroupLabelProps,
     hasSelectedItem: () =>
       mode === "multiple" ? selectedValues().length > 0 : !!selectedValue,
-    isOpen: () => isOpen,
+    isOpen,
     setIsOpen,
     isCustomValue,
     getHighlightedIndex: () => highlightedIndex,
