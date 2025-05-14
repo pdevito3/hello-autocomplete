@@ -1,6 +1,6 @@
 // domain/autocomplete/features/useNavigation.tsx
 import { useCallback } from "react";
-import type { ActionItem, Mode } from "../types";
+import type { ActionItem } from "../types";
 
 export function useNavigation<T>({
   activeItem,
@@ -12,63 +12,23 @@ export function useNavigation<T>({
   tabs,
   activeTabIndex,
   setActiveTabIndex,
-  isItemDisabled,
-  itemToString,
-  mode,
-  setSelectedValue,
-  setInputValue,
-  setSelectedValuesState,
-  onSelectValue,
+  handleSelect,
+  optionRefs,
+  tabRefs,
 }: {
   activeItem: ActionItem | T | null;
   setActiveItem: (item: T | ActionItem | null) => void;
   flattenedItems: (T | ActionItem)[];
   isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
+  setIsOpen: (open: boolean) => void;
   allowsEmptyCollection: boolean;
   tabs: Array<{ key: string; filter?: (item: T) => boolean }>;
   activeTabIndex: number;
   setActiveTabIndex: (index: number) => void;
-  isItemDisabled: (item: T) => boolean;
-  itemToString: (item: T) => string;
-  mode: Mode;
-  setSelectedValue: (value: T) => void;
-  setInputValue: (value: string) => void;
-  setSelectedValuesState: React.Dispatch<React.SetStateAction<T[]>>;
-  onSelectValue?: (item: T) => void;
+  handleSelect: (item: T) => void;
+  optionRefs: React.RefObject<Array<HTMLElement | null>>;
+  tabRefs: React.RefObject<Array<HTMLElement | null>>;
 }) {
-  const handleSelect = useCallback(
-    (item: T) => {
-      if (isItemDisabled(item)) return;
-
-      if (mode === "single") {
-        setSelectedValue(item);
-        setInputValue(itemToString(item));
-        onSelectValue?.(item);
-        setIsOpen(false);
-      } else {
-        setSelectedValuesState((prev) =>
-          prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
-        );
-        onSelectValue?.(item);
-        setInputValue("");
-      }
-
-      setActiveItem(null);
-    },
-    [
-      isItemDisabled,
-      mode,
-      setActiveItem,
-      setSelectedValue,
-      setInputValue,
-      itemToString,
-      onSelectValue,
-      setIsOpen,
-      setSelectedValuesState,
-    ]
-  );
-
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLElement>) => {
       const { key } = event;
@@ -83,12 +43,10 @@ export function useNavigation<T>({
               if (flattenedItems.length) setActiveItem(flattenedItems[0]);
             }
           } else {
-            const nextIndex =
+            const next =
               currentIndex < flattenedItems.length - 1 ? currentIndex + 1 : 0;
-            setActiveItem(flattenedItems[nextIndex]);
-            document
-              .getElementById(`option-${nextIndex}`)
-              ?.scrollIntoView({ block: "nearest" });
+            setActiveItem(flattenedItems[next]);
+            optionRefs.current[next]?.scrollIntoView({ block: "nearest" });
           }
           break;
 
@@ -101,12 +59,10 @@ export function useNavigation<T>({
                 setActiveItem(flattenedItems[flattenedItems.length - 1]);
             }
           } else {
-            const prevIndex =
+            const prev =
               currentIndex > 0 ? currentIndex - 1 : flattenedItems.length - 1;
-            setActiveItem(flattenedItems[prevIndex]);
-            document
-              .getElementById(`option-${prevIndex}`)
-              ?.scrollIntoView({ block: "nearest" });
+            setActiveItem(flattenedItems[prev]);
+            optionRefs.current[prev]?.scrollIntoView({ block: "nearest" });
           }
           break;
 
@@ -115,9 +71,7 @@ export function useNavigation<T>({
           if (tabs.length > 0) {
             const nextTab = (activeTabIndex + 1) % tabs.length;
             setActiveTabIndex(nextTab);
-            document
-              .getElementById(`autocomplete-tab-${tabs[nextTab].key}`)
-              ?.focus();
+            tabRefs.current[nextTab]?.focus();
           }
           break;
 
@@ -126,9 +80,7 @@ export function useNavigation<T>({
           if (tabs.length > 0) {
             const prevTab = (activeTabIndex - 1 + tabs.length) % tabs.length;
             setActiveTabIndex(prevTab);
-            document
-              .getElementById(`autocomplete-tab-${tabs[prevTab].key}`)
-              ?.focus();
+            tabRefs.current[prevTab]?.focus();
           }
           break;
 
@@ -166,6 +118,8 @@ export function useNavigation<T>({
       tabs,
       activeTabIndex,
       setActiveTabIndex,
+      optionRefs,
+      tabRefs,
     ]
   );
 

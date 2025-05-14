@@ -207,7 +207,62 @@ export function useAutoComplete<T>({
 
   const [isFocused, setIsFocused] = useState(false);
 
-  const { handleKeyDown, handleSelect } = useNavigation<T>({
+  const handleSelect = useCallback(
+    (item: T) => {
+      if (isItemDisabled(item)) return;
+
+      if (mode === "single") {
+        setSelectedValue(item);
+        setInputValue(itemToStringFn(item));
+        onSelectValue?.(item);
+        setIsOpen(false);
+      } else {
+        setSelectedValuesState((prev) =>
+          prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
+        );
+        onSelectValue?.(item);
+        setInputValue("");
+      }
+
+      setActiveItem(null);
+    },
+    [
+      isItemDisabled,
+      mode,
+      setActiveItem,
+      setSelectedValue,
+      setInputValue,
+      itemToStringFn,
+      onSelectValue,
+      setIsOpen,
+    ]
+  );
+
+  const { isCustomValue } = useCustomValue<T>({
+    items,
+    inputValue,
+    itemToString: itemToStringFn,
+    allowsCustomValue,
+  });
+
+  const optionRefs = useRef<Array<HTMLLIElement | null>>([]);
+  const { getOptionState, getOptionProps, getOptionLinkProps } = useOption<T>({
+    optionRefs,
+    items,
+    activeItem,
+    selectedValue,
+    selectedValues: selectedValues(),
+    isItemDisabled,
+    isCustomValue,
+    onSelect: handleSelect,
+    mode,
+    flattenedItems,
+    getOptionLink,
+    setActiveItem,
+  });
+
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const { handleKeyDown } = useNavigation<T>({
     activeItem,
     setActiveItem,
     flattenedItems,
@@ -217,13 +272,9 @@ export function useAutoComplete<T>({
     tabs,
     activeTabIndex,
     setActiveTabIndex,
-    isItemDisabled,
-    itemToString: itemToStringFn,
-    mode,
-    setSelectedValue,
-    setInputValue,
-    setSelectedValuesState,
-    onSelectValue,
+    handleSelect,
+    optionRefs,
+    tabRefs,
   });
 
   const onFilterAsyncRef = useRef(onFilterAsync);
@@ -282,14 +333,8 @@ export function useAutoComplete<T>({
     setIsOpen,
   });
 
-  const { isCustomValue } = useCustomValue<T>({
-    items,
-    inputValue,
-    itemToString: itemToStringFn,
-    allowsCustomValue,
-  });
-
   const { getTabListProps, getTabState, getTabProps } = useTabs<T>({
+    tabRefs,
     activeTabIndex,
     items,
     tabs,
@@ -340,20 +385,6 @@ export function useAutoComplete<T>({
   const { getLabelProps } = useLabel({
     htmlFor: "autocomplete-input",
     srOnly: labelSrOnly,
-  });
-
-  const { getOptionState, getOptionProps, getOptionLinkProps } = useOption<T>({
-    items,
-    activeItem,
-    selectedValue,
-    selectedValues: selectedValues(),
-    isItemDisabled,
-    isCustomValue,
-    onSelect: handleSelect,
-    mode,
-    flattenedItems,
-    getOptionLink,
-    setActiveItem,
   });
 
   const { getGroupProps, getGroupLabelProps } = useGroup();

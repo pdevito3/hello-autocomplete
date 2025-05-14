@@ -2,12 +2,14 @@ import { useCallback } from "react";
 import type { Tab, TabState } from "../types";
 
 export function useTabs<T>({
+  tabRefs,
   activeTabIndex,
   items,
   tabs,
   setActiveTabIndex,
   handleKeyDown,
 }: {
+  tabRefs: React.RefObject<Array<HTMLButtonElement | null>>;
   activeTabIndex: number;
   items: T[];
   tabs: Tab<T>[];
@@ -22,9 +24,13 @@ export function useTabs<T>({
       tabIndex: index === activeTabIndex ? 0 : -1,
       onClick: () => setActiveTabIndex(index),
       onKeyDown: handleKeyDown,
+      // store the ref for focusing in useNavigation
+      ref: (el: HTMLButtonElement | null) => {
+        tabRefs.current[index] = el;
+      },
       ...tab.tabProps,
     }),
-    [activeTabIndex, handleKeyDown, setActiveTabIndex]
+    [activeTabIndex, handleKeyDown, setActiveTabIndex, tabRefs]
   );
 
   const getTabListProps = useCallback(
@@ -45,5 +51,5 @@ export function useTabs<T>({
     [activeTabIndex, items, tabs]
   );
 
-  return { getTabProps, getTabListProps, getTabState };
+  return { getTabProps, getTabListProps, getTabState, tabRefs };
 }

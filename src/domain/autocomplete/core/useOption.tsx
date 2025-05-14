@@ -13,6 +13,7 @@ export function useOption<T>({
   flattenedItems,
   getOptionLink,
   setActiveItem,
+  optionRefs,
 }: {
   /** the full, flattened list (including any ActionItem entries) */
   items: Array<T | ActionItem>;
@@ -35,6 +36,7 @@ export function useOption<T>({
     item: T
   ) => string | Partial<Record<string, unknown>> | undefined;
   setActiveItem(item: T | ActionItem): void;
+  optionRefs: React.RefObject<Array<HTMLLIElement | null>>;
 }) {
   const getOptionProps = useCallback(
     (item: T | ActionItem) => {
@@ -52,6 +54,10 @@ export function useOption<T>({
               e.preventDefault();
               action.onAction();
             }
+          },
+          // store ref for scrolling
+          ref: (el: HTMLLIElement | null) => {
+            optionRefs.current[index] = el;
           },
         };
       }
@@ -79,19 +85,24 @@ export function useOption<T>({
         "data-index": index,
         "data-custom": custom ? "true" : undefined,
         disabled,
-        onClick: disabled ? undefined : () => onSelect(nonActionItem),
         "data-disabled": disabled ? "true" : undefined,
+        onClick: disabled ? undefined : () => onSelect(nonActionItem),
+        // store ref for scrolling
+        ref: (el: HTMLLIElement | null) => {
+          optionRefs.current[index] = el;
+        },
       };
     },
     [
       items,
-      activeItem,
-      selectedValue,
-      selectedValues,
       isItemDisabled,
+      activeItem,
       mode,
-      onSelect,
+      selectedValues,
+      selectedValue,
       isCustomValue,
+      optionRefs,
+      onSelect,
     ]
   );
 
