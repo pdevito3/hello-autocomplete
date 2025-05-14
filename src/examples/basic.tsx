@@ -29,7 +29,6 @@ export function BasicExample() {
       ),
     itemToString: (u) => u.name,
   });
-  console.log({ isOpen });
 
   return (
     <div className="max-w-md">
