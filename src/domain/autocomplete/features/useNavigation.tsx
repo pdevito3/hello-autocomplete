@@ -1,3 +1,4 @@
+// domain/autocomplete/features/useNavigation.tsx
 import { useCallback } from "react";
 import type { ActionItem, Mode } from "../types";
 
@@ -38,9 +39,8 @@ export function useNavigation<T>({
 }) {
   const handleSelect = useCallback(
     (item: T) => {
-      if (isItemDisabled(item)) {
-        return; // do nothing if the item is disabled
-      }
+      if (isItemDisabled(item)) return;
+
       if (mode === "single") {
         setSelectedValue(item);
         setInputValue(itemToString(item));
@@ -53,6 +53,7 @@ export function useNavigation<T>({
         onSelectValue?.(item);
         setInputValue("");
       }
+
       setActiveItem(null);
     },
     [
@@ -114,9 +115,9 @@ export function useNavigation<T>({
           if (tabs.length > 0) {
             const nextTab = (activeTabIndex + 1) % tabs.length;
             setActiveTabIndex(nextTab);
-            // document
-            //   .getElementById(`autocomplete-tab-${tabs[nextTab].key}`)
-            //   ?.focus();
+            document
+              .getElementById(`autocomplete-tab-${tabs[nextTab].key}`)
+              ?.focus();
           }
           break;
 
@@ -125,9 +126,9 @@ export function useNavigation<T>({
           if (tabs.length > 0) {
             const prevTab = (activeTabIndex - 1 + tabs.length) % tabs.length;
             setActiveTabIndex(prevTab);
-            // document
-            //   .getElementById(`autocomplete-tab-${tabs[prevTab].key}`)
-            //   ?.focus();
+            document
+              .getElementById(`autocomplete-tab-${tabs[prevTab].key}`)
+              ?.focus();
           }
           break;
 
