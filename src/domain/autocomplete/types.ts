@@ -1,33 +1,48 @@
-export type Placement = "top" | "bottom" | "left" | "right";
+/**
+ * Types and interfaces for the autocomplete component and hook.
+ */
+
+/**
+ * Selection mode: 'single' for one selection or 'multiple' for several selections.
+ */
 export type Mode = "single" | "multiple";
 
+/**
+ * Configuration for grouping items in the list.
+ */
 export interface GroupingOptions<T> {
-  /** property name on item to group by */
+  /** Property name on item to group by. */
   key: keyof T;
-  /** optional aria-label or overall label for group list */
+  /** Optional aria-label or overall label for the group list. */
   label: string;
 }
 
+/**
+ * Represents a group of items in a grouped list.
+ */
 export interface Group<T> {
-  /** unique identifier for this group (the group-by value) */
+  /** Unique identifier for this group (the group-by value). */
   key: string;
-  /** items in this group (always entire set even if nested groups) */
+  /** Items in this group (always the entire set even if nested groups). */
   items: T[];
-  /** optional sub-groups for further levels of grouping */
+  /** Optional sub-groups for further levels of nesting. */
   groups?: Group<T>[];
-  /** aria-label for the group's list container */
+  /** Aria-label for the group's list container. */
   label: string;
 
-  /** allow any `data-*` on the <ul> */
+  /**
+   * Props for the <ul> that allow any `data-*` attributes.
+   */
   listProps: React.HTMLAttributes<HTMLUListElement> & {
     [key: `data-${string}`]: string | boolean | undefined;
   };
 
   header: {
-    /** text to render as the group's heading */
+    /** Text to render as the group's heading. */
     label: string;
-
-    /** allow any `data-*` on the <span> */
+    /**
+     * Props for the <span> heading, allowing any `data-*` attributes.
+     */
     headingProps: React.HTMLAttributes<HTMLSpanElement> & {
       [key: `data-${string}`]: string | boolean | undefined;
     };
@@ -35,119 +50,155 @@ export interface Group<T> {
 }
 
 // ----------------------------------------------------------------
-// New: ActionItem type to represent “action” entries in the list
+// ActionItem: represents “action” entries in the list (e.g., "Create new...")
 // ----------------------------------------------------------------
+/**
+ * Represents a special action entry in the options list.
+ */
 export interface ActionItem {
-  /** marker so we can detect these at runtime */
+  /** Marker so we can detect action items at runtime. */
   __isAction?: true;
-  /** text to render for this action */
+  /** Text to render for this action. */
   label: string;
-  /** what to do when it’s “selected” */
+  /** Callback to invoke when the action is selected. */
   onAction: () => void;
-  /** placement: top or bottom of the list (default bottom) */
+  /** Placement of the action: 'top' or 'bottom' (default 'bottom'). */
   placement?: "top" | "bottom";
-  /** if true, only render when the list of real items is empty */
+  /** Render only when the list of real items is empty. */
   showWhenEmpty?: boolean;
 }
 
+/**
+ * Represents a pre-filtering tab in the autocomplete list.
+ */
 export interface Tab<T> {
-  /** unique key for this tab */
+  /** Unique key for this tab. */
   key: string;
-  /** text to render on the tab */
+  /** Text to render on the tab. */
   label: string;
-  /** filter to apply before other filtering */
+  /** Optional filter to apply before other filters. */
   filter?: (item: T) => boolean;
-  /** optional custom props for the tab button */
+  /** Optional custom props for the tab button. */
   tabProps?: React.HTMLAttributes<HTMLButtonElement>;
 }
 
+/**
+ * Controlled state for the autocomplete component.
+ */
 export interface AutocompleteState<T> {
+  /** Current input text. */
   inputValue?: string;
+  /** External setter for the inputValue. */
   setInputValue?: (value: string) => void;
+  /** Selected value in single-select mode. */
   selectedValue?: T;
+  /** External setter for the selectedValue. */
   setSelectedValue?: (value: T | undefined) => void;
+  /** Whether the listbox is open. */
   isOpen?: boolean;
+  /** External setter for the open state. */
   setIsOpen?: (isOpen: boolean) => void;
-  /** one or more levels of grouping definitions */
+  /** One or more grouping definitions. */
   grouping?: GroupingOptions<T>[];
+  /** Default selected value. */
   defaultValue?: T;
-
+  /** Currently active (highlighted) item. */
   activeItem?: T | null;
+  /** External setter for the activeItem. */
   setActiveItem?: (item: T | ActionItem | null) => void;
-  /** index of the currently highlighted option */
+  /** Index of the currently highlighted option. */
   highlightedIndex?: number | null;
-  /** callback to set the highlighted option index */
+  /** External setter for the highlightedIndex. */
   setHighlightedIndex?: (index: number | null) => void;
+  /** Accessible label for the autocomplete component. */
   label?: string;
 }
 
+/**
+ * Options to configure the useAutoComplete hook.
+ */
 export interface UseAutoCompleteOptions<T> {
-  /** 'single' for one selection, 'multiple' for multiple */
+  /** 'single' for one selection, 'multiple' for multiple selections. */
   mode?: Mode;
+  /** Controlled component state. */
   state?: AutocompleteState<T>;
+  /** Open menu by default. */
   defaultOpen?: boolean;
+  /** Hide label visually but keep it for screen readers. */
   labelSrOnly?: boolean;
-  placement?: Placement;
+  /** Debounce delay (milliseconds) for async filtering. */
   asyncDebounceMs?: number;
-  /** enable selecting values that aren’t in the list */
+  /** Allow values not present in the list. */
   allowsCustomValue?: boolean;
+  /** Items to display in the list. */
   items?: T[];
+  /** Convert an item to a string for display. */
   itemToString?: (item: T) => string;
+  /** Sync callback when input value changes. */
   onInputValueChange?: (value: string) => void;
+  /** Async filter function receiving searchTerm and signal. */
   onFilterAsync?: (params: {
     searchTerm: string;
     signal: AbortSignal;
   }) => Promise<T[]>;
+  /** Async input-change callback receiving value and signal. */
   onInputValueChangeAsync?: (params: {
     value: string;
     signal: AbortSignal;
   }) => Promise<void>;
+  /** Async blur callback receiving value and signal. */
   onBlurAsync?: (params: {
     value: string;
     signal: AbortSignal;
   }) => Promise<void>;
+  /** Callback when a value is selected. */
   onSelectValue?: (value: T) => void;
+  /** Async handler for custom value creation. */
   onCustomValueAsync?: (params: {
     value: string;
     signal: AbortSignal;
   }) => Promise<void>;
-  /** called when the clear button is clicked */
+  /** Callback for clear-button clicks. */
   onClear?: () => void;
-
-  /** return true for items that should be rendered and treated as disabled */
+  /** Determine if an item should be disabled. */
   isItemDisabled?: (item: T) => boolean;
-  /**
-   * derive link props for an option.
-   * Can return a string (will be used as href)
-   * or an object of props (e.g. { to, params, search } for a router Link).
-   */
+  /** Derive link props for an option (href/to/params). */
   getOptionLink?: (
     item: T
   ) => string | Partial<Record<string, unknown>> | undefined;
-  /**
-   * zero or more “action” entries that appear alongside your normal items,
-   * can be clicked or keyboard‑selected to run `onAction()`
-   */
+  /** Additional action items to include. */
   actions?: ActionItem[];
-  /** whether the combo box allows the menu to open even when the item collection is empty */
+  /** Allow open when there are no items. */
   allowsEmptyCollection?: boolean;
-
-  /** zero or more tabs for pre‐filtering items */
+  /** Tabs for top‑level pre-filtering. */
   tabs?: Tab<T>[];
-  /** key of the tab to select by default */
+  /** Default selected tab key. */
   defaultTabKey?: string;
 }
 
+/**
+ * State shape for an individual option.
+ */
 export interface OptionState {
+  /** True if the option is active (highlighted). */
   isActive: boolean;
+  /** True if the option is selected. */
   isSelected: boolean;
+  /** True if the option is disabled. */
   isDisabled: boolean;
+  /** True if the entry is an action item. */
   isAction: boolean;
 }
 
+/**
+ * State shape for an individual tab.
+ */
 export interface TabState {
+  /** True if this tab is selected. */
   isSelected: boolean;
+  /** True if this tab is disabled. */
   isDisabled: boolean;
+  /** Number of items under this tab. */
   itemCount: number;
 }
 
@@ -157,111 +208,166 @@ export interface TabState {
 //    - WithActions → getItems(): Array<T|ActionItem>
 // ----------------------------------------------------------------
 
+/**
+ * Return type for useAutoComplete without action items.
+ */
 export interface UseAutoCompleteReturnNoActions<T> {
+  /** Get the list of items to render (T[]). */
   getItems: () => T[];
+  /** Get selected item(s). */
   getSelectedItem: () => T | T[] | undefined;
+  /** True if there is an active (highlighted) item. */
   hasActiveItem: () => boolean;
+  /** True if the input or list has focus. */
   isFocused: () => boolean;
+  /** Props for the root <div> (combobox). */
   getRootProps: () => React.HTMLAttributes<HTMLDivElement> & {
     ref: React.Ref<HTMLDivElement>;
   } & { [key: `data-${string}`]: string | boolean | undefined };
+  /** Props for the <ul> listbox. */
   getListProps: () => React.HTMLAttributes<HTMLUListElement> & {
     ref: React.Ref<HTMLUListElement>;
   };
+  /** Props for the <label>. */
   getLabelProps: () => React.LabelHTMLAttributes<HTMLLabelElement>;
+  /** Props for the <input>. */
   getInputProps: () => React.InputHTMLAttributes<HTMLInputElement> & {
     [key: `data-${string}`]: string | boolean | undefined;
   };
+  /** Props for the clear button. */
   getClearProps: () => React.ButtonHTMLAttributes<HTMLButtonElement> & {
     [key: `data-${string}`]: string | boolean | undefined;
   };
+  /** Props for the disclosure button. */
   getDisclosureProps: () => React.ButtonHTMLAttributes<HTMLButtonElement> & {
     [key: `data-${string}`]: string | boolean | undefined;
   };
+  /** Props for each <li> option. */
   getOptionProps: (
     item: T | ActionItem
   ) => React.LiHTMLAttributes<HTMLLIElement>;
-
+  /** State helper for an option. */
   getOptionState: (item: T) => OptionState;
+  /** Props for a group <ul>. */
   getGroupProps: (group: Group<T>) => React.HTMLAttributes<HTMLUListElement>;
+  /** Props for a group heading <span>. */
   getGroupLabelProps: (
     group: Group<T>
   ) => React.HTMLAttributes<HTMLSpanElement>;
+  /** True if there is a selected item. */
   hasSelectedItem: () => boolean;
+  /** Whether the list is open. */
   isOpen: boolean;
+  /** Toggle the open state. */
   setIsOpen: (open: boolean) => void;
+  /** Detect custom input values. */
   isCustomValue: (item: T) => boolean;
+  /** Get current highlighted index. */
   getHighlightedIndex: () => number | null;
+  /** Set highlighted index. */
   setHighlightedIndex: (i: number | null) => void;
+  /** Get current active item. */
   getActiveItem: () => T | null;
+  /** Set active item. */
   setActiveItem: (item: T | null) => void;
+  /** Props for option links. */
   getOptionLinkProps: (
     item: T
   ) => React.AnchorHTMLAttributes<HTMLAnchorElement> & { role: "option" };
+  /** Clear the input and selection. */
   clear: () => void;
-  /** props for the tab list container */
+  /** Props for the tab list container. */
   getTabListProps: () => React.HTMLAttributes<HTMLDivElement>;
-  /** props for an individual tab */
+  /** Props for an individual tab. */
   getTabProps: (
     tab: Tab<T>,
     index: number
   ) => React.HTMLAttributes<HTMLButtonElement>;
+  /** State helper for a tab. */
   getTabState: (tab: Tab<T>) => TabState;
 }
 
+/**
+ * Return type for useAutoComplete with action items.
+ */
 export interface UseAutoCompleteReturnWithActions<T> {
+  /** Get the list of items to render (T[] | ActionItem[]). */
   getItems: () => Array<T | ActionItem>;
+  /** Get selected item(s). */
   getSelectedItem: () => T | T[] | undefined;
+  /** True if there is an active (highlighted) item. */
   hasActiveItem: () => boolean;
+  /** True if the input or list has focus. */
   isFocused: () => boolean;
+  /** Props for the root <div> (combobox). */
   getRootProps: () => React.HTMLAttributes<HTMLDivElement> & {
     ref: React.Ref<HTMLDivElement>;
   } & { [key: `data-${string}`]: string | boolean | undefined };
+  /** Props for the <ul> listbox. */
   getListProps: () => React.HTMLAttributes<HTMLUListElement> & {
     ref: React.Ref<HTMLUListElement>;
   };
+  /** Props for the <label>. */
   getLabelProps: () => React.LabelHTMLAttributes<HTMLLabelElement>;
+  /** Props for the <input>. */
   getInputProps: () => React.InputHTMLAttributes<HTMLInputElement> & {
     [key: `data-${string}`]: string | boolean | undefined;
   };
+  /** Props for the clear button. */
   getClearProps: () => React.ButtonHTMLAttributes<HTMLButtonElement> & {
     [key: `data-${string}`]: string | boolean | undefined;
   };
+  /** Props for the disclosure button. */
   getDisclosureProps: () => React.ButtonHTMLAttributes<HTMLButtonElement> & {
     [key: `data-${string}`]: string | boolean | undefined;
   };
+  /** Props for each <li> option. */
   getOptionProps: (
     item: T | ActionItem
   ) => React.LiHTMLAttributes<HTMLLIElement>;
+  /** State helper for an option or action. */
   getOptionState: (item: T | ActionItem) => OptionState;
+  /** Props for a group <ul>. */
   getGroupProps: (group: Group<T>) => React.HTMLAttributes<HTMLUListElement>;
+  /** Props for a group heading <span>. */
   getGroupLabelProps: (
     group: Group<T>
   ) => React.HTMLAttributes<HTMLSpanElement>;
+  /** True if there is a selected item. */
   hasSelectedItem: () => boolean;
+  /** Whether the list is open. */
   isOpen: boolean;
+  /** Toggle the open state. */
   setIsOpen: (open: boolean) => void;
+  /** Detect custom input values. */
   isCustomValue: (item: T) => boolean;
+  /** Get current highlighted index. */
   getHighlightedIndex: () => number | null;
+  /** Set highlighted index. */
   setHighlightedIndex: (i: number | null) => void;
+  /** Get current active item or action. */
   getActiveItem: () => T | ActionItem | null;
+  /** Set active item or action. */
   setActiveItem: (item: T | ActionItem | null) => void;
+  /** Props for option links. */
   getOptionLinkProps: (
     item: T
   ) => React.AnchorHTMLAttributes<HTMLAnchorElement> & { role: "option" };
+  /** Clear the input and selection. */
   clear: () => void;
-  /** props for the tab list container */
+  /** Props for the tab list container. */
   getTabListProps: () => React.HTMLAttributes<HTMLDivElement>;
-  /** props for an individual tab */
+  /** Props for an individual tab. */
   getTabProps: (
     tab: Tab<T>,
     index: number
   ) => React.HTMLAttributes<HTMLButtonElement>;
+  /** State helper for a tab. */
   getTabState: (tab: Tab<T>) => TabState;
 }
 
 // ——————————————————————————————
-// No‐actions variants: getItems(): T[]
+// No-actions variants: getItems(): T[]
 // ——————————————————————————————
 
 export type UseAutoCompleteUngroupedSingleNoActions<T> = Omit<
@@ -298,7 +404,7 @@ export type UseAutoCompleteGroupedMultipleNoActions<T> = Omit<
 };
 
 // ——————————————————————————————
-// With‐actions variants: getItems(): Array<T|ActionItem>
+// With-actions variants: getItems(): Array<T|ActionItem>
 // ——————————————————————————————
 
 export type UseAutoCompleteUngroupedSingleWithActions<T> = Omit<
