@@ -3,7 +3,7 @@ import { Animated } from "@/examples/animated";
 import { BasicExample } from "@/examples/basic";
 import { ControlledCustomEntryExample } from "@/examples/controlled-custom-entry";
 import { CustomEntryExample } from "@/examples/custom-entry";
-import { CustomRenderingExample } from "@/examples/custom-options";
+import { DetailedOptionExample } from "@/examples/custom-options";
 import { BasicDisabledExample } from "@/examples/disabled-basic";
 import { ComplexDisabledExample } from "@/examples/disabled-complex";
 import { DisclosureExample } from "@/examples/disclosure";
@@ -30,24 +30,30 @@ export default function HomePage() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto space-y-8 grid gap-6 grid-cols-3">
+        <div className="max-w-6xl mx-auto space-y-8 grid gap-6 grid-cols-2">
           <Example title="Basic Autocomplete">
             <BasicExample />
           </Example>
           <Example title="Simple Autocomplete">
             <SimpleExample />
           </Example>
-          <Example title="Custom Rendering">
-            <CustomRenderingExample />
+          <Example title="Detailed Option">
+            <DetailedOptionExample />
           </Example>
-          <Example title="Infinite Autocomplete">
+          <Example title="Infinite Async">
             <InfiniteAutocompleteExample />
           </Example>
           <Example title="Disclosure Button">
             <DisclosureExample />
           </Example>
+          <Example title="Animation">
+            <Animated />
+          </Example>
           <Example title="Grouping">
             <GroupedFruitExample />
+          </Example>
+          <Example title="Multi Grouping">
+            <MultiGroupedFruitExample />
           </Example>
           <Example title="Tabs">
             <TabsExample />
@@ -55,14 +61,8 @@ export default function HomePage() {
           <Example title="Tab Links">
             <TabLinksExample />
           </Example>
-          <Example title="Multi Grouping">
-            <MultiGroupedFruitExample />
-          </Example>
           <Example title="Multi Select">
             <MultiFruitExample />
-          </Example>
-          <Example title="Animation">
-            <Animated />
           </Example>
           <Example title="Custom Value">
             <CustomEntryExample />

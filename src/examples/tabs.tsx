@@ -69,7 +69,7 @@ export function TabsExample() {
               {/* Tabs */}
               <div
                 {...getTabListProps()}
-                className="flex space-x-2 p-3 bg-gray-50 relative"
+                className="flex space-x-2 p-3 bg-gray-50 relative overflow-auto"
               >
                 {tabs.map((tab, i) => {
                   const { isSelected, itemCount } = getTabState(tab);

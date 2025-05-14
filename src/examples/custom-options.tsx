@@ -4,7 +4,7 @@ import { Check } from "@/svgs";
 import { useState } from "react";
 import { cn } from "../utils";
 
-export function CustomRenderingExample() {
+export function DetailedOptionExample() {
   const [inputValue, setInputValue] = useState("");
   const [selectedValue, setSelectedValue] = useState<User | undefined>();
   const [isOpen, setIsOpen] = useState(false);
