@@ -6,12 +6,12 @@ import { useInput } from "@/domain/autocomplete/core/useInput";
 import { useLabel } from "@/domain/autocomplete/core/useLabel";
 import { useListbox } from "@/domain/autocomplete/core/useListbox";
 import { useOption } from "@/domain/autocomplete/core/useOption";
-import { useTabs } from "@/domain/autocomplete/core/useTabs";
 import { useCustomValue } from "@/domain/autocomplete/features/useCustomValue";
 import { useFiltering } from "@/domain/autocomplete/features/useFiltering";
 import { useGroup } from "@/domain/autocomplete/features/useGroup";
 import { useGrouping } from "@/domain/autocomplete/features/useGrouping";
 import { useNavigation } from "@/domain/autocomplete/features/useNavigation";
+import { useTabs } from "@/domain/autocomplete/features/useTabs";
 import type {
   ActionItem,
   GroupingOptions,
