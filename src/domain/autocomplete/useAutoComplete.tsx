@@ -128,17 +128,21 @@ export function useAutoComplete<T>({
     setInputValue: setInputValueProp,
     selectedValue: selectedValueProp,
     setSelectedValue: setSelectedValueProp,
+    selectedValues: selectedValuesProp,
+    setSelectedValues: setSelectedValuesProp,
     isOpen: isOpenProp,
     setIsOpen: setIsOpenProp,
     activeItem: activeItemProp,
     setActiveItem: setActiveItemProp,
     highlightedIndex: highlightedIndexProp,
     setHighlightedIndex: setHighlightedIndexProp,
+
     label: labelProp = "",
     defaultValue,
     grouping: groupingProp,
   } = state;
 
+  // Input state
   const [inputValueState, setInputValueState] = useState<string>(
     inputValueProp ?? ""
   );
@@ -146,26 +150,37 @@ export function useAutoComplete<T>({
     inputValueProp !== undefined ? inputValueProp : inputValueState;
   const setInputValue = setInputValueProp ?? setInputValueState;
 
+  // Single selected value state
   const [selectedValueState, setSelectedValueState] = useState<T | undefined>(
     defaultValue
   );
-  const [selectedValuesState, setSelectedValuesState] = useState<T[]>([]);
   const selectedValue =
     mode === "single"
       ? selectedValueProp !== undefined
         ? selectedValueProp
         : selectedValueState
       : undefined;
-  const selectedValues = useCallback(
-    () => (mode === "multiple" ? selectedValuesState : []),
-    [mode, selectedValuesState]
-  );
   const setSelectedValue = setSelectedValueProp ?? setSelectedValueState;
 
+  // Multiple selected values state
+  const [selectedValuesState, setSelectedValuesState] = useState<T[]>([]);
+  const selectedValues =
+    mode === "multiple"
+      ? selectedValuesProp !== undefined
+        ? selectedValuesProp
+        : selectedValuesState
+      : [];
+  const setSelectedValues =
+    mode === "multiple"
+      ? setSelectedValuesProp ?? setSelectedValuesState
+      : () => {};
+
+  // Open state
   const [isOpenState, setIsOpenState] = useState<boolean>(defaultOpen);
   const isOpen = isOpenProp !== undefined ? isOpenProp : isOpenState;
   const setIsOpen = setIsOpenProp ?? setIsOpenState;
 
+  // Items and tabs
   const [items, setItems] = useState<T[]>(itemsProp);
   const [activeTabIndex, setActiveTabIndex] = useState<number>(() => {
     if (tabs.length === 0) return -1;
@@ -217,8 +232,10 @@ export function useAutoComplete<T>({
         onSelectValue?.(item);
         setIsOpen(false);
       } else {
-        setSelectedValuesState((prev) =>
-          prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
+        setSelectedValues(
+          selectedValues.includes(item)
+            ? selectedValues.filter((i) => i !== item)
+            : [...selectedValues, item]
         );
         onSelectValue?.(item);
         setInputValue("");
@@ -235,6 +252,8 @@ export function useAutoComplete<T>({
       itemToStringFn,
       onSelectValue,
       setIsOpen,
+      setSelectedValues,
+      selectedValues,
     ]
   );
 
@@ -251,7 +270,7 @@ export function useAutoComplete<T>({
     items,
     activeItem,
     selectedValue,
-    selectedValues: selectedValues(),
+    selectedValues: selectedValues,
     isItemDisabled,
     isCustomValue,
     onSelect: handleSelect,
@@ -323,7 +342,7 @@ export function useAutoComplete<T>({
   const { getClearProps, handleClear } = useClearButton<T>({
     inputValue: inputValue,
     selectedValue,
-    selectedValues: selectedValues(),
+    selectedValues: selectedValues,
     mode,
     onClear,
     setInputValue,
@@ -347,7 +366,7 @@ export function useAutoComplete<T>({
     isFocused,
     mode,
     selectedValue,
-    selectedValues: selectedValues(),
+    selectedValues: selectedValues,
     inputValue,
     setIsOpen,
     setActiveItem,
@@ -400,7 +419,7 @@ export function useAutoComplete<T>({
       return ungroupedWithActions as T[];
     },
     getSelectedItem: () =>
-      mode === "multiple" ? selectedValues() : selectedValue,
+      mode === "multiple" ? selectedValues : selectedValue,
     hasActiveItem: () => !!activeItem,
     isFocused: () => isFocused,
     getRootProps,
@@ -414,7 +433,7 @@ export function useAutoComplete<T>({
     getGroupProps,
     getGroupLabelProps,
     hasSelectedItem: () =>
-      mode === "multiple" ? selectedValues().length > 0 : !!selectedValue,
+      mode === "multiple" ? selectedValues.length > 0 : !!selectedValue,
     isOpen,
     setIsOpen,
     isCustomValue,

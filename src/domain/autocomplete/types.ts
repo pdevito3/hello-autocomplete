@@ -94,6 +94,10 @@ export interface AutocompleteState<T> {
   selectedValue?: T;
   /** External setter for the selectedValue. */
   setSelectedValue?: (value: T | undefined) => void;
+  /** Selected value in multiple-select mode. */
+  selectedValues?: T[];
+  /** External setter for selectedValues. */
+  setSelectedValues?: (values: T[] | undefined) => void;
   /** Whether the listbox is open. */
   isOpen?: boolean;
   /** External setter for the open state. */
