@@ -1,5 +1,6 @@
 import { CustomActions } from "@/examples/actions";
 import { Animated } from "@/examples/animated";
+import { AsyncSourceExample } from "@/examples/async-source";
 import { BasicExample } from "@/examples/basic";
 import { ControlledCustomEntryExample } from "@/examples/controlled-custom-entry";
 import { CustomEntryExample } from "@/examples/custom-entry";
@@ -48,6 +49,9 @@ export default function HomePage() {
           </Example>
           <Example title="Animation">
             <Animated />
+          </Example>
+          <Example title="Async Source">
+            <AsyncSourceExample />
           </Example>
           <Example title="Grouping">
             <GroupedFruitExample />
