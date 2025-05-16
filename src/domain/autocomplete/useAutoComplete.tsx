@@ -426,6 +426,8 @@ export function useAutoComplete<T>({
     getListProps,
     getLabelProps,
     getInputProps,
+    inputValue,
+    setInputValue,
     getClearProps,
     getDisclosureProps,
     getOptionProps,

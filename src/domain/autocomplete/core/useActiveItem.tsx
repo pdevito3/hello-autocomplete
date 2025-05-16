@@ -11,7 +11,7 @@ export function useActiveItem<T>({
   activeItemProp: T | null | undefined;
   highlightedIndexProp: number | null | undefined;
   flattenedItems: (T | ActionItem)[];
-  setActiveItemProp: ((item: T | ActionItem | null) => void) | undefined;
+  setActiveItemProp: ((item: T | null) => void) | undefined;
   setHighlightedIndexProp: ((index: number | null) => void) | undefined;
 }) {
   type NavState = {

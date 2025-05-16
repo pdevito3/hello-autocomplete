@@ -109,7 +109,7 @@ export interface AutocompleteState<T> {
   /** Currently active (highlighted) item. */
   activeItem?: T | null;
   /** External setter for the activeItem. */
-  setActiveItem?: (item: T | ActionItem | null) => void;
+  setActiveItem?: (item: T | null) => void;
   /** Index of the currently highlighted option. */
   highlightedIndex?: number | null;
   /** External setter for the highlightedIndex. */
@@ -289,6 +289,10 @@ export interface UseAutoCompleteReturnNoActions<T> {
   ) => React.HTMLAttributes<HTMLButtonElement>;
   /** State helper for a tab. */
   getTabState: (tab: Tab<T>) => TabState;
+  /** Get the current tab key. */
+  getInputValue: () => string;
+  /** Set the input value. */
+  setInputValue: (value: string) => void;
 }
 
 /**
@@ -368,6 +372,10 @@ export interface UseAutoCompleteReturnWithActions<T> {
   ) => React.HTMLAttributes<HTMLButtonElement>;
   /** State helper for a tab. */
   getTabState: (tab: Tab<T>) => TabState;
+  /** Get the current tab key. */
+  getInputValue: () => string;
+  /** Set the input value. */
+  setInputValue: (value: string) => void;
 }
 
 // ——————————————————————————————
