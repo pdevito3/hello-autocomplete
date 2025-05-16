@@ -117,10 +117,10 @@ export function AsyncSourceExample() {
           <h3 className="text-sm font-medium text-gray-500">Selected book:</h3>
           <div className="mt-2">
             <p className="text-sm text-gray-900">
-              Name: {getSelectedItem()?.title}
+              Title: {getSelectedItem()?.title}
             </p>
             <p className="text-sm text-gray-900">
-              Email: {getSelectedItem()?.author}
+              Author: {getSelectedItem()?.author}
             </p>
           </div>
         </div>
