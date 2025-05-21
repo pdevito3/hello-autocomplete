@@ -90,14 +90,6 @@ export interface UseAutocompleteState<T> {
   inputValue?: string;
   /** External setter for the inputValue. */
   setInputValue?: (value: string) => void;
-  /** Selected value in single-select mode. */
-  selectedItem?: T;
-  /** External setter for the selectedItem. */
-  setSelectedItem?: (value: T | undefined) => void;
-  /** Selected value in multiple-select mode. */
-  selectedItems?: T[];
-  /** External setter for selectedItems. */
-  setSelectedItems?: (values: T[] | undefined) => void;
   /** Whether the listbox is open. */
   isOpen?: boolean;
   /** External setter for the open state. */

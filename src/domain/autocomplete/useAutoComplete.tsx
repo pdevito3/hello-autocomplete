@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useActiveItem } from "../autocomplete/core/useActiveItem";
 import { useAutocompleteRoot } from "../autocomplete/core/useAutocompleteRoot";
 import { useClearButton } from "../autocomplete/core/useClearButton";
@@ -126,10 +126,6 @@ export function useAutoComplete<T>({
   const {
     inputValue: inputValueProp,
     setInputValue: setInputValueProp,
-    selectedItem: selectedItemProp,
-    setSelectedItem: setSelectedItemProp,
-    selectedItems: selectedItemsProp,
-    setSelectedItems: setSelectedItemsProp,
     isOpen: isOpenProp,
     setIsOpen: setIsOpenProp,
     activeItem: activeItemProp,
@@ -154,26 +150,33 @@ export function useAutoComplete<T>({
   const [selectedItemState, setSelectedItemState] = useState<T | undefined>(
     defaultValue
   );
-  const selectedItem =
-    mode === "single"
-      ? selectedItemProp !== undefined
-        ? selectedItemProp
-        : selectedItemState
-      : undefined;
-  const setSelectedItem = setSelectedItemProp ?? setSelectedItemState;
+  const selectedItem = useMemo(
+    () => (mode === "single" ? selectedItemState : undefined),
+    [mode, selectedItemState]
+  );
+  const setSelectedItem = useCallback(
+    (item: T) => {
+      if (mode === "single") {
+        setSelectedItemState(item);
+      }
+    },
+    [mode, setSelectedItemState]
+  );
 
   // Multiple selected values state
   const [selectedItemsState, setSelectedItemsState] = useState<T[]>([]);
-  const selectedItems =
-    mode === "multiple"
-      ? selectedItemsProp !== undefined
-        ? selectedItemsProp
-        : selectedItemsState
-      : [];
-  const setSelectedItems =
-    mode === "multiple"
-      ? setSelectedItemsProp ?? setSelectedItemsState
-      : () => {};
+  const selectedItems = useMemo(
+    () => (mode === "multiple" ? selectedItemsState : []),
+    [mode, selectedItemsState]
+  );
+  const setSelectedItems = useCallback(
+    (items: T[]) => {
+      if (mode === "multiple") {
+        setSelectedItemsState(items);
+      }
+    },
+    [mode, setSelectedItemsState]
+  );
 
   // Open state
   const [isOpenState, setIsOpenState] = useState<boolean>(defaultOpen);
