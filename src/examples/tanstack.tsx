@@ -35,8 +35,8 @@ export function ControllableAutocomplete<T>({
   } = useAutoComplete<T>({
     items,
     state: {
-      selectedItem: value,
-      setSelectedItem: onChange,
+      selectedValue: value,
+      setSelectedValue: onChange,
       isOpen,
       setIsOpen,
       label,

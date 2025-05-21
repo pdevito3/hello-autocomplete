@@ -42,7 +42,7 @@ export function Animated() {
           />
           <AnimatePresence>
             {hasSelectedItem() && (
-              // @ts-ignore
+              // @ts-expect-error motion
               <motion.button
                 type="button"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 bg-transparent hover:text-gray-600 focus:outline-sky-600"
@@ -58,7 +58,7 @@ export function Animated() {
           </AnimatePresence>
           <AnimatePresence>
             {isOpen && (
-              // @ts-ignore
+              // @ts-expect-error motion
               <motion.ul
                 {...getListProps()}
                 className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
@@ -80,7 +80,7 @@ export function Animated() {
                   getItems().map((fruit, index) => {
                     const { isActive, isSelected } = getItemState(fruit);
                     return (
-                      // @ts-ignore
+                      // @ts-expect-error motion
                       <motion.li
                         key={fruit.value}
                         {...getItemProps(fruit)}

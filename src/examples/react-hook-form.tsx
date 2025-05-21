@@ -36,10 +36,9 @@ export function ControllableAutocomplete<T>({
     getItems,
   } = useAutoComplete<T>({
     items,
-    // @ts-ignore
     state: {
-      selectedItem: value,
-      setSelectedItem: onChange,
+      selectedValue: value,
+      setSelectedValue: onChange,
       isOpen,
       setIsOpen,
       label,

@@ -83,9 +83,11 @@ export interface Tab<T> {
 }
 
 /**
- * Controlled state for the autocomplete hook.
+ * Controlled state for the autocomplete hook.*
+ * @template T  the type of each option item
+ * @template V  the external value type (defaults to T)
  */
-export interface UseAutocompleteState<T> {
+export interface UseAutocompleteState<T, V = T> {
   /** Current input text. */
   inputValue?: string;
   /** External setter for the inputValue. */
@@ -96,7 +98,7 @@ export interface UseAutocompleteState<T> {
   setIsOpen?: (isOpen: boolean) => void;
   /** One or more grouping definitions. */
   grouping?: GroupingOptions<T>[];
-  /** Default selected value. */
+  /** Default selected item (uncontrolled single mode). */
   defaultValue?: T;
   /** Currently active (highlighted) item. */
   activeItem?: T | null;
@@ -110,16 +112,37 @@ export interface UseAutocompleteState<T> {
   label?: string;
   /** Whether the input is disabled. */
   disabled?: boolean;
+
+  /**
+   * Controlled selected value (single mode), mapped via `mapValue`.
+   * If provided, the hook will use this instead of its internal T-based state.
+   */
+  selectedValue?: V;
+  /** External setter for controlled single-mode value. */
+  setSelectedValue?: (value: V) => void;
+
+  /**
+   * Controlled selected values (multiple mode), mapped via `mapValue`.
+   * If provided, the hook will use these instead of its internal T-based state.
+   */
+  selectedValues?: V[];
+  /** External setter for controlled multiple-mode values. */
+  setSelectedValues?: (values: V[]) => void;
 }
 
 /**
  * Options to configure the useAutoComplete hook.
+ *
+ * @template T  the type of each option item
+ * @template V  the external value type (defaults to T)
  */
-export interface UseAutoCompleteOptions<T> {
+export interface UseAutoCompleteOptions<T, V = T> {
   /** 'single' for one selection, 'multiple' for multiple selections. */
   mode?: Mode;
-  /** Controlled component state. */
-  state?: UseAutocompleteState<T>;
+
+  /** Controlled vs. uncontrolled state. */
+  state?: UseAutocompleteState<T, V>;
+
   /** Open menu by default. */
   defaultOpen?: boolean;
   /** Hide label visually but keep it for screen readers. */
@@ -132,6 +155,8 @@ export interface UseAutoCompleteOptions<T> {
   items?: T[];
   /** Convert an item to a string for display. */
   itemToString?: (item: T) => string;
+  /** Map a selected item T → external value V. Defaults to identity. */
+  mapValue?: (item: T) => V;
   /** Sync callback when input value changes. */
   onInputValueChange?: (value: string) => void;
   /** Async filter function receiving searchTerm and signal. */
@@ -149,7 +174,7 @@ export interface UseAutoCompleteOptions<T> {
     value: string;
     signal: AbortSignal;
   }) => Promise<void>;
-  /** Callback when a value is selected. */
+  /** Callback when a value is selected (always receives the raw T). */
   onSelectItem?: (value: T) => void;
   /** Async handler for custom value creation. */
   onCustomItemCreationAsync?: (params: {
@@ -168,7 +193,7 @@ export interface UseAutoCompleteOptions<T> {
   actions?: ActionItem[];
   /** Allow open when there are no items. */
   allowsEmptyCollection?: boolean;
-  /** Tabs for top‑level pre-filtering. */
+  /** Tabs for top-level pre-filtering. */
   tabs?: Tab<T>[];
   /** Default selected tab key. */
   defaultTabKey?: string;
@@ -209,7 +234,7 @@ export interface TabState {
 /**
  * Return type for useAutoComplete without action items.
  */
-export interface UseAutoCompleteReturnNoActions<T> {
+export interface UseAutoCompleteReturnNoActions<T, V = T> {
   /** Get the list of items to render (T[]). */
   getItems: () => T[];
   /** Get selected item(s). */
@@ -287,12 +312,14 @@ export interface UseAutoCompleteReturnNoActions<T> {
   setInputValue: (value: string) => void;
   /** True if the input is disabled. */
   getIsDisabled: () => boolean;
+  getSelectedValue: () => V | undefined;
+  getSelectedValues: () => V[] | undefined;
 }
 
 /**
  * Return type for useAutoComplete with action items.
  */
-export interface UseAutoCompleteReturnWithActions<T> {
+export interface UseAutoCompleteReturnWithActions<T, V = T> {
   /** Get the list of items to render (T[] | ActionItem[]). */
   getItems: () => Array<T | ActionItem>;
   /** Get selected item(s). */
@@ -370,6 +397,8 @@ export interface UseAutoCompleteReturnWithActions<T> {
   setInputValue: (value: string) => void;
   /** True if the input is disabled. */
   getIsDisabled: () => boolean;
+  getSelectedValue: () => V | undefined;
+  getSelectedValues: () => V[] | undefined;
 }
 
 // ——————————————————————————————

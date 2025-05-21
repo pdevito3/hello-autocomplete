@@ -2,6 +2,7 @@ import { CustomActions } from "@/examples/actions";
 import { Animated } from "@/examples/animated";
 import { AsyncSourceExample } from "@/examples/async-source";
 import { BasicExample } from "@/examples/basic";
+import { ControlledByIdExample } from "@/examples/controlled-by-id";
 import { ControlledCustomEntryExample } from "@/examples/controlled-custom-entry";
 import { CustomEntryExample } from "@/examples/custom-entry";
 import { DetailedOptionExample } from "@/examples/custom-options";
@@ -97,6 +98,9 @@ export default function HomePage() {
           </Example>
           <Example title="RHF Form">
             <ReactHookFormExample />
+          </Example>
+          <Example title="Controlled for Id">
+            <ControlledByIdExample />
           </Example>
         </div>
       </div>
