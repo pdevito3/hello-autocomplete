@@ -1,6 +1,6 @@
-import { users } from "@/datasets/users";
-import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
-import { Check, XIcon } from "@/svgs";
+import { users } from "../datasets/users";
+import { useAutoComplete } from "../domain/autocomplete/useAutoComplete";
+import { Check, XIcon } from "../svgs";
 import { cn } from "../utils";
 
 export function BasicDisabledExample() {
@@ -9,8 +9,8 @@ export function BasicDisabledExample() {
     getLabelProps,
     getInputProps,
     getListProps,
-    getOptionProps,
-    getOptionState,
+    getItemProps,
+    getItemState,
     getItems,
     getClearProps,
     hasSelectedItem,
@@ -64,12 +64,12 @@ export function BasicDisabledExample() {
               ) : (
                 getItems().map((user) => {
                   const { isActive, isSelected, isDisabled } =
-                    getOptionState(user);
+                    getItemState(user);
 
                   return (
                     <li
                       key={user.id}
-                      {...getOptionProps(user)}
+                      {...getItemProps(user)}
                       className={cn(
                         "px-4 py-2 cursor-pointer hover:bg-gray-100",
                         isActive && "bg-gray-100",

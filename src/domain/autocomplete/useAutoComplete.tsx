@@ -1,17 +1,18 @@
-import { useActiveItem } from "@/domain/autocomplete/core/useActiveItem";
-import { useAutocompleteRoot } from "@/domain/autocomplete/core/useAutocompleteRoot";
-import { useClearButton } from "@/domain/autocomplete/core/useClearButton";
-import { useDisclosure } from "@/domain/autocomplete/core/useDisclosure";
-import { useInput } from "@/domain/autocomplete/core/useInput";
-import { useLabel } from "@/domain/autocomplete/core/useLabel";
-import { useListbox } from "@/domain/autocomplete/core/useListbox";
-import { useOption } from "@/domain/autocomplete/core/useOption";
-import { useCustomValue } from "@/domain/autocomplete/features/useCustomValue";
-import { useFiltering } from "@/domain/autocomplete/features/useFiltering";
-import { useGroup } from "@/domain/autocomplete/features/useGroup";
-import { useGrouping } from "@/domain/autocomplete/features/useGrouping";
-import { useNavigation } from "@/domain/autocomplete/features/useNavigation";
-import { useTabs } from "@/domain/autocomplete/features/useTabs";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useActiveItem } from "../autocomplete/core/useActiveItem";
+import { useAutocompleteRoot } from "../autocomplete/core/useAutocompleteRoot";
+import { useClearButton } from "../autocomplete/core/useClearButton";
+import { useDisclosure } from "../autocomplete/core/useDisclosure";
+import { useInput } from "../autocomplete/core/useInput";
+import { useLabel } from "../autocomplete/core/useLabel";
+import { useListbox } from "../autocomplete/core/useListbox";
+import { useOption } from "../autocomplete/core/useOption";
+import { useCustomValue } from "../autocomplete/features/useCustomValue";
+import { useFiltering } from "../autocomplete/features/useFiltering";
+import { useGroup } from "../autocomplete/features/useGroup";
+import { useGrouping } from "../autocomplete/features/useGrouping";
+import { useNavigation } from "../autocomplete/features/useNavigation";
+import { useTabs } from "../autocomplete/features/useTabs";
 import type {
   ActionItem,
   GroupingOptions,
@@ -24,8 +25,7 @@ import type {
   UseAutoCompleteUngroupedMultipleWithActions,
   UseAutoCompleteUngroupedSingleNoActions,
   UseAutoCompleteUngroupedSingleWithActions,
-} from "@/domain/autocomplete/types";
-import { useCallback, useEffect, useRef, useState } from "react";
+} from "../autocomplete/types";
 
 export function useAutoComplete<T>(
   options: UseAutoCompleteOptions<T> & {
@@ -97,17 +97,17 @@ export function useAutoComplete<T>({
   defaultOpen = false,
   labelSrOnly = false,
   asyncDebounceMs = 0,
-  allowsCustomValue = false,
+  allowsCustomItems = false,
   onInputValueChange,
-  onSelectValue,
+  onSelectItem,
   onInputValueChangeAsync,
   onBlurAsync,
   items: itemsProp = [],
   onFilterAsync,
   itemToString,
-  onClear,
+  onClearAsync,
   isItemDisabled: isItemDisabledProp,
-  getOptionLink,
+  getItemLink,
   actions,
   allowsEmptyCollection = false,
   tabs = [],
@@ -126,10 +126,10 @@ export function useAutoComplete<T>({
   const {
     inputValue: inputValueProp,
     setInputValue: setInputValueProp,
-    selectedValue: selectedValueProp,
-    setSelectedValue: setSelectedValueProp,
-    selectedValues: selectedValuesProp,
-    setSelectedValues: setSelectedValuesProp,
+    selectedItem: selectedItemProp,
+    setSelectedItem: setSelectedItemProp,
+    selectedItems: selectedItemsProp,
+    setSelectedItems: setSelectedItemsProp,
     isOpen: isOpenProp,
     setIsOpen: setIsOpenProp,
     activeItem: activeItemProp,
@@ -151,28 +151,28 @@ export function useAutoComplete<T>({
   const setInputValue = setInputValueProp ?? setInputValueState;
 
   // Single selected value state
-  const [selectedValueState, setSelectedValueState] = useState<T | undefined>(
+  const [selectedItemState, setSelectedItemState] = useState<T | undefined>(
     defaultValue
   );
-  const selectedValue =
+  const selectedItem =
     mode === "single"
-      ? selectedValueProp !== undefined
-        ? selectedValueProp
-        : selectedValueState
+      ? selectedItemProp !== undefined
+        ? selectedItemProp
+        : selectedItemState
       : undefined;
-  const setSelectedValue = setSelectedValueProp ?? setSelectedValueState;
+  const setSelectedItem = setSelectedItemProp ?? setSelectedItemState;
 
   // Multiple selected values state
-  const [selectedValuesState, setSelectedValuesState] = useState<T[]>([]);
-  const selectedValues =
+  const [selectedItemsState, setSelectedItemsState] = useState<T[]>([]);
+  const selectedItems =
     mode === "multiple"
-      ? selectedValuesProp !== undefined
-        ? selectedValuesProp
-        : selectedValuesState
+      ? selectedItemsProp !== undefined
+        ? selectedItemsProp
+        : selectedItemsState
       : [];
-  const setSelectedValues =
+  const setSelectedItems =
     mode === "multiple"
-      ? setSelectedValuesProp ?? setSelectedValuesState
+      ? setSelectedItemsProp ?? setSelectedItemsState
       : () => {};
 
   // Open state
@@ -196,7 +196,7 @@ export function useAutoComplete<T>({
   );
   const { grouped, flattenedItems, groupingOptions, ungroupedWithActions } =
     useGrouping<T>({
-      allowsCustomValue,
+      allowsCustomItems,
       inputValue,
       itemToString: itemToStringFn,
       actions,
@@ -227,17 +227,17 @@ export function useAutoComplete<T>({
       if (isItemDisabled(item)) return;
 
       if (mode === "single") {
-        setSelectedValue(item);
+        setSelectedItem(item);
         setInputValue(itemToStringFn(item));
-        onSelectValue?.(item);
+        onSelectItem?.(item);
         setIsOpen(false);
       } else {
-        setSelectedValues(
-          selectedValues.includes(item)
-            ? selectedValues.filter((i) => i !== item)
-            : [...selectedValues, item]
+        setSelectedItems(
+          selectedItems.includes(item)
+            ? selectedItems.filter((i) => i !== item)
+            : [...selectedItems, item]
         );
-        onSelectValue?.(item);
+        onSelectItem?.(item);
         setInputValue("");
       }
 
@@ -247,37 +247,38 @@ export function useAutoComplete<T>({
       isItemDisabled,
       mode,
       setActiveItem,
-      setSelectedValue,
+      setSelectedItem,
       setInputValue,
       itemToStringFn,
-      onSelectValue,
+      onSelectItem,
       setIsOpen,
-      setSelectedValues,
-      selectedValues,
+      setSelectedItems,
+      selectedItems,
     ]
   );
 
-  const { isCustomValue } = useCustomValue<T>({
+  const { isCustomItem } = useCustomValue<T>({
     items,
     inputValue,
     itemToString: itemToStringFn,
-    allowsCustomValue,
+    allowsCustomItems,
   });
 
   const optionRefs = useRef<Array<HTMLLIElement | null>>([]);
-  const { getOptionState, getOptionProps, getOptionLinkProps } = useOption<T>({
+  const { getItemState, getItemProps, getItemLinkProps } = useOption<T>({
     optionRefs,
     items,
     activeItem,
-    selectedValue,
-    selectedValues: selectedValues,
+    selectedItem,
+    selectedItems: selectedItems,
     isItemDisabled,
-    isCustomValue,
+    isCustomItem,
     onSelect: handleSelect,
     mode,
     flattenedItems,
-    getOptionLink,
+    getItemLink,
     setActiveItem,
+    close: () => setIsOpen(false),
   });
 
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -320,10 +321,10 @@ export function useAutoComplete<T>({
 
   useEffect(() => {
     if (defaultValue && mode === "single") {
-      setSelectedValue(defaultValue);
+      setSelectedItem(defaultValue);
       setInputValue(itemToStringFn(defaultValue));
     }
-  }, [defaultValue, mode, setSelectedValue, setInputValue, itemToStringFn]);
+  }, [defaultValue, mode, setSelectedItem, setInputValue, itemToStringFn]);
 
   const { debouncedAsyncOperation } = useFiltering<T>({
     inputValue,
@@ -341,13 +342,13 @@ export function useAutoComplete<T>({
 
   const { getClearProps, handleClear } = useClearButton<T>({
     inputValue: inputValue,
-    selectedValue,
-    selectedValues: selectedValues,
+    selectedItem,
+    selectedItems: selectedItems,
     mode,
-    onClear,
+    onClearAsync,
     setInputValue,
-    setSelectedValue,
-    setSelectedValues: setSelectedValuesState,
+    setSelectedItem,
+    setSelectedItems: setSelectedItemsState,
     setActiveItem,
     setIsOpen,
   });
@@ -365,8 +366,8 @@ export function useAutoComplete<T>({
     isOpen,
     isFocused,
     mode,
-    selectedValue,
-    selectedValues: selectedValues,
+    selectedItem,
+    selectedItems: selectedItems,
     inputValue,
     setIsOpen,
     setActiveItem,
@@ -419,8 +420,7 @@ export function useAutoComplete<T>({
       // otherwise, render items + custom‐value + action items
       return ungroupedWithActions as T[];
     },
-    getSelectedItem: () =>
-      mode === "multiple" ? selectedValues : selectedValue,
+    getSelectedItem: () => (mode === "multiple" ? selectedItems : selectedItem),
     hasActiveItem: () => !!activeItem,
     isFocused: () => isFocused,
     getRootProps,
@@ -431,24 +431,25 @@ export function useAutoComplete<T>({
     setInputValue,
     getClearProps,
     getDisclosureProps,
-    getOptionProps,
-    getOptionState,
+    getItemProps,
+    getItemState,
     getGroupProps,
     getGroupLabelProps,
     hasSelectedItem: () =>
-      mode === "multiple" ? selectedValues.length > 0 : !!selectedValue,
+      mode === "multiple" ? selectedItems.length > 0 : !!selectedItem,
     isOpen,
     setIsOpen,
-    isCustomValue,
+    isCustomItem,
     getHighlightedIndex: () => highlightedIndex,
     setHighlightedIndex,
     getActiveItem: () => activeItem,
     setActiveItem,
-    getOptionLinkProps,
+    getItemLinkProps,
     clear: handleClear,
     getTabListProps,
     getTabProps,
     getTabState,
+    getIsDisabled: () => disabled,
   } as unknown as
     | UseAutoCompleteUngroupedSingleNoActions<T>
     | UseAutoCompleteUngroupedMultipleNoActions<T>

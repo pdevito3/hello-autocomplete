@@ -4,24 +4,24 @@ export function useCustomValue<T>({
   items,
   inputValue,
   itemToString,
-  allowsCustomValue,
+  allowsCustomItems,
 }: {
   items: T[];
   inputValue: string;
   itemToString: (item: T) => string;
-  allowsCustomValue: boolean;
+  allowsCustomItems: boolean;
 }) {
-  const isCustomValue = useCallback(
+  const isCustomItem = useCallback(
     (item: T) => {
       return (
-        allowsCustomValue &&
+        allowsCustomItems &&
         inputValue.trim() !== "" &&
         itemToString(item) === inputValue &&
         !items.some((it) => itemToString(it) === inputValue)
       );
     },
-    [allowsCustomValue, inputValue, itemToString, items]
+    [allowsCustomItems, inputValue, itemToString, items]
   );
 
-  return { isCustomValue };
+  return { isCustomItem };
 }

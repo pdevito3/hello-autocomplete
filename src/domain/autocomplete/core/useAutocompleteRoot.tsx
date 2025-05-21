@@ -4,8 +4,8 @@ export function useAutocompleteRoot<T>({
   isOpen,
   isFocused,
   mode,
-  selectedValue,
-  selectedValues,
+  selectedItem,
+  selectedItems,
   inputValue,
   setIsOpen,
   setActiveItem,
@@ -14,8 +14,8 @@ export function useAutocompleteRoot<T>({
   isOpen: boolean;
   isFocused: boolean;
   mode: "single" | "multiple";
-  selectedValue?: T;
-  selectedValues: T[];
+  selectedItem?: T;
+  selectedItems: T[];
   inputValue: string;
   setIsOpen: (isOpen: boolean) => void;
   setActiveItem: (item: T | null) => void;
@@ -37,15 +37,15 @@ export function useAutocompleteRoot<T>({
       "data-mode": mode,
       "data-has-selected":
         mode === "multiple"
-          ? selectedValues.length > 0
+          ? selectedItems.length > 0
             ? "true"
             : undefined
-          : selectedValue
+          : selectedItem
           ? "true"
           : undefined,
       "data-has-value": inputValue.trim() !== "" ? "true" : undefined,
     };
-  }, [isOpen, isFocused, mode, selectedValue, selectedValues, inputValue]);
+  }, [isOpen, isFocused, mode, selectedItem, selectedItems, inputValue]);
 
   // Close the listbox when clicking outside
   useEffect(() => {

@@ -1,9 +1,9 @@
-import type { User } from "@/datasets/users";
-import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
-import { Check, XIcon } from "@/svgs";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { User } from "../datasets/users";
+import { useAutoComplete } from "../domain/autocomplete/useAutoComplete";
+import { Check, XIcon } from "../svgs";
 import { cn } from "../utils";
 
 const mockUsers: User[] = Array.from({ length: 80 }, (_, i) => ({
@@ -36,7 +36,7 @@ async function fetchUserPage(
 
 export function InfiniteAutocompleteExample() {
   const [filter, setFilter] = useState("");
-  const [selectedValue, setSelectedValue] = useState<User | undefined>();
+  const [selectedItem, setSelectedItem] = useState<User | undefined>();
   const [isOpen, setIsOpen] = useState(false);
   const [activeItem, setActiveItem] = useState<User | null>(null);
 
@@ -105,16 +105,16 @@ export function InfiniteAutocompleteExample() {
     getLabelProps,
     getInputProps,
     getListProps,
-    getOptionProps,
-    getOptionState,
+    getItemProps,
+    getItemState,
     hasSelectedItem,
     getClearProps,
   } = useAutoComplete<User>({
     state: {
       inputValue: filter,
       setInputValue: setFilter,
-      selectedValue,
-      setSelectedValue,
+      selectedItem,
+      setSelectedItem,
       isOpen,
       setIsOpen,
       activeItem,
@@ -201,17 +201,17 @@ export function InfiniteAutocompleteExample() {
                 return (
                   <li
                     key={user.id}
-                    {...getOptionProps(user)}
+                    {...getItemProps(user)}
                     style={style}
                     className={cn(
                       "px-4 py-2 cursor-pointer hover:bg-gray-100",
-                      getOptionState(user).isActive && "bg-gray-100"
+                      getItemState(user).isActive && "bg-gray-100"
                     )}
                   >
                     <div>
                       <div className="font-medium flex">
                         <p className="flex-1">{user.name}</p>
-                        {getOptionState(user).isSelected && (
+                        {getItemState(user).isSelected && (
                           <Check className="text-blue-500" />
                         )}
                       </div>

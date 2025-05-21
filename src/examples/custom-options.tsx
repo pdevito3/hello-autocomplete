@@ -1,12 +1,12 @@
-import { users, type User } from "@/datasets/users";
-import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
-import { Check } from "@/svgs";
 import { useState } from "react";
+import { users, type User } from "../datasets/users";
+import { useAutoComplete } from "../domain/autocomplete/useAutoComplete";
+import { Check } from "../svgs";
 import { cn } from "../utils";
 
 export function DetailedOptionExample() {
   const [inputValue, setInputValue] = useState("");
-  const [selectedValue, setSelectedValue] = useState<User | undefined>();
+  const [selectedItem, setSelectedItem] = useState<User | undefined>();
   const [isOpen, setIsOpen] = useState(false);
   const [activeItem, setActiveItem] = useState<User | null>(null);
 
@@ -15,16 +15,16 @@ export function DetailedOptionExample() {
     getLabelProps,
     getInputProps,
     getListProps,
-    getOptionProps,
-    getOptionState,
+    getItemProps,
+    getItemState,
     getItems,
   } = useAutoComplete({
     items: users,
     state: {
       inputValue,
       setInputValue,
-      selectedValue,
-      setSelectedValue,
+      selectedItem,
+      setSelectedItem,
       isOpen,
       setIsOpen,
       activeItem,
@@ -61,16 +61,16 @@ export function DetailedOptionExample() {
                 getItems().map((user) => (
                   <li
                     key={user.id}
-                    {...getOptionProps(user)}
+                    {...getItemProps(user)}
                     className={cn(
                       "px-4 py-2 cursor-pointer hover:bg-gray-100",
-                      getOptionState(user).isActive && "bg-gray-100"
+                      getItemState(user).isActive && "bg-gray-100"
                     )}
                   >
                     <div>
                       <div className="font-medium flex">
                         <p className="flex-1">{user.name}</p>
-                        {getOptionState(user).isSelected && (
+                        {getItemState(user).isSelected && (
                           <Check className="text-blue-500" />
                         )}
                       </div>
@@ -83,14 +83,12 @@ export function DetailedOptionExample() {
           )}
         </div>
       </div>
-      {selectedValue && (
+      {selectedItem && (
         <div className="mt-4 p-4 bg-gray-50 rounded-md">
           <h3 className="text-sm font-medium text-gray-500">Selected User:</h3>
           <div className="mt-2">
-            <p className="text-sm text-gray-900">Name: {selectedValue.name}</p>
-            <p className="text-sm text-gray-900">
-              Email: {selectedValue.email}
-            </p>
+            <p className="text-sm text-gray-900">Name: {selectedItem.name}</p>
+            <p className="text-sm text-gray-900">Email: {selectedItem.email}</p>
           </div>
         </div>
       )}

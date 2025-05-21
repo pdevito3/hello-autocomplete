@@ -83,21 +83,21 @@ export interface Tab<T> {
 }
 
 /**
- * Controlled state for the autocomplete component.
+ * Controlled state for the autocomplete hook.
  */
-export interface AutocompleteState<T> {
+export interface UseAutocompleteState<T> {
   /** Current input text. */
   inputValue?: string;
   /** External setter for the inputValue. */
   setInputValue?: (value: string) => void;
   /** Selected value in single-select mode. */
-  selectedValue?: T;
-  /** External setter for the selectedValue. */
-  setSelectedValue?: (value: T | undefined) => void;
+  selectedItem?: T;
+  /** External setter for the selectedItem. */
+  setSelectedItem?: (value: T | undefined) => void;
   /** Selected value in multiple-select mode. */
-  selectedValues?: T[];
-  /** External setter for selectedValues. */
-  setSelectedValues?: (values: T[] | undefined) => void;
+  selectedItems?: T[];
+  /** External setter for selectedItems. */
+  setSelectedItems?: (values: T[] | undefined) => void;
   /** Whether the listbox is open. */
   isOpen?: boolean;
   /** External setter for the open state. */
@@ -110,7 +110,7 @@ export interface AutocompleteState<T> {
   activeItem?: T | null;
   /** External setter for the activeItem. */
   setActiveItem?: (item: T | null) => void;
-  /** Index of the currently highlighted option. */
+  /** Index of the currently highlighted item. */
   highlightedIndex?: number | null;
   /** External setter for the highlightedIndex. */
   setHighlightedIndex?: (index: number | null) => void;
@@ -127,7 +127,7 @@ export interface UseAutoCompleteOptions<T> {
   /** 'single' for one selection, 'multiple' for multiple selections. */
   mode?: Mode;
   /** Controlled component state. */
-  state?: AutocompleteState<T>;
+  state?: UseAutocompleteState<T>;
   /** Open menu by default. */
   defaultOpen?: boolean;
   /** Hide label visually but keep it for screen readers. */
@@ -135,7 +135,7 @@ export interface UseAutoCompleteOptions<T> {
   /** Debounce delay (milliseconds) for async filtering. */
   asyncDebounceMs?: number;
   /** Allow values not present in the list. */
-  allowsCustomValue?: boolean;
+  allowsCustomItems?: boolean;
   /** Items to display in the list. */
   items?: T[];
   /** Convert an item to a string for display. */
@@ -158,18 +158,18 @@ export interface UseAutoCompleteOptions<T> {
     signal: AbortSignal;
   }) => Promise<void>;
   /** Callback when a value is selected. */
-  onSelectValue?: (value: T) => void;
+  onSelectItem?: (value: T) => void;
   /** Async handler for custom value creation. */
-  onCustomValueAsync?: (params: {
+  onCustomItemCreationAsync?: (params: {
     value: string;
     signal: AbortSignal;
   }) => Promise<void>;
   /** Callback for clear-button clicks. */
-  onClear?: () => void;
+  onClearAsync?: (params: { signal: AbortSignal }) => Promise<void>;
   /** Determine if an item should be disabled. */
   isItemDisabled?: (item: T) => boolean;
-  /** Derive link props for an option (href/to/params). */
-  getOptionLink?: (
+  /** Derive link props for an item (href/to/params). */
+  getItemLink?: (
     item: T
   ) => string | Partial<Record<string, unknown>> | undefined;
   /** Additional action items to include. */
@@ -183,14 +183,14 @@ export interface UseAutoCompleteOptions<T> {
 }
 
 /**
- * State shape for an individual option.
+ * State shape for an individual item.
  */
-export interface OptionState {
-  /** True if the option is active (highlighted). */
+export interface ItemState {
+  /** True if the item is active (highlighted). */
   isActive: boolean;
-  /** True if the option is selected. */
+  /** True if the item is selected. */
   isSelected: boolean;
-  /** True if the option is disabled. */
+  /** True if the item is disabled. */
   isDisabled: boolean;
   /** True if the entry is an action item. */
   isAction: boolean;
@@ -248,12 +248,10 @@ export interface UseAutoCompleteReturnNoActions<T> {
   getDisclosureProps: () => React.ButtonHTMLAttributes<HTMLButtonElement> & {
     [key: `data-${string}`]: string | boolean | undefined;
   };
-  /** Props for each <li> option. */
-  getOptionProps: (
-    item: T | ActionItem
-  ) => React.LiHTMLAttributes<HTMLLIElement>;
-  /** State helper for an option. */
-  getOptionState: (item: T) => OptionState;
+  /** Props for each <li> item. */
+  getItemProps: (item: T | ActionItem) => React.LiHTMLAttributes<HTMLLIElement>;
+  /** State helper for an item. */
+  getItemState: (item: T) => ItemState;
   /** Props for a group <ul>. */
   getGroupProps: (group: Group<T>) => React.HTMLAttributes<HTMLUListElement>;
   /** Props for a group heading <span>. */
@@ -267,7 +265,7 @@ export interface UseAutoCompleteReturnNoActions<T> {
   /** Toggle the open state. */
   setIsOpen: (open: boolean) => void;
   /** Detect custom input values. */
-  isCustomValue: (item: T) => boolean;
+  isCustomItem: (item: T) => boolean;
   /** Get current highlighted index. */
   getHighlightedIndex: () => number | null;
   /** Set highlighted index. */
@@ -276,8 +274,8 @@ export interface UseAutoCompleteReturnNoActions<T> {
   getActiveItem: () => T | null;
   /** Set active item. */
   setActiveItem: (item: T | null) => void;
-  /** Props for option links. */
-  getOptionLinkProps: (
+  /** Props for item links. */
+  getItemLinkProps: (
     item: T
   ) => React.AnchorHTMLAttributes<HTMLAnchorElement> & { role: "option" };
   /** Clear the input and selection. */
@@ -295,6 +293,8 @@ export interface UseAutoCompleteReturnNoActions<T> {
   getInputValue: () => string;
   /** Set the input value. */
   setInputValue: (value: string) => void;
+  /** True if the input is disabled. */
+  getIsDisabled: () => boolean;
 }
 
 /**
@@ -331,12 +331,10 @@ export interface UseAutoCompleteReturnWithActions<T> {
   getDisclosureProps: () => React.ButtonHTMLAttributes<HTMLButtonElement> & {
     [key: `data-${string}`]: string | boolean | undefined;
   };
-  /** Props for each <li> option. */
-  getOptionProps: (
-    item: T | ActionItem
-  ) => React.LiHTMLAttributes<HTMLLIElement>;
-  /** State helper for an option or action. */
-  getOptionState: (item: T | ActionItem) => OptionState;
+  /** Props for each <li> item. */
+  getItemProps: (item: T | ActionItem) => React.LiHTMLAttributes<HTMLLIElement>;
+  /** State helper for an item or action. */
+  getItemState: (item: T | ActionItem) => ItemState;
   /** Props for a group <ul>. */
   getGroupProps: (group: Group<T>) => React.HTMLAttributes<HTMLUListElement>;
   /** Props for a group heading <span>. */
@@ -350,7 +348,7 @@ export interface UseAutoCompleteReturnWithActions<T> {
   /** Toggle the open state. */
   setIsOpen: (open: boolean) => void;
   /** Detect custom input values. */
-  isCustomValue: (item: T) => boolean;
+  isCustomItem: (item: T) => boolean;
   /** Get current highlighted index. */
   getHighlightedIndex: () => number | null;
   /** Set highlighted index. */
@@ -360,7 +358,7 @@ export interface UseAutoCompleteReturnWithActions<T> {
   /** Set active item or action. */
   setActiveItem: (item: T | ActionItem | null) => void;
   /** Props for option links. */
-  getOptionLinkProps: (
+  getItemLinkProps: (
     item: T
   ) => React.AnchorHTMLAttributes<HTMLAnchorElement> & { role: "option" };
   /** Clear the input and selection. */
@@ -378,6 +376,8 @@ export interface UseAutoCompleteReturnWithActions<T> {
   getInputValue: () => string;
   /** Set the input value. */
   setInputValue: (value: string) => void;
+  /** True if the input is disabled. */
+  getIsDisabled: () => boolean;
 }
 
 // ——————————————————————————————

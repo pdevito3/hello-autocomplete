@@ -1,6 +1,6 @@
-import { fruits } from "@/datasets/fruit";
-import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
-import { Check, XIcon } from "@/svgs";
+import { fruits } from "../datasets/fruit";
+import { useAutoComplete } from "../domain/autocomplete/useAutoComplete";
+import { Check, XIcon } from "../svgs";
 import { cn } from "../utils";
 
 export default function MultiFruitExample() {
@@ -9,8 +9,8 @@ export default function MultiFruitExample() {
     getLabelProps,
     getInputProps,
     getListProps,
-    getOptionProps,
-    getOptionState,
+    getItemProps,
+    getItemState,
     getItems,
     getClearProps,
     hasSelectedItem,
@@ -88,15 +88,15 @@ export default function MultiFruitExample() {
                 (getItems() as (typeof fruits)[0][]).map((fruit) => (
                   <li
                     key={fruit.value}
-                    {...getOptionProps(fruit)}
+                    {...getItemProps(fruit)}
                     className={cn(
                       "px-4 py-2 cursor-pointer hover:bg-gray-100",
-                      getOptionState(fruit).isActive && "bg-gray-100"
+                      getItemState(fruit).isActive && "bg-gray-100"
                     )}
                   >
                     <div className="flex items-center justify-between">
                       <span>{fruit.label}</span>
-                      {getOptionState(fruit).isSelected && (
+                      {getItemState(fruit).isSelected && (
                         <Check className="text-green-500" />
                       )}
                     </div>

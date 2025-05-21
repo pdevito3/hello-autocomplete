@@ -1,6 +1,6 @@
-import { fruits, type Fruit } from "@/datasets/fruit";
-import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
-import { Check, XIcon } from "@/svgs";
+import { fruits, type Fruit } from "../datasets/fruit";
+import { useAutoComplete } from "../domain/autocomplete/useAutoComplete";
+import { Check, XIcon } from "../svgs";
 import { cn } from "../utils";
 
 export function CustomActions() {
@@ -9,8 +9,8 @@ export function CustomActions() {
     getLabelProps,
     getInputProps,
     getListProps,
-    getOptionProps,
-    getOptionState,
+    getItemProps,
+    getItemState,
     getItems,
     getClearProps,
     hasSelectedItem,
@@ -80,14 +80,13 @@ export function CustomActions() {
                 <li className="px-4 py-2 text-gray-500">No fruits found</li>
               ) : (
                 getItems().map((item, idx) => {
-                  const { isActive, isSelected, isAction } =
-                    getOptionState(item);
+                  const { isActive, isSelected, isAction } = getItemState(item);
 
                   if (isAction) {
                     return (
                       <li
                         key={`action-${idx}`}
-                        {...getOptionProps(item)}
+                        {...getItemProps(item)}
                         className="px-4 py-2 cursor-pointer text-blue-600 hover:bg-blue-50"
                       >
                         {item.label}
@@ -100,7 +99,7 @@ export function CustomActions() {
                   return (
                     <li
                       key={fruit.value}
-                      {...getOptionProps(fruit)}
+                      {...getItemProps(fruit)}
                       className={cn(
                         "px-4 py-2 cursor-pointer flex items-center justify-between",
                         isActive && "bg-gray-100"

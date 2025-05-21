@@ -1,12 +1,12 @@
-import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
-import { Check, XIcon } from "@/svgs";
 import { useMemo } from "react";
+import { useAutoComplete } from "../domain/autocomplete/useAutoComplete";
+import { Check, XIcon } from "../svgs";
 import { cn } from "../utils";
 
 export function CustomEntryExample({
-  allowsCustomValue = true,
+  allowsCustomItems = true,
 }: {
-  allowsCustomValue?: boolean;
+  allowsCustomItems?: boolean;
 }) {
   const languages = useMemo(
     () => ["JavaScript", "TypeScript", "Python", "Ruby"],
@@ -18,17 +18,17 @@ export function CustomEntryExample({
     getLabelProps,
     getInputProps,
     getListProps,
-    getOptionProps,
-    getOptionState,
+    getItemProps,
+    getItemState,
     getItems,
     getClearProps,
     hasSelectedItem,
     isOpen,
-    isCustomValue,
+    isCustomItem,
     getSelectedItem,
   } = useAutoComplete<string>({
     items: languages,
-    allowsCustomValue,
+    allowsCustomItems,
     state: { label: "Choose or add a language" },
     asyncDebounceMs: 200,
     onFilterAsync: async ({ searchTerm }) =>
@@ -69,15 +69,15 @@ export function CustomEntryExample({
             {items.map((lang) => (
               <li
                 key={lang}
-                {...getOptionProps(lang)}
+                {...getItemProps(lang)}
                 className={cn(
                   "px-4 py-2 cursor-pointer hover:bg-gray-100",
-                  getOptionState(lang).isActive && "bg-gray-100"
+                  getItemState(lang).isActive && "bg-gray-100"
                 )}
               >
                 <div className="flex items-center justify-between">
-                  {isCustomValue(lang) ? `Add "${lang}"` : lang}
-                  {getOptionState(lang).isSelected && <Check />}
+                  {isCustomItem(lang) ? `Add "${lang}"` : lang}
+                  {getItemState(lang).isSelected && <Check />}
                 </div>
               </li>
             ))}

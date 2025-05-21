@@ -1,12 +1,12 @@
-import { users, type User } from "@/datasets/users";
-import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
-import { Check, XIcon } from "@/svgs";
 import { useState } from "react";
+import { users, type User } from "../datasets/users";
+import { useAutoComplete } from "../domain/autocomplete/useAutoComplete";
+import { Check, XIcon } from "../svgs";
 import { cn } from "../utils";
 
 export function DisclosureExample() {
   const [inputValue, setInputValue] = useState("");
-  const [selectedValue, setSelectedValue] = useState<User | undefined>();
+  const [selectedItem, setSelectedItem] = useState<User | undefined>();
   const [isOpen, setIsOpen] = useState(false);
   const [activeItem, setActiveItem] = useState<User | null>(null);
 
@@ -15,8 +15,8 @@ export function DisclosureExample() {
     getLabelProps,
     getInputProps,
     getListProps,
-    getOptionProps,
-    getOptionState,
+    getItemProps,
+    getItemState,
     getItems,
     getClearProps,
     getDisclosureProps,
@@ -26,8 +26,8 @@ export function DisclosureExample() {
     state: {
       inputValue,
       setInputValue,
-      selectedValue,
-      setSelectedValue,
+      selectedItem,
+      setSelectedItem,
       isOpen,
       setIsOpen,
       activeItem,
@@ -96,15 +96,15 @@ export function DisclosureExample() {
                 getItems().map((user) => (
                   <li
                     key={user.id}
-                    {...getOptionProps(user)}
+                    {...getItemProps(user)}
                     className={cn(
                       "px-4 py-2 cursor-pointer hover:bg-gray-100",
-                      getOptionState(user).isActive && "bg-gray-100"
+                      getItemState(user).isActive && "bg-gray-100"
                     )}
                   >
                     <div className="flex items-center justify-between">
                       {user.name}
-                      {getOptionState(user).isSelected && (
+                      {getItemState(user).isSelected && (
                         <Check className="text-blue-500" />
                       )}
                     </div>
@@ -116,14 +116,12 @@ export function DisclosureExample() {
         </div>
       </div>
 
-      {selectedValue && (
+      {selectedItem && (
         <div className="mt-4 p-4 bg-gray-50 rounded-md">
           <h3 className="text-sm font-medium text-gray-500">Selected User:</h3>
           <div className="mt-2">
-            <p className="text-sm text-gray-900">Name: {selectedValue.name}</p>
-            <p className="text-sm text-gray-900">
-              Email: {selectedValue.email}
-            </p>
+            <p className="text-sm text-gray-900">Name: {selectedItem.name}</p>
+            <p className="text-sm text-gray-900">Email: {selectedItem.email}</p>
           </div>
         </div>
       )}

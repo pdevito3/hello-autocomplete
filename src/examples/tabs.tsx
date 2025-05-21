@@ -1,16 +1,24 @@
-import { fruits, type Fruit } from "@/datasets/fruit";
 import type { Tab } from "@/domain/autocomplete/types";
-import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
-import { Check, XIcon } from "@/svgs";
 import React, { useMemo } from "react";
+import { fruits, type Fruit } from "../datasets/fruit";
+import { useAutoComplete } from "../domain/autocomplete/useAutoComplete";
+import { Check, XIcon } from "../svgs";
 import { cn } from "../utils";
 
 export function TabsExample() {
   const tabs = useMemo<Tab<Fruit>[]>(
     () => [
       { key: "all", label: "All" },
-      { key: "berries", label: "Berries", filter: (f) => f.type === "berry" },
-      { key: "melons", label: "Melons", filter: (f) => f.type === "melon" },
+      {
+        key: "berries",
+        label: "Berries",
+        filter: (f: Fruit) => f.type === "berry",
+      },
+      {
+        key: "melons",
+        label: "Melons",
+        filter: (f: Fruit) => f.type === "melon",
+      },
     ],
     []
   );
@@ -20,8 +28,8 @@ export function TabsExample() {
     getLabelProps,
     getInputProps,
     getListProps,
-    getOptionProps,
-    getOptionState,
+    getItemProps,
+    getItemState,
     getItems,
     getClearProps,
     hasSelectedItem,
@@ -103,12 +111,12 @@ export function TabsExample() {
                 ) : (
                   getItems().map((fruit) => {
                     const { isActive, isSelected, isDisabled } =
-                      getOptionState(fruit);
+                      getItemState(fruit);
 
                     return (
                       <li
                         key={(fruit as Fruit).value}
-                        {...getOptionProps(fruit)}
+                        {...getItemProps(fruit)}
                         className={cn(
                           "px-4 py-2 flex items-center justify-between",
                           !isDisabled && "hover:bg-gray-100",

@@ -1,9 +1,9 @@
-import { mockBooks, type Book } from "@/datasets/books";
-import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
-import { Check, XIcon } from "@/svgs";
-import { cn } from "@/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { mockBooks, type Book } from "../datasets/books";
+import { useAutoComplete } from "../domain/autocomplete/useAutoComplete";
+import { Check, XIcon } from "../svgs";
+import { cn } from "../utils";
 
 // Simulated API: returns books whose title or author includes the searchTerm
 async function fetchBooks(searchTerm: string): Promise<Book[]> {
@@ -35,8 +35,8 @@ export function AsyncSourceExample() {
     getLabelProps,
     getInputProps,
     getListProps,
-    getOptionProps,
-    getOptionState,
+    getItemProps,
+    getItemState,
     getItems,
     getClearProps,
     hasSelectedItem,
@@ -86,12 +86,12 @@ export function AsyncSourceExample() {
               ) : (
                 getItems().map((book) => {
                   const { isActive, isSelected, isDisabled } =
-                    getOptionState(book);
+                    getItemState(book);
 
                   return (
                     <li
                       key={book.id}
-                      {...getOptionProps(book)}
+                      {...getItemProps(book)}
                       className={cn(
                         "px-4 py-2 cursor-pointer hover:bg-gray-100",
                         isActive && "bg-gray-100",

@@ -1,22 +1,23 @@
-import React from "react";
+import React, { useCallback, useRef } from "react";
 
 export interface UseClearButtonOptions<T> {
   /** current input text */
   inputValue: string;
   /** single‑select value (if mode = single) */
-  selectedValue?: T;
+  selectedItem?: T;
   /** multi‑select values (if mode = multiple) */
-  selectedValues: T[];
+  selectedItems: T[];
   /** 'single' or 'multiple' */
   mode: "single" | "multiple";
-  /** clear any external side‑effects */
-  onClear?: () => void;
-  /** reset the input text */
+  /** async clear that fires when the selected value is cleared */
+  onClearAsync?: (params: {
+    signal: AbortSignal;
+  }) => Promise<void> /** reset the input text */;
   setInputValue(value: string): void;
   /** reset the single‑select value */
-  setSelectedValue?(value: T | undefined): void;
+  setSelectedItem?(value: T | undefined): void;
   /** reset the multi‑select values */
-  setSelectedValues?(values: T[]): void;
+  setSelectedItems?(values: T[]): void;
   /** clear any active/highlighted item */
   setActiveItem(item: T | null): void;
   /** close the listbox */
@@ -24,27 +25,55 @@ export interface UseClearButtonOptions<T> {
 }
 
 export function useClearButton<T>(opts: UseClearButtonOptions<T>) {
-  const handleClear = React.useCallback(() => {
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const handleClear = useCallback(async () => {
+    // reset UI state first
     opts.setInputValue("");
     if (opts.mode === "single") {
-      opts.setSelectedValue?.(undefined);
+      opts.setSelectedItem?.(undefined);
     } else {
-      opts.setSelectedValues?.([]);
+      opts.setSelectedItems?.([]);
     }
-    opts.onClear?.();
+
+    // abort any in-flight clear
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    if (opts.onClearAsync) {
+      try {
+        await opts.onClearAsync({ signal: controller.signal });
+      } catch (err) {
+        // ignore only user-aborted calls
+        if (!(err instanceof Error && err.name === "AbortError")) {
+          console.error(err);
+        }
+      }
+    }
+
     opts.setActiveItem(null);
     opts.setIsOpen(false);
-  }, [opts]);
+  }, [
+    opts.setInputValue,
+    opts.setSelectedItem,
+    opts.setSelectedItems,
+    opts.mode,
+    opts.onClearAsync,
+    opts.setActiveItem,
+    opts.setIsOpen,
+  ]);
 
   const getClearProps =
-    React.useCallback((): React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    useCallback((): React.ButtonHTMLAttributes<HTMLButtonElement> & {
       [key: `data-${string}`]: string | boolean | undefined;
     } => {
       const disabled =
         opts.inputValue === "" &&
         (opts.mode === "single"
-          ? !opts.selectedValue
-          : opts.selectedValues.length === 0);
+          ? !opts.selectedItem
+          : opts.selectedItems.length === 0);
+
       return {
         type: "button",
         "aria-label": "Clear input",
@@ -56,8 +85,8 @@ export function useClearButton<T>(opts: UseClearButtonOptions<T>) {
     }, [
       opts.inputValue,
       opts.mode,
-      opts.selectedValue,
-      opts.selectedValues,
+      opts.selectedItem,
+      opts.selectedItems,
       handleClear,
     ]);
 

@@ -9,7 +9,7 @@ export function useFiltering<T>({
 }: {
   inputValue: string;
   setItems: React.Dispatch<React.SetStateAction<T[]>>;
-  onFilterAsyncRef: React.MutableRefObject<
+  onFilterAsyncRef: React.RefObject<
     | ((params: { searchTerm: string; signal: AbortSignal }) => Promise<T[]>)
     | undefined
   >;

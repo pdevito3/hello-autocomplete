@@ -2,7 +2,7 @@ import React from "react";
 import type { ActionItem, Group, GroupingOptions, Tab } from "../types";
 
 export function useGrouping<T>({
-  allowsCustomValue,
+  allowsCustomItems,
   inputValue,
   itemToString,
   actions,
@@ -11,7 +11,7 @@ export function useGrouping<T>({
   tabs,
   activeTabIndex,
 }: {
-  allowsCustomValue: boolean;
+  allowsCustomItems: boolean;
   inputValue: string;
   itemToString: (item: T) => string;
   actions?: ActionItem[];
@@ -99,7 +99,7 @@ export function useGrouping<T>({
   // ---- ungrouped items + optional “create custom” item as before ----
   const ungroupedItemsWithCustom: T[] = (() => {
     if (
-      allowsCustomValue &&
+      allowsCustomItems &&
       inputValue.trim() !== "" &&
       !filteredTabItems.some((it) => itemToString(it) === inputValue)
     ) {

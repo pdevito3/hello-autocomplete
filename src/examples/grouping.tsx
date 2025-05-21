@@ -1,6 +1,6 @@
-import { fruits, type Fruit } from "@/datasets/fruit";
-import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
-import { Check, XIcon } from "@/svgs";
+import { fruits, type Fruit } from "../datasets/fruit";
+import { useAutoComplete } from "../domain/autocomplete/useAutoComplete";
+import { Check, XIcon } from "../svgs";
 import { cn } from "../utils";
 
 export function GroupedFruitExample() {
@@ -11,8 +11,8 @@ export function GroupedFruitExample() {
     getListProps,
     getGroupProps,
     getGroupLabelProps,
-    getOptionProps,
-    getOptionState,
+    getItemProps,
+    getItemState,
     getItems,
     getClearProps,
     hasSelectedItem,
@@ -80,14 +80,14 @@ export function GroupedFruitExample() {
                       {group.items.map((fruit) => (
                         <li
                           key={fruit.value}
-                          {...getOptionProps(fruit)}
+                          {...getItemProps(fruit)}
                           className={cn(
                             "px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center",
-                            getOptionState(fruit).isActive && "bg-gray-100"
+                            getItemState(fruit).isActive && "bg-gray-100"
                           )}
                         >
                           <span>{fruit.label}</span>
-                          {getOptionState(fruit).isSelected && (
+                          {getItemState(fruit).isSelected && (
                             <Check className="text-green-500 h-5 w-5" />
                           )}
                         </li>

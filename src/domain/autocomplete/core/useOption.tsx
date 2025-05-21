@@ -4,42 +4,47 @@ import type { ActionItem, Mode, OptionState } from "../types";
 export function useOption<T>({
   items,
   activeItem,
-  selectedValue,
-  selectedValues,
+  selectedItem,
+  selectedItems,
   isItemDisabled,
-  isCustomValue,
+  isCustomItem,
   onSelect,
   mode,
   flattenedItems,
-  getOptionLink,
+  getItemLink,
   setActiveItem,
   optionRefs,
+  close,
 }: {
   /** the full, flattened list (including any ActionItem entries) */
   items: Array<T | ActionItem>;
   /** the currently active/highlighted entry */
   activeItem: T | ActionItem | null;
   /** single‑select value */
-  selectedValue?: T;
+  selectedItem?: T;
   /** multi‑select values */
-  selectedValues?: T[];
+  selectedItems?: T[];
   /** pick up disabled state for real items */
   isItemDisabled(item: T): boolean;
   /** detect if a real item is the “custom value” */
-  isCustomValue(item: T): boolean;
+  isCustomItem(item: T): boolean;
   /** callback when a real item is chosen */
   onSelect(item: T): void;
   /** the mode of the autocomplete */
   mode: Mode;
   flattenedItems: Array<T | ActionItem>;
-  getOptionLink?: (
+  getItemLink?: (
     item: T
   ) => string | Partial<Record<string, unknown>> | undefined;
   setActiveItem(item: T | ActionItem): void;
   optionRefs: React.RefObject<Array<HTMLLIElement | null>>;
+  close: () => void;
 }) {
-  const getOptionProps = useCallback(
+  const getItemProps = useCallback(
     (item: T | ActionItem) => {
+      // compute index up‐front so both branches can use it
+      const index = items.findIndex((i) => i === item);
+
       // --- action entries ---
       if ((item as ActionItem).__isAction) {
         const action = item as ActionItem;
@@ -64,14 +69,13 @@ export function useOption<T>({
 
       // --- listbox entries ---
       const nonActionItem = item as T;
-      const index = items.findIndex((i) => i === item);
       const disabled = isItemDisabled(nonActionItem);
       const isActive = item === activeItem;
       const isSelected =
         mode === "multiple"
-          ? Boolean(selectedValues?.includes(nonActionItem))
-          : nonActionItem === selectedValue;
-      const custom = isCustomValue(nonActionItem);
+          ? Boolean(selectedItems?.includes(nonActionItem))
+          : nonActionItem === selectedItem;
+      const custom = isCustomItem(nonActionItem);
 
       return {
         role: "option",
@@ -87,7 +91,6 @@ export function useOption<T>({
         disabled,
         "data-disabled": disabled ? "true" : undefined,
         onClick: disabled ? undefined : () => onSelect(nonActionItem),
-        // store ref for scrolling
         ref: (el: HTMLLIElement | null) => {
           optionRefs.current[index] = el;
         },
@@ -98,15 +101,15 @@ export function useOption<T>({
       isItemDisabled,
       activeItem,
       mode,
-      selectedValues,
-      selectedValue,
-      isCustomValue,
+      selectedItems,
+      selectedItem,
+      isCustomItem,
       optionRefs,
       onSelect,
     ]
   );
 
-  const getOptionState = useCallback(
+  const getItemState = useCallback(
     (item: T | ActionItem): OptionState => {
       // always treat actions as their own state
       if ((item as ActionItem).__isAction) {
@@ -122,8 +125,8 @@ export function useOption<T>({
       const disabled = isItemDisabled(nonActionItem);
       const selected =
         mode === "multiple"
-          ? Boolean(selectedValues?.includes(nonActionItem))
-          : nonActionItem === selectedValue;
+          ? Boolean(selectedItems?.includes(nonActionItem))
+          : nonActionItem === selectedItem;
 
       return {
         isActive: item === activeItem,
@@ -132,20 +135,20 @@ export function useOption<T>({
         isAction: false,
       };
     },
-    [activeItem, isItemDisabled, mode, selectedValue, selectedValues]
+    [activeItem, isItemDisabled, mode, selectedItem, selectedItems]
   );
 
-  const getOptionLinkProps = useCallback(
+  const getItemLinkProps = useCallback(
     (item: T): Record<string, unknown> & { role: "option" } => {
       const index = flattenedItems.findIndex((i) => i === item);
       const disabled = isItemDisabled(item);
       const isSelected =
         mode === "multiple"
-          ? selectedValues?.includes(item) || false
-          : item === selectedValue;
+          ? selectedItems?.includes(item) || false
+          : item === selectedItem;
 
       // user‑returned link value
-      const linkResult = getOptionLink?.(item);
+      const linkResult = getItemLink?.(item);
       // build base props: if string, treat as href; else spread object
       const linkProps: Record<string, unknown> =
         typeof linkResult === "string"
@@ -170,6 +173,7 @@ export function useOption<T>({
           ? (e: React.MouseEvent) => {
               // don't use handleSelect(item) for link
               e.stopPropagation();
+              close();
             }
           : undefined,
       };
@@ -178,9 +182,9 @@ export function useOption<T>({
       flattenedItems,
       isItemDisabled,
       mode,
-      selectedValues,
-      selectedValue,
-      getOptionLink,
+      selectedItems,
+      selectedItem,
+      getItemLink,
     ]
   );
 
@@ -192,5 +196,5 @@ export function useOption<T>({
     }
   }, [flattenedItems, activeItem, setActiveItem]);
 
-  return { getOptionProps, getOptionState, getOptionLinkProps };
+  return { getItemProps, getItemState, getItemLinkProps };
 }

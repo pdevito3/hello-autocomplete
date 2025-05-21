@@ -18,7 +18,7 @@ export interface UseInputOptions<T> {
   /** Move focus to a particular item */
   setActiveItem(item: T | null): void;
   /** Ref to the latest async filter function */
-  onFilterAsyncRef: React.MutableRefObject<
+  onFilterAsyncRef: React.RefObject<
     | ((params: { searchTerm: string; signal: AbortSignal }) => Promise<T[]>)
     | undefined
   >;
@@ -37,7 +37,7 @@ export interface UseInputOptions<T> {
   onInputValueChange?: (value: string) => void;
   setInputValue(value: string): void;
   setIsFocused(isFocused: boolean): void;
-  disabled?: boolean | undefined;
+  disabled?: boolean;
 }
 
 export function useInput<T>(opts: UseInputOptions<T>) {
@@ -71,7 +71,7 @@ export function useInput<T>(opts: UseInputOptions<T>) {
     } => ({
       id: "autocomplete-input",
       value: opts.inputValue,
-      disabled: opts.disabled,
+      disabled: opts.disabled ?? undefined,
       onChange: handleInputChange,
       onKeyDown: opts.handleKeyDown,
       onFocus: async () => {

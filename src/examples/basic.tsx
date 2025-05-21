@@ -1,6 +1,6 @@
-import { users } from "@/datasets/users";
-import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
-import { Check, XIcon } from "@/svgs";
+import { users } from "../datasets/users";
+import { useAutoComplete } from "../domain/autocomplete/useAutoComplete";
+import { Check, XIcon } from "../svgs";
 import { cn } from "../utils";
 
 // Basic autocomplete example
@@ -10,8 +10,8 @@ export function BasicExample() {
     getLabelProps,
     getInputProps,
     getListProps,
-    getOptionProps,
-    getOptionState,
+    getItemProps,
+    getItemState,
     getItems,
     getClearProps,
     hasSelectedItem,
@@ -61,15 +61,15 @@ export function BasicExample() {
                 getItems().map((user) => (
                   <li
                     key={user.id}
-                    {...getOptionProps(user)}
+                    {...getItemProps(user)}
                     className={cn(
                       "px-4 py-2 cursor-pointer hover:bg-gray-100",
-                      getOptionState(user).isActive && "bg-gray-100"
+                      getItemState(user).isActive && "bg-gray-100"
                     )}
                   >
                     <div className="flex items-center justify-between">
                       {user.name}
-                      {getOptionState(user).isSelected && (
+                      {getItemState(user).isSelected && (
                         <Check className="text-blue-500" />
                       )}
                     </div>

@@ -1,9 +1,9 @@
-import { Check, XIcon } from "@/svgs";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
+import { useAutoComplete } from "../domain/autocomplete/useAutoComplete";
 
 import type { Tab } from "@/domain/autocomplete/types";
-import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
+import { Check, XIcon } from "../svgs";
 import { cn } from "../utils";
 
 interface LinkItem {
@@ -51,12 +51,12 @@ export function TabLinksExample() {
       {
         key: "internal",
         label: "Internal",
-        filter: (item) => item.target === "internal",
+        filter: (item: LinkItem) => item.target === "internal",
       },
       {
         key: "external",
         label: "External",
-        filter: (item) => item.target === "external",
+        filter: (item: LinkItem) => item.target === "external",
       },
     ],
     []
@@ -67,9 +67,9 @@ export function TabLinksExample() {
     getLabelProps,
     getInputProps,
     getListProps,
-    getOptionProps,
-    getOptionLinkProps,
-    getOptionState,
+    getItemProps,
+    getItemLinkProps,
+    getItemState,
     getItems,
     getClearProps,
     hasSelectedItem,
@@ -79,7 +79,7 @@ export function TabLinksExample() {
     getTabState,
   } = useAutoComplete<LinkItem>({
     items: links,
-    getOptionLink: (item) =>
+    getItemLink: (item) =>
       item.target === "internal"
         ? { to: item.url }
         : item.target === "download"
@@ -150,12 +150,12 @@ export function TabLinksExample() {
                   <li className="px-4 py-2 text-gray-500">No results found</li>
                 ) : (
                   getItems().map((link) => {
-                    const { isActive } = getOptionState(link);
+                    const { isActive } = getItemState(link);
 
                     return (
                       <li
                         key={link.id}
-                        {...getOptionProps(link)}
+                        {...getItemProps(link)}
                         className={cn(
                           "px-4 py-2 flex items-center justify-between",
                           isActive && "bg-gray-100"
@@ -163,37 +163,37 @@ export function TabLinksExample() {
                       >
                         {link.target === "internal" ? (
                           <Link
-                            {...getOptionLinkProps(link)}
+                            {...getItemLinkProps(link)}
                             to={link.url}
                             rel="noopener noreferrer"
                             target="_blank"
                             className="flex items-center justify-between w-full"
                           >
                             <span>{link.name}</span>
-                            {getOptionState(link).isSelected && (
+                            {getItemState(link).isSelected && (
                               <Check className="text-blue-500" />
                             )}
                           </Link>
                         ) : link.target === "download" ? (
                           <a
-                            {...getOptionLinkProps(link)}
+                            {...getItemLinkProps(link)}
                             className="flex items-center justify-between w-full"
                             download
                           >
                             <span>{link.name}</span>
-                            {getOptionState(link).isSelected && (
+                            {getItemState(link).isSelected && (
                               <Check className="text-blue-500" />
                             )}
                           </a>
                         ) : (
                           <a
-                            {...getOptionLinkProps(link)}
+                            {...getItemLinkProps(link)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center justify-between w-full"
                           >
                             <span>{link.name}</span>
-                            {getOptionState(link).isSelected && (
+                            {getItemState(link).isSelected && (
                               <Check className="text-blue-500" />
                             )}
                           </a>

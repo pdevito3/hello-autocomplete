@@ -1,6 +1,6 @@
-import { fruits, type Fruit } from "@/datasets/fruit";
-import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
-import { Check, XIcon } from "@/svgs";
+import { fruits, type Fruit } from "../datasets/fruit";
+import { useAutoComplete } from "../domain/autocomplete/useAutoComplete";
+import { Check, XIcon } from "../svgs";
 import { cn } from "../utils";
 
 export function ComplexDisabledExample() {
@@ -9,8 +9,8 @@ export function ComplexDisabledExample() {
     getLabelProps,
     getInputProps,
     getListProps,
-    getOptionProps,
-    getOptionState,
+    getItemProps,
+    getItemState,
     getItems,
     getClearProps,
     hasSelectedItem,
@@ -64,12 +64,12 @@ export function ComplexDisabledExample() {
               ) : (
                 getItems().map((fruit) => {
                   const { isActive, isSelected, isDisabled } =
-                    getOptionState(fruit);
+                    getItemState(fruit);
 
                   return (
                     <li
                       key={fruit.value}
-                      {...getOptionProps(fruit)}
+                      {...getItemProps(fruit)}
                       className={cn(
                         "px-4 py-2 cursor-pointer",
                         !isDisabled && "hover:bg-gray-100",

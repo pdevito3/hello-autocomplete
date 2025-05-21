@@ -1,7 +1,7 @@
-import { fruits, type Fruit } from "@/datasets/fruit";
-import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
-import { Check, XIcon } from "@/svgs";
 import { AnimatePresence, motion } from "framer-motion";
+import { fruits, type Fruit } from "../datasets/fruit";
+import { useAutoComplete } from "../domain/autocomplete/useAutoComplete";
+import { Check, XIcon } from "../svgs";
 import { cn } from "../utils";
 
 export function Animated() {
@@ -10,8 +10,8 @@ export function Animated() {
     getLabelProps,
     getInputProps,
     getListProps,
-    getOptionProps,
-    getOptionState,
+    getItemProps,
+    getItemState,
     getItems,
     getClearProps,
     hasSelectedItem,
@@ -42,6 +42,7 @@ export function Animated() {
           />
           <AnimatePresence>
             {hasSelectedItem() && (
+              // @ts-ignore
               <motion.button
                 type="button"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 bg-transparent hover:text-gray-600 focus:outline-sky-600"
@@ -57,6 +58,7 @@ export function Animated() {
           </AnimatePresence>
           <AnimatePresence>
             {isOpen && (
+              // @ts-ignore
               <motion.ul
                 {...getListProps()}
                 className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
@@ -76,17 +78,15 @@ export function Animated() {
                   </motion.li>
                 ) : (
                   getItems().map((fruit, index) => {
-                    const { isActive, isSelected } = getOptionState(fruit);
-                    const disabled = fruit.type === "berry";
+                    const { isActive, isSelected } = getItemState(fruit);
                     return (
+                      // @ts-ignore
                       <motion.li
                         key={fruit.value}
-                        {...getOptionProps(fruit)}
+                        {...getItemProps(fruit)}
                         className={cn(
                           "px-4 py-2 cursor-pointer",
-                          !disabled && "hover:bg-gray-100",
-                          isActive && "bg-gray-100",
-                          disabled && "opacity-50 cursor-not-allowed"
+                          isActive && "bg-gray-100"
                         )}
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}

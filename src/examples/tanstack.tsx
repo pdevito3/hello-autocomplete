@@ -1,9 +1,9 @@
-import { fruits, type Fruit } from "@/datasets/fruit";
-import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
-import { Check, XIcon } from "@/svgs";
-import { cn } from "@/utils";
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
+import { fruits, type Fruit } from "../datasets/fruit";
+import { useAutoComplete } from "../domain/autocomplete/useAutoComplete";
+import { Check, XIcon } from "../svgs";
+import { cn } from "../utils";
 
 interface AutocompleteProps<T> {
   value?: T;
@@ -27,16 +27,16 @@ export function ControllableAutocomplete<T>({
     getLabelProps,
     getInputProps,
     getListProps,
-    getOptionProps,
-    getOptionState,
+    getItemProps,
+    getItemState,
     getClearProps,
     hasSelectedItem,
     getItems,
   } = useAutoComplete<T>({
     items,
     state: {
-      selectedValue: value,
-      setSelectedValue: onChange,
+      selectedItem: value,
+      setSelectedItem: onChange,
       isOpen,
       setIsOpen,
       label,
@@ -82,14 +82,14 @@ export function ControllableAutocomplete<T>({
               getItems().map((item, index) => (
                 <li
                   key={index}
-                  {...getOptionProps(item)}
+                  {...getItemProps(item)}
                   className={cn(
                     "px-4 py-2 cursor-pointer flex justify-between",
-                    getOptionState(item).isActive && "bg-gray-100"
+                    getItemState(item).isActive && "bg-gray-100"
                   )}
                 >
                   <span>{itemToString(item)}</span>
-                  {getOptionState(item).isSelected && <Check />}
+                  {getItemState(item).isSelected && <Check />}
                 </li>
               ))
             )}

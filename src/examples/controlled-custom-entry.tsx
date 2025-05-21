@@ -1,12 +1,12 @@
-import { useAutoComplete } from "@/domain/autocomplete/useAutoComplete";
-import { Check, XIcon } from "@/svgs";
 import { useMemo, useState } from "react";
+import { useAutoComplete } from "../domain/autocomplete/useAutoComplete";
+import { Check, XIcon } from "../svgs";
 import { cn } from "../utils";
 
 export function ControlledCustomEntryExample({
-  allowsCustomValue = true,
+  allowsCustomItems = true,
 }: {
-  allowsCustomValue?: boolean;
+  allowsCustomItems?: boolean;
 }) {
   const languages = useMemo(
     () => ["JavaScript", "TypeScript", "Python", "Ruby"],
@@ -14,7 +14,7 @@ export function ControlledCustomEntryExample({
   );
 
   const [inputValue, setInputValue] = useState("");
-  const [selectedValue, setSelectedValue] = useState<string | undefined>(
+  const [selectedItem, setSelectedItem] = useState<string | undefined>(
     undefined
   );
   const [isOpen, setIsOpen] = useState(false);
@@ -24,22 +24,22 @@ export function ControlledCustomEntryExample({
     getLabelProps,
     getInputProps,
     getListProps,
-    getOptionProps,
-    getOptionState,
+    getItemProps,
+    getItemState,
     getItems,
     getClearProps,
     hasSelectedItem,
-    isCustomValue,
+    isCustomItem,
     getSelectedItem,
   } = useAutoComplete<string>({
     items: languages,
-    allowsCustomValue,
+    allowsCustomItems,
     state: {
       label: "Choose or add a language",
       inputValue,
       setInputValue,
-      selectedValue,
-      setSelectedValue,
+      selectedItem,
+      setSelectedItem,
       isOpen,
       setIsOpen,
     },
@@ -82,15 +82,15 @@ export function ControlledCustomEntryExample({
             {items.map((lang) => (
               <li
                 key={lang}
-                {...getOptionProps(lang)}
+                {...getItemProps(lang)}
                 className={cn(
                   "px-4 py-2 cursor-pointer hover:bg-gray-100",
-                  getOptionState(lang).isActive && "bg-gray-100"
+                  getItemState(lang).isActive && "bg-gray-100"
                 )}
               >
                 <div className="flex items-center justify-between">
-                  {isCustomValue(lang) ? `Add "${lang}"` : lang}
-                  {getOptionState(lang).isSelected && <Check />}
+                  {isCustomItem(lang) ? `Add "${lang}"` : lang}
+                  {getItemState(lang).isSelected && <Check />}
                 </div>
               </li>
             ))}

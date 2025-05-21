@@ -3,7 +3,7 @@ import { useAutoComplete } from "../domain/autocomplete/useAutoComplete";
 import { Check, XIcon } from "../svgs";
 import { cn } from "../utils";
 
-export function SimpleExample() {
+export function DisabledInputExample() {
   const fruits = useMemo(
     () => [
       "Apple",
@@ -30,9 +30,11 @@ export function SimpleExample() {
     hasSelectedItem,
     isOpen,
     getSelectedItem,
+    getIsDisabled,
   } = useAutoComplete<string>({
     items: fruits,
     state: {
+      disabled: true,
       label: "Search fruits",
     },
     asyncDebounceMs: 300,
@@ -50,7 +52,10 @@ export function SimpleExample() {
           <input
             {...getInputProps()}
             placeholder="Type to search..."
-            className="w-full px-3 py-2 border rounded-md border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className={cn(
+              "w-full px-3 py-2 border rounded-md border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+              getIsDisabled() && "bg-gray-200 cursor-not-allowed"
+            )}
           />
           {hasSelectedItem() && (
             <button
