@@ -116,6 +116,8 @@ export interface AutocompleteState<T> {
   setHighlightedIndex?: (index: number | null) => void;
   /** Accessible label for the autocomplete component. */
   label?: string;
+  /** Whether the input is disabled. */
+  disabled?: boolean;
 }
 
 /**

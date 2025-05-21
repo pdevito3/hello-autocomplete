@@ -136,7 +136,7 @@ export function useAutoComplete<T>({
     setActiveItem: setActiveItemProp,
     highlightedIndex: highlightedIndexProp,
     setHighlightedIndex: setHighlightedIndexProp,
-
+    disabled,
     label: labelProp = "",
     defaultValue,
     grouping: groupingProp,
@@ -398,6 +398,7 @@ export function useAutoComplete<T>({
     debouncedAsyncOperation,
     onInputValueChange,
     setIsFocused,
+    disabled,
   });
 
   // TODO htmlFor dynamic from input

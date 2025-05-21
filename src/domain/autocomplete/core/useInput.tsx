@@ -37,6 +37,7 @@ export interface UseInputOptions<T> {
   onInputValueChange?: (value: string) => void;
   setInputValue(value: string): void;
   setIsFocused(isFocused: boolean): void;
+  disabled?: boolean | undefined;
 }
 
 export function useInput<T>(opts: UseInputOptions<T>) {
@@ -70,6 +71,7 @@ export function useInput<T>(opts: UseInputOptions<T>) {
     } => ({
       id: "autocomplete-input",
       value: opts.inputValue,
+      disabled: opts.disabled,
       onChange: handleInputChange,
       onKeyDown: opts.handleKeyDown,
       onFocus: async () => {
@@ -118,6 +120,7 @@ export function useInput<T>(opts: UseInputOptions<T>) {
       "data-value": opts.inputValue,
       "data-has-value": opts.inputValue.trim() !== "" ? "true" : undefined,
       "data-autocomplete": "list",
+      "aria-disabled": opts.disabled ? "true" : undefined,
     }),
     [handleInputChange, opts]
   );
