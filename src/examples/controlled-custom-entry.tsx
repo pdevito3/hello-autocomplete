@@ -14,9 +14,6 @@ export function ControlledCustomEntryExample({
   );
 
   const [inputValue, setInputValue] = useState("");
-  const [selectedItem, setSelectedItem] = useState<string | undefined>(
-    undefined
-  );
   const [isOpen, setIsOpen] = useState(false);
 
   const {
@@ -38,8 +35,6 @@ export function ControlledCustomEntryExample({
       label: "Choose or add a language",
       inputValue,
       setInputValue,
-      selectedItem,
-      setSelectedItem,
       isOpen,
       setIsOpen,
     },

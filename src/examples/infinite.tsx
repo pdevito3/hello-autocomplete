@@ -36,7 +36,6 @@ async function fetchUserPage(
 
 export function InfiniteAutocompleteExample() {
   const [filter, setFilter] = useState("");
-  const [selectedItem, setSelectedItem] = useState<User | undefined>();
   const [isOpen, setIsOpen] = useState(false);
   const [activeItem, setActiveItem] = useState<User | null>(null);
 
@@ -113,8 +112,6 @@ export function InfiniteAutocompleteExample() {
     state: {
       inputValue: filter,
       setInputValue: setFilter,
-      selectedItem,
-      setSelectedItem,
       isOpen,
       setIsOpen,
       activeItem,

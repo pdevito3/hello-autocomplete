@@ -6,7 +6,6 @@ import { cn } from "../utils";
 
 export function DetailedOptionExample() {
   const [inputValue, setInputValue] = useState("");
-  const [selectedItem, setSelectedItem] = useState<User | undefined>();
   const [isOpen, setIsOpen] = useState(false);
   const [activeItem, setActiveItem] = useState<User | null>(null);
 
@@ -18,13 +17,12 @@ export function DetailedOptionExample() {
     getItemProps,
     getItemState,
     getItems,
+    getSelectedItem,
   } = useAutoComplete({
     items: users,
     state: {
       inputValue,
       setInputValue,
-      selectedItem,
-      setSelectedItem,
       isOpen,
       setIsOpen,
       activeItem,
@@ -83,12 +81,16 @@ export function DetailedOptionExample() {
           )}
         </div>
       </div>
-      {selectedItem && (
+      {getSelectedItem() && (
         <div className="mt-4 p-4 bg-gray-50 rounded-md">
           <h3 className="text-sm font-medium text-gray-500">Selected User:</h3>
           <div className="mt-2">
-            <p className="text-sm text-gray-900">Name: {selectedItem.name}</p>
-            <p className="text-sm text-gray-900">Email: {selectedItem.email}</p>
+            <p className="text-sm text-gray-900">
+              Name: {getSelectedItem()?.name}
+            </p>
+            <p className="text-sm text-gray-900">
+              Email: {getSelectedItem()?.email}
+            </p>
           </div>
         </div>
       )}
