@@ -401,74 +401,72 @@ export interface UseAutoCompleteReturnWithActions<T, V = T> {
   getSelectedValues: () => V[] | undefined;
 }
 
-// ——————————————————————————————
-// No-actions variants: getItems(): T[]
-// ——————————————————————————————
+// ----------------------------------------------------------------
+// No-actions variants: getItems(): T[], getSelectedItem(): T | T[]
+// ----------------------------------------------------------------
 
-export type UseAutoCompleteUngroupedSingleNoActions<T> = Omit<
-  UseAutoCompleteReturnNoActions<T>,
+export type UseAutoCompleteUngroupedSingleNoActions<T, V = T> = Omit<
+  UseAutoCompleteReturnNoActions<T, V>,
   "getItems" | "getSelectedItem"
 > & {
   getItems: () => T[];
   getSelectedItem: () => T | undefined;
 };
 
-export type UseAutoCompleteUngroupedMultipleNoActions<T> = Omit<
-  UseAutoCompleteReturnNoActions<T>,
+export type UseAutoCompleteUngroupedMultipleNoActions<T, V = T> = Omit<
+  UseAutoCompleteReturnNoActions<T, V>,
   "getItems" | "getSelectedItem"
 > & {
   getItems: () => T[];
   getSelectedItem: () => T[];
 };
 
-// grouped versions:
-export type UseAutoCompleteGroupedSingleNoActions<T> = Omit<
-  UseAutoCompleteReturnNoActions<T>,
+export type UseAutoCompleteGroupedSingleNoActions<T, V = T> = Omit<
+  UseAutoCompleteReturnNoActions<T, V>,
   "getItems" | "getSelectedItem"
 > & {
   getItems: () => Group<T>[];
   getSelectedItem: () => T | undefined;
 };
 
-export type UseAutoCompleteGroupedMultipleNoActions<T> = Omit<
-  UseAutoCompleteReturnNoActions<T>,
+export type UseAutoCompleteGroupedMultipleNoActions<T, V = T> = Omit<
+  UseAutoCompleteReturnNoActions<T, V>,
   "getItems" | "getSelectedItem"
 > & {
   getItems: () => Group<T>[];
   getSelectedItem: () => T[];
 };
 
-// ——————————————————————————————
-// With-actions variants: getItems(): Array<T|ActionItem>
-// ——————————————————————————————
+// ----------------------------------------------------------------
+// With-actions variants: getItems(): Array<T|ActionItem>, getSelectedItem(): T | T[]
+// ----------------------------------------------------------------
 
-export type UseAutoCompleteUngroupedSingleWithActions<T> = Omit<
-  UseAutoCompleteReturnWithActions<T>,
+export type UseAutoCompleteUngroupedSingleWithActions<T, V = T> = Omit<
+  UseAutoCompleteReturnWithActions<T, V>,
   "getItems" | "getSelectedItem"
 > & {
   getItems: () => Array<T | ActionItem>;
   getSelectedItem: () => T | undefined;
 };
 
-export type UseAutoCompleteUngroupedMultipleWithActions<T> = Omit<
-  UseAutoCompleteReturnWithActions<T>,
+export type UseAutoCompleteUngroupedMultipleWithActions<T, V = T> = Omit<
+  UseAutoCompleteReturnWithActions<T, V>,
   "getItems" | "getSelectedItem"
 > & {
   getItems: () => Array<T | ActionItem>;
   getSelectedItem: () => T[];
 };
 
-// grouped versions:
-export type UseAutoCompleteGroupedSingleWithActions<T> = Omit<
-  UseAutoCompleteReturnWithActions<T>,
+export type UseAutoCompleteGroupedSingleWithActions<T, V = T> = Omit<
+  UseAutoCompleteReturnWithActions<T, V>,
   "getItems" | "getSelectedItem"
 > & {
   getItems: () => Group<T>[];
   getSelectedItem: () => T | undefined;
 };
 
-export type UseAutoCompleteGroupedMultipleWithActions<T> = Omit<
-  UseAutoCompleteReturnWithActions<T>,
+export type UseAutoCompleteGroupedMultipleWithActions<T, V = T> = Omit<
+  UseAutoCompleteReturnWithActions<T, V>,
   "getItems" | "getSelectedItem"
 > & {
   getItems: () => Group<T>[];

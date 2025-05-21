@@ -33,7 +33,7 @@ export function useAutoComplete<T, V = T>(
     state?: { grouping?: undefined };
     mode?: "single";
   }
-): UseAutoCompleteUngroupedSingleNoActions<T>;
+): UseAutoCompleteUngroupedSingleNoActions<T, V>;
 
 export function useAutoComplete<T, V = T>(
   options: UseAutoCompleteOptions<T, V> & {
@@ -41,7 +41,7 @@ export function useAutoComplete<T, V = T>(
     state?: { grouping?: undefined };
     mode: "multiple";
   }
-): UseAutoCompleteUngroupedMultipleNoActions<T>;
+): UseAutoCompleteUngroupedMultipleNoActions<T, V>;
 
 export function useAutoComplete<T, V = T>(
   options: UseAutoCompleteOptions<T, V> & {
@@ -49,7 +49,7 @@ export function useAutoComplete<T, V = T>(
     state: { grouping: GroupingOptions<T>[] };
     mode?: "single";
   }
-): UseAutoCompleteGroupedSingleNoActions<T>;
+): UseAutoCompleteGroupedSingleNoActions<T, V>;
 
 export function useAutoComplete<T, V = T>(
   options: UseAutoCompleteOptions<T, V> & {
@@ -57,7 +57,7 @@ export function useAutoComplete<T, V = T>(
     state: { grouping: GroupingOptions<T>[] };
     mode: "multiple";
   }
-): UseAutoCompleteGroupedMultipleNoActions<T>;
+): UseAutoCompleteGroupedMultipleNoActions<T, V>;
 
 export function useAutoComplete<T, V = T>(
   options: UseAutoCompleteOptions<T, V> & {
@@ -65,7 +65,7 @@ export function useAutoComplete<T, V = T>(
     state?: { grouping?: undefined };
     mode?: "single";
   }
-): UseAutoCompleteUngroupedSingleWithActions<T>;
+): UseAutoCompleteUngroupedSingleWithActions<T, V>;
 
 export function useAutoComplete<T, V = T>(
   options: UseAutoCompleteOptions<T, V> & {
@@ -73,7 +73,7 @@ export function useAutoComplete<T, V = T>(
     state?: { grouping?: undefined };
     mode: "multiple";
   }
-): UseAutoCompleteUngroupedMultipleWithActions<T>;
+): UseAutoCompleteUngroupedMultipleWithActions<T, V>;
 
 export function useAutoComplete<T, V = T>(
   options: UseAutoCompleteOptions<T, V> & {
@@ -81,7 +81,7 @@ export function useAutoComplete<T, V = T>(
     state: { grouping: GroupingOptions<T>[] };
     mode?: "single";
   }
-): UseAutoCompleteGroupedSingleWithActions<T>;
+): UseAutoCompleteGroupedSingleWithActions<T, V>;
 
 export function useAutoComplete<T, V = T>(
   options: UseAutoCompleteOptions<T, V> & {
@@ -89,7 +89,7 @@ export function useAutoComplete<T, V = T>(
     state: { grouping: GroupingOptions<T>[] };
     mode: "multiple";
   }
-): UseAutoCompleteGroupedMultipleWithActions<T>;
+): UseAutoCompleteGroupedMultipleWithActions<T, V>;
 
 export function useAutoComplete<T, V = T>({
   mode: modeProp = "single",
