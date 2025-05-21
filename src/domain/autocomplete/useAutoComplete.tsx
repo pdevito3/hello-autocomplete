@@ -385,15 +385,28 @@ export function useAutoComplete<T, V = T>({
     itemsLength: flattenedItems.length,
   });
 
-  const { getClearProps, handleClear } = useClearButton<T>({
+  const clearSelectedItem = setSelectedValueProp
+    ? (_: unknown) => {
+        // clear the controlled value
+        setSelectedValueProp(undefined as unknown as V);
+      }
+    : setInternalSelectedItem;
+  const clearSelectedItems = setSelectedValuesProp
+    ? (_: unknown) => {
+        // clear the controlled value
+        setSelectedValuesProp([]);
+      }
+    : setInternalSelectedItems;
+
+  const { getClearProps, handleClear } = useClearButton<T, V>({
     inputValue,
     selectedItem,
     selectedItems,
     mode,
     onClearAsync,
     setInputValue,
-    setSelectedItem: setInternalSelectedItem,
-    setSelectedItems: setInternalSelectedItems,
+    setSelectedItem: clearSelectedItem,
+    setSelectedItems: clearSelectedItems,
     setActiveItem,
     setIsOpen,
   });

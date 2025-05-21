@@ -1,6 +1,6 @@
 import React, { useCallback, useRef } from "react";
 
-export interface UseClearButtonOptions<T> {
+export interface UseClearButtonOptions<T, V> {
   /** current input text */
   inputValue: string;
   /** single‑select value (if mode = single) */
@@ -24,7 +24,7 @@ export interface UseClearButtonOptions<T> {
   setIsOpen(open: boolean): void;
 }
 
-export function useClearButton<T>(opts: UseClearButtonOptions<T>) {
+export function useClearButton<T, V = T>(opts: UseClearButtonOptions<T, V>) {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleClear = useCallback(async () => {
@@ -54,15 +54,7 @@ export function useClearButton<T>(opts: UseClearButtonOptions<T>) {
 
     opts.setActiveItem(null);
     opts.setIsOpen(false);
-  }, [
-    opts.setInputValue,
-    opts.setSelectedItem,
-    opts.setSelectedItems,
-    opts.mode,
-    opts.onClearAsync,
-    opts.setActiveItem,
-    opts.setIsOpen,
-  ]);
+  }, [opts]);
 
   const getClearProps =
     useCallback((): React.ButtonHTMLAttributes<HTMLButtonElement> & {
